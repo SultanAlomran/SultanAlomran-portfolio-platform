@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <ProjectReference Include="../Portfolio.Application/Portfolio.Application.csproj" />
+    <ProjectReference Include="../Portfolio.Domain/Portfolio.Domain.csproj" />
+    <ProjectReference Include="../Portfolio.Shared/Portfolio.Shared.csproj" />
+  </ItemGroup>
+</Project>

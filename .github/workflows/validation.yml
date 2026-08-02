@@ -1,0 +1,63 @@
+name: Foundation validation
+on:
+  pull_request:
+  push:
+    branches: [dev]
+permissions:
+  contents: read
+jobs:
+  dotnet:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - run: dotnet restore Portfolio.sln
+      - run: dotnet build Portfolio.sln --configuration Release --no-restore
+      - run: dotnet test Portfolio.sln --configuration Release --no-build
+      - run: dotnet format Portfolio.sln --verify-no-changes --no-restore
+  portfolio-web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Portfolio.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: ${{ hashFiles('src/Portfolio.Web/package-lock.json') != '' }}
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/Portfolio.Web/package-lock.json
+      - name: Report missing lockfile
+        if: ${{ hashFiles('src/Portfolio.Web/package-lock.json') == '' }}
+        run: echo 'Portfolio.Web validation is pending its separately generated package-lock.json.'
+      - if: ${{ hashFiles('src/Portfolio.Web/package-lock.json') != '' }}
+        run: npm ci
+      - if: ${{ hashFiles('src/Portfolio.Web/package-lock.json') != '' }}
+        run: npm run lint
+      - if: ${{ hashFiles('src/Portfolio.Web/package-lock.json') != '' }}
+        run: npm run build
+  portfolio-admin:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/Portfolio.Admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') != '' }}
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: src/Portfolio.Admin/package-lock.json
+      - name: Report missing lockfile
+        if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') == '' }}
+        run: echo 'Portfolio.Admin validation is pending its separately generated package-lock.json.'
+      - if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') != '' }}
+        run: npm ci
+      - if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') != '' }}
+        run: npm run lint
+      - if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') != '' }}
+        run: npm run build
