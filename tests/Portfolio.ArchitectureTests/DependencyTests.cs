@@ -1,5 +1,3 @@
-using System.Reflection;
-
 namespace Portfolio.ArchitectureTests;
 
 public sealed class DependencyTests
@@ -16,7 +14,7 @@ public sealed class DependencyTests
     [Fact]
     public void Application_does_not_reference_host_or_infrastructure()
     {
-        var assembly = Assembly.Load("Portfolio.Application");
+        var assembly = typeof(Portfolio.Application.DependencyInjection).Assembly;
         var references = assembly.GetReferencedAssemblies().Select(x => x.Name).ToArray();
         Assert.DoesNotContain("Portfolio.Infrastructure", references);
         Assert.DoesNotContain("Portfolio.Api", references);
@@ -64,8 +62,8 @@ public sealed class DependencyTests
     [Fact]
     public void Infrastructure_is_the_only_layer_that_owns_entity_framework()
     {
-        var infrastructure = Assembly.Load("Portfolio.Infrastructure");
-        Assert.Contains(infrastructure.GetReferencedAssemblies(), reference =>
+        var infrastructureAssembly = typeof(Portfolio.Infrastructure.AssemblyMarker).Assembly;
+        Assert.Contains(infrastructureAssembly.GetReferencedAssemblies(), reference =>
             reference.Name?.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) == true);
     }
 }
