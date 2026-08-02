@@ -13,5 +13,5 @@ public sealed class ProjectImage : Entity
     public int DisplayOrder { get; private set; }
     public Project Project { get; private set; } = null!;
     public MediaFile MediaFile { get; private set; } = null!;
-    
+
 }

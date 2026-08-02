@@ -11,5 +11,5 @@ public sealed class Technology : Entity
     public string Category { get; private set; } = "";
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public ICollection<ProjectTechnology> ProjectTechnologies { get; private set; } = new HashSet<ProjectTechnology>();
-    
+
 }

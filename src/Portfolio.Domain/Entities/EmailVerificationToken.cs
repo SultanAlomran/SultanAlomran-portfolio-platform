@@ -14,5 +14,5 @@ public sealed class EmailVerificationToken : Entity
     public DateTime? UsedAt { get; private set; }
     public string? IpUsed { get; private set; }
     public User User { get; private set; } = null!;
-    
+
 }

@@ -15,5 +15,5 @@ public sealed class PasswordResetToken : Entity
     public string? IpUsed { get; private set; }
     public string? IpUsedFrom { get; private set; }
     public User User { get; private set; } = null!;
-    
+
 }

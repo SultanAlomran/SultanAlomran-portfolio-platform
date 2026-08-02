@@ -11,5 +11,5 @@ public sealed class UserRole : Entity
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User User { get; private set; } = null!;
     public Role Role { get; private set; } = null!;
-    
+
 }

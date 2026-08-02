@@ -18,5 +18,5 @@ public sealed class PageView : Entity
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User? User { get; private set; }
     public Session? Session { get; private set; }
-    
+
 }

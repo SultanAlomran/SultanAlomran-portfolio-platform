@@ -10,5 +10,5 @@ public sealed class Role : Entity
     public string? Description { get; private set; }
     public ICollection<UserRole> UserRoles { get; private set; } = new HashSet<UserRole>();
     public ICollection<RolePermission> RolePermissions { get; private set; } = new HashSet<RolePermission>();
-    
+
 }

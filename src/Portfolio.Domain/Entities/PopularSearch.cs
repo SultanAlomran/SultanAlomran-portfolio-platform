@@ -9,5 +9,5 @@ public sealed class PopularSearch : Entity
     public string SearchTerm { get; private set; } = "";
     public int SearchCount { get; private set; }
 
-    
+
 }

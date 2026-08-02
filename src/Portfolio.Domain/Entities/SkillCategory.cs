@@ -11,5 +11,5 @@ public sealed class SkillCategory : Entity
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; } = true;
     public ICollection<Skill> Skills { get; private set; } = new HashSet<Skill>();
-    
+
 }

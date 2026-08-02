@@ -12,5 +12,5 @@ public sealed class InfographicResource : Entity
     public string ResourceType { get; private set; } = "";
     public int DisplayOrder { get; private set; }
     public Infographic Infographic { get; private set; } = null!;
-    
+
 }

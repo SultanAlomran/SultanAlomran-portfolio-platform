@@ -11,5 +11,5 @@ public sealed class UserBookmark : Entity
     public Guid EntityId { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User User { get; private set; } = null!;
-    
+
 }

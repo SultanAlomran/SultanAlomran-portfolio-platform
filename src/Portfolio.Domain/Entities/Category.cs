@@ -16,5 +16,5 @@ public sealed class Category : SoftDeletableEntity
     public Category? Parent { get; private set; }
     public ICollection<Category> Children { get; private set; } = new HashSet<Category>();
     public ICollection<Infographic> Infographics { get; private set; } = new HashSet<Infographic>();
-    
+
 }

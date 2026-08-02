@@ -17,5 +17,5 @@ public sealed class EntityStatistic : Entity
     public decimal RatingAverage { get; private set; }
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
 
-    
+
 }

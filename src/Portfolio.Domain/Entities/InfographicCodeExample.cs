@@ -13,5 +13,5 @@ public sealed class InfographicCodeExample : Entity
     public string? FilePath { get; private set; }
     public int DisplayOrder { get; private set; }
     public Infographic Infographic { get; private set; } = null!;
-    
+
 }

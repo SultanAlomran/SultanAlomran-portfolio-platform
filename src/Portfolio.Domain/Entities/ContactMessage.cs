@@ -16,5 +16,5 @@ public sealed class ContactMessage : Entity
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; private set; }
 
-    
+
 }

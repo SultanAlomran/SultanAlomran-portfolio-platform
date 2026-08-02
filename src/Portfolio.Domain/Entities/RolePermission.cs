@@ -10,5 +10,5 @@ public sealed class RolePermission : Entity
     public Guid PermissionId { get; private set; }
     public Role Role { get; private set; } = null!;
     public Permission Permission { get; private set; } = null!;
-    
+
 }

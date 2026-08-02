@@ -19,5 +19,5 @@ public sealed class MediaFile : Entity
     public Guid? UploadedBy { get; private set; }
     public DateTime UploadedAt { get; private set; } = DateTime.UtcNow;
     public User? Uploader { get; private set; }
-    
+
 }

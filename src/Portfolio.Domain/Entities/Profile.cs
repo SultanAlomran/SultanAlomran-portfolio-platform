@@ -17,5 +17,5 @@ public sealed class Profile : AuditableEntity
     public Guid? CvMediaFileId { get; private set; }
     public MediaFile? ProfileImageMediaFile { get; private set; }
     public MediaFile? CvMediaFile { get; private set; }
-    
+
 }

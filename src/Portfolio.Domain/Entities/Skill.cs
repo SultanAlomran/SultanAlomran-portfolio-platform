@@ -13,5 +13,5 @@ public sealed class Skill : Entity
     public int DisplayOrder { get; private set; }
     public bool IsActive { get; private set; } = true;
     public SkillCategory SkillCategory { get; private set; } = null!;
-    
+
 }

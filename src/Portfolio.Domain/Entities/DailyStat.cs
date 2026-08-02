@@ -14,5 +14,5 @@ public sealed class DailyStat : Entity
     public decimal? BounceRate { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
-    
+
 }

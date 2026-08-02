@@ -10,5 +10,5 @@ public sealed class ProjectTechnology : Entity
     public Guid TechnologyId { get; private set; }
     public Project Project { get; private set; } = null!;
     public Technology Technology { get; private set; } = null!;
-    
+
 }

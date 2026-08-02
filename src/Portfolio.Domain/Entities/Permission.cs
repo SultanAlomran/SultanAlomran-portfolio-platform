@@ -9,5 +9,5 @@ public sealed class Permission : Entity
     public string Name { get; private set; } = "";
     public string? Description { get; private set; }
     public ICollection<RolePermission> RolePermissions { get; private set; } = new HashSet<RolePermission>();
-    
+
 }

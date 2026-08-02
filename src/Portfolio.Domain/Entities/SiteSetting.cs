@@ -12,5 +12,5 @@ public sealed class SiteSetting : Entity
     public bool IsEncrypted { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    
+
 }

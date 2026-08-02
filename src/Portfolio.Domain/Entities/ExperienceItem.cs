@@ -14,5 +14,5 @@ public sealed class ExperienceItem : AuditableEntity
     public bool IsCurrent { get; private set; }
     public int DisplayOrder { get; private set; }
 
-    public void SetDates(DateOnly start, DateOnly? end) { if (end < start) throw new ArgumentException("End date cannot precede start date."); StartDate=start; EndDate=end; }
+    public void SetDates(DateOnly start, DateOnly? end) { if (end < start) throw new ArgumentException("End date cannot precede start date."); StartDate = start; EndDate = end; }
 }

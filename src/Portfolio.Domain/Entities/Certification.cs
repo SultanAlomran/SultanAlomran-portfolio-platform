@@ -15,5 +15,5 @@ public sealed class Certification : AuditableEntity
     public Guid? MediaFileId { get; private set; }
     public int DisplayOrder { get; private set; }
     public MediaFile? MediaFile { get; private set; }
-    
+
 }

@@ -17,5 +17,5 @@ public sealed class Session : Entity
     public DateTime? EndedAt { get; private set; }
     public User? User { get; private set; }
     public ICollection<PageView> PageViews { get; private set; } = new HashSet<PageView>();
-    public void End(DateTime endedAt) { if (endedAt < StartedAt) throw new ArgumentException("End time cannot precede start time."); EndedAt=endedAt; }
+    public void End(DateTime endedAt) { if (endedAt < StartedAt) throw new ArgumentException("End time cannot precede start time."); EndedAt = endedAt; }
 }

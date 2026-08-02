@@ -14,5 +14,5 @@ public sealed class InfographicStep : Entity
     public int DisplayOrder { get; private set; }
     public Infographic Infographic { get; private set; } = null!;
     public MediaFile? MediaFile { get; private set; }
-    
+
 }

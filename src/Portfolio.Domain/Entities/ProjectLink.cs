@@ -12,5 +12,5 @@ public sealed class ProjectLink : Entity
     public string LinkType { get; private set; } = "";
     public int DisplayOrder { get; private set; }
     public Project Project { get; private set; } = null!;
-    
+
 }

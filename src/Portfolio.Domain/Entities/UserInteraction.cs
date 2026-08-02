@@ -15,5 +15,5 @@ public sealed class UserInteraction : Entity
     public string? UserAgent { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User? User { get; private set; }
-    
+
 }

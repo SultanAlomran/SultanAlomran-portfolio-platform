@@ -10,5 +10,5 @@ public sealed class Tag : Entity
     public string Slug { get; private set; } = "";
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
 
-    
+
 }

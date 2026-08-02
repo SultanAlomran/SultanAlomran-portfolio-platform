@@ -20,5 +20,5 @@ public sealed class User : AuditableEntity
     public ICollection<Notification> Notifications { get; private set; } = new HashSet<Notification>();
     public ICollection<AuditLog> AuditLogs { get; private set; } = new HashSet<AuditLog>();
     public ICollection<MediaFile> UploadedMediaFiles { get; private set; } = new HashSet<MediaFile>();
-    
+
 }

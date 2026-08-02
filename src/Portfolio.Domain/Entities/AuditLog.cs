@@ -16,5 +16,5 @@ public sealed class AuditLog : Entity
     public string? IpAddress { get; private set; }
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User? User { get; private set; }
-    
+
 }
