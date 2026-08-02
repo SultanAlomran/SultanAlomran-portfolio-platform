@@ -17,6 +17,10 @@ jobs:
       - run: dotnet build Portfolio.sln --configuration Release --no-restore
       - run: dotnet test Portfolio.sln --configuration Release --no-build
       - run: dotnet format Portfolio.sln --verify-no-changes --no-restore
+      - run: dotnet list Portfolio.sln package --vulnerable --include-transitive
+      - name: Verify migration model snapshot
+        run: dotnet ef migrations has-pending-model-changes --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
+        continue-on-error: true
   portfolio-web:
     runs-on: ubuntu-latest
     defaults:

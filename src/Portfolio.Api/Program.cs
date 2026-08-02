@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
 using Portfolio.Api.Middleware;
 
@@ -18,7 +19,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-app.MapHealthChecks("/health");
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = registration => !registration.Tags.Contains("ready")
+});
+app.MapHealthChecks("/health/ready");
 app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" }))
     .WithName("ApiVerification");
 app.Run();
