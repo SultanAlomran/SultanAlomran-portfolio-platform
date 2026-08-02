@@ -1,10 +1,22 @@
-# Database Specification — Draft 0.1
+# # Database Specification — Draft 0.1
 
-> **Status:** Draft for validation before EF Core implementation  
-> **Purpose:** Machine-readable implementation contract for Codex and EF Core generation  
-> **Authoritative order:** This document → approved Project 00 decisions → ERD image as visual reference  
-> **Important:** Any item marked **TBD**, **Needs confirmation**, **Proposed**, **Recommended**, or **Blocking** must not be guessed or implemented without explicit approval.
-
+> **Status:** Database design draft awaiting validation and explicit approval.
+>
+> **Purpose:** Define the planned database schema and serve as the EF Core
+> implementation contract after approval.
+>
+> Do not generate entities, EF Core configurations, persistence code, or migrations
+> while this document remains in Draft status.
+>
+> Items marked **TBD**, **Needs confirmation**, **Proposed**, **Recommended**, or
+> **Blocking** must be resolved and explicitly approved before they are implemented.
+>
+> When the database design is approved, change the status to:
+> **Approved for EF Core implementation**.
+>
+> **Authority order:** Approved Database Specification → approved Implementation Plan
+> → ERD image as a visual reference.
+> 
 ## 1. Scope and Implementation Rules
 
 This specification defines the relational database for:
