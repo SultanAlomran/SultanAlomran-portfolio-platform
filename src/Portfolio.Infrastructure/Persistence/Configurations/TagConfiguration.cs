@@ -9,6 +9,6 @@ internal sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
     public void Configure(EntityTypeBuilder<Tag> builder)
     {
         builder.ConfigureCommon("Tags");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique(); builder.HasIndex(x => x.Slug).IsUnique();
     }
 }

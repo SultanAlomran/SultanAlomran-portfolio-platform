@@ -9,6 +9,6 @@ internal sealed class SeriesConfiguration : IEntityTypeConfiguration<Series>
     public void Configure(EntityTypeBuilder<Series> builder)
     {
         builder.ConfigureCommon("Series");
-        EntityRelationships.Configure(builder);
+        builder.HasQueryFilter(x => !x.IsDeleted); builder.HasIndex(x => x.Slug).IsUnique().HasFilter("[IsDeleted] = 0");
     }
 }

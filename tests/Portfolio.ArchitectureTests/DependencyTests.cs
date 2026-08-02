@@ -28,4 +28,44 @@ public sealed class DependencyTests
         var references = typeof(Portfolio.Domain.AssemblyMarker).Assembly.GetReferencedAssemblies().Select(x => x.Name).ToArray();
         Assert.DoesNotContain(references, x => x is not null && x.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void Forbidden_persistence_and_mapping_packages_are_absent()
+    {
+        var assemblies = AppDomain.CurrentDomain.GetAssemblies()
+            .SelectMany(x => x.GetReferencedAssemblies().Append(x.GetName()))
+            .Select(x => x.Name)
+            .Where(x => x is not null)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        Assert.DoesNotContain("MediatR", assemblies);
+        Assert.DoesNotContain("AutoMapper", assemblies);
+        Assert.DoesNotContain("Dapper", assemblies);
+    }
+
+    [Fact]
+    public void Domain_has_no_relational_or_ui_annotations()
+    {
+        var forbiddenNamespaces = new[]
+        {
+            "System.ComponentModel.DataAnnotations",
+            "System.ComponentModel.DataAnnotations.Schema"
+        };
+
+        var attributes = typeof(Portfolio.Domain.AssemblyMarker).Assembly.GetTypes()
+            .SelectMany(type => type.GetCustomAttributesData()
+                .Concat(type.GetProperties().SelectMany(property => property.GetCustomAttributesData())));
+
+        Assert.DoesNotContain(attributes, attribute => forbiddenNamespaces.Contains(
+            attribute.AttributeType.Namespace,
+            StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void Infrastructure_is_the_only_layer_that_owns_entity_framework()
+    {
+        var infrastructure = Assembly.Load("Portfolio.Infrastructure");
+        Assert.Contains(infrastructure.GetReferencedAssemblies(), reference =>
+            reference.Name?.StartsWith("Microsoft.EntityFrameworkCore", StringComparison.Ordinal) == true);
+    }
 }

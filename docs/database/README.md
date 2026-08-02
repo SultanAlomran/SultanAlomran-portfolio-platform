@@ -36,3 +36,9 @@ dotnet ef database update --project src/Portfolio.Infrastructure --startup-proje
 ```
 
 Never migrate production automatically at API startup. Configure `ConnectionStrings__PortfolioDatabase` through local secrets, environment variables, a secret manager, or Azure Key Vault. For every future schema change, update entities/configurations, add metadata and SQL Server tests, generate and review a named migration and idempotent SQL, then synchronize this guide and `ERD.dbml`.
+
+## Cleanup validation status
+
+Entity-specific relationships, indexes, filters, constraints, precision, and delete behavior now live in the corresponding configuration class; the former centralized relationship switch has been removed. DbSet CLR property names use predictable plurals while existing explicit table mappings remain stable. The base API configuration has no database credential, and local configuration must be supplied externally.
+
+Migration generation, idempotent-script review, and live SQL Server execution remain required before this cleanup milestone can be declared complete. They were not fabricated in an environment without the pinned .NET 10 SDK. CI retains a temporary non-blocking pending-model check solely until `InitialDataFoundation` and `PortfolioDbContextModelSnapshot` are generated and committed.

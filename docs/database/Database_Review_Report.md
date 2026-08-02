@@ -49,3 +49,9 @@ Only deterministic, non-secret roles, permissions, categories, technologies, ski
 ## Remaining assumptions and resolved contradictions
 
 The prompt approves future-enhancement tables now and overrides the draft status. Status enums are numeric with explicit values. Skill deletion is Restrict to prevent accidental professional-data loss. Certification uniqueness is `(Name, Issuer)`. The profile singleton uses a constant `SingletonKey`. `MimeType` is the canonical media type. The DBML's Article, direct Infographic SeriesId, ProjectImage URL, unclear PublicCount, nullable publishing status, and duplicate counters are superseded. No unresolved contradiction blocks implementation.
+
+## Cleanup implementation review
+
+The mapping review removed the centralized entity-type switch. Each entity configuration now directly exposes its relationships, indexes, query filters, check constraints, precision, and delete behavior, and typed expressions replace the former string-based engagement and token mappings. Public DbSet names now use correct plurals without changing entity class names or the established explicit table mappings. Credential-bearing base configuration was removed.
+
+The model still contains exactly the approved 45 entities. No Article, `PublicCount`, direct `Infographic.SeriesId`, or `ProjectImage.ImageUrl` was introduced; `ProjectImage.MediaFileId` and `EntityStatistic` remain authoritative. Initial migration and real-SQL-Server validation are outstanding because this execution environment lacks .NET 10 and Docker.

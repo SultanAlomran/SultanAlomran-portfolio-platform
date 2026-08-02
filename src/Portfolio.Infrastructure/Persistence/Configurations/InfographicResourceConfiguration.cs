@@ -9,6 +9,6 @@ internal sealed class InfographicResourceConfiguration : IEntityTypeConfiguratio
     public void Configure(EntityTypeBuilder<InfographicResource> builder)
     {
         builder.ConfigureCommon("InfographicResources");
-        EntityRelationships.Configure(builder);
+        builder.HasOne(x => x.Infographic).WithMany(x => x.Resources).HasForeignKey(x => x.InfographicId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.ToTable(t => t.HasCheckConstraint("CK_InfographicResources_DisplayOrder", "[DisplayOrder] >= 0"));
     }
 }

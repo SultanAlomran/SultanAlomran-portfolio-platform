@@ -9,6 +9,6 @@ internal sealed class ReadingPathItemConfiguration : IEntityTypeConfiguration<Re
     public void Configure(EntityTypeBuilder<ReadingPathItem> builder)
     {
         builder.ConfigureCommon("ReadingPathItems");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.ReadingPathId, x.Position }).IsUnique(); builder.HasIndex(x => new { x.ReadingPathId, x.EntityType, x.EntityId }).IsUnique(); builder.HasOne(x => x.ReadingPath).WithMany(x => x.Items).HasForeignKey(x => x.ReadingPathId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.ToTable(t => t.HasCheckConstraint("CK_ReadingPathItems_Position", "[Position] > 0"));
     }
 }

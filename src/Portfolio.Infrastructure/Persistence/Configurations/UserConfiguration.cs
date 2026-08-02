@@ -9,6 +9,6 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
     public void Configure(EntityTypeBuilder<User> builder)
     {
         builder.ConfigureCommon("Users");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.UserName).IsUnique(); builder.HasIndex(x => x.Email).IsUnique();
     }
 }

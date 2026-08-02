@@ -9,6 +9,6 @@ internal sealed class PermissionConfiguration : IEntityTypeConfiguration<Permiss
     public void Configure(EntityTypeBuilder<Permission> builder)
     {
         builder.ConfigureCommon("Permissions");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

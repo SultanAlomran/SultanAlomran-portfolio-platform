@@ -9,6 +9,6 @@ internal sealed class InfographicCodeExampleConfiguration : IEntityTypeConfigura
     public void Configure(EntityTypeBuilder<InfographicCodeExample> builder)
     {
         builder.ConfigureCommon("InfographicCodeExamples");
-        EntityRelationships.Configure(builder);
+        builder.HasOne(x => x.Infographic).WithMany(x => x.CodeExamples).HasForeignKey(x => x.InfographicId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.ToTable(t => t.HasCheckConstraint("CK_InfographicCodeExamples_DisplayOrder", "[DisplayOrder] >= 0"));
     }
 }

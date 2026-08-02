@@ -9,6 +9,6 @@ internal sealed class SiteSettingConfiguration : IEntityTypeConfiguration<SiteSe
     public void Configure(EntityTypeBuilder<SiteSetting> builder)
     {
         builder.ConfigureCommon("SiteSettings");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.SettingKey).IsUnique();
     }
 }

@@ -9,6 +9,6 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
     public void Configure(EntityTypeBuilder<Role> builder)
     {
         builder.ConfigureCommon("Roles");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

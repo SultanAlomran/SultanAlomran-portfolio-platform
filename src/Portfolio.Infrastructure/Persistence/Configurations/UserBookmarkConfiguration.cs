@@ -9,6 +9,6 @@ internal sealed class UserBookmarkConfiguration : IEntityTypeConfiguration<UserB
     public void Configure(EntityTypeBuilder<UserBookmark> builder)
     {
         builder.ConfigureCommon("UserBookmarks");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.UserId, x.EntityType, x.EntityId }).IsUnique(); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
     }
 }

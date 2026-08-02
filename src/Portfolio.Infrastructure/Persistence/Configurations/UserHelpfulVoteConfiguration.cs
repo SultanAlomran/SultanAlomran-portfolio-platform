@@ -9,6 +9,6 @@ internal sealed class UserHelpfulVoteConfiguration : IEntityTypeConfiguration<Us
     public void Configure(EntityTypeBuilder<UserHelpfulVote> builder)
     {
         builder.ConfigureCommon("UserHelpfulVotes");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.UserId, x.EntityType, x.EntityId }).IsUnique(); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
     }
 }
