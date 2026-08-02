@@ -9,6 +9,6 @@ internal sealed class CategoryConfiguration : IEntityTypeConfiguration<Category>
     public void Configure(EntityTypeBuilder<Category> builder)
     {
         builder.ConfigureCommon("Categories");
-        EntityRelationships.Configure(builder);
+        builder.HasQueryFilter(x => !x.IsDeleted); builder.HasIndex(x => x.Name).IsUnique().HasFilter("[IsDeleted] = 0"); builder.HasIndex(x => x.Slug).IsUnique().HasFilter("[IsDeleted] = 0"); builder.HasOne(x => x.Parent).WithMany(x => x.Children).HasForeignKey(x => x.ParentId).OnDelete(DeleteBehavior.Restrict);
     }
 }

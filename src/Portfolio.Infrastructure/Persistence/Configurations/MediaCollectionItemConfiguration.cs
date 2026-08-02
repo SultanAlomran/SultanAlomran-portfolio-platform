@@ -9,6 +9,6 @@ internal sealed class MediaCollectionItemConfiguration : IEntityTypeConfiguratio
     public void Configure(EntityTypeBuilder<MediaCollectionItem> builder)
     {
         builder.ConfigureCommon("MediaCollectionItems");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.MediaCollectionId, x.MediaFileId }).IsUnique(); builder.HasOne(x => x.MediaCollection).WithMany(x => x.Items).HasForeignKey(x => x.MediaCollectionId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.HasOne(x => x.MediaFile).WithMany().HasForeignKey(x => x.MediaFileId).IsRequired().OnDelete(DeleteBehavior.Restrict); builder.ToTable(t => t.HasCheckConstraint("CK_MediaCollectionItems_DisplayOrder", "[DisplayOrder] >= 0"));
     }
 }

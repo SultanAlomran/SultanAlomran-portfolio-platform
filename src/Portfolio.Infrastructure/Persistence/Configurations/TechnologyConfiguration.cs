@@ -9,6 +9,6 @@ internal sealed class TechnologyConfiguration : IEntityTypeConfiguration<Technol
     public void Configure(EntityTypeBuilder<Technology> builder)
     {
         builder.ConfigureCommon("Technologies");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

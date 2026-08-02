@@ -9,6 +9,6 @@ internal sealed class NotificationConfiguration : IEntityTypeConfiguration<Notif
     public void Configure(EntityTypeBuilder<Notification> builder)
     {
         builder.ConfigureCommon("Notifications");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.UserId, x.IsRead, x.CreatedAt }); builder.HasOne(x => x.User).WithMany(x => x.Notifications).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.SetNull);
     }
 }

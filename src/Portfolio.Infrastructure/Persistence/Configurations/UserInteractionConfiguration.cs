@@ -9,6 +9,6 @@ internal sealed class UserInteractionConfiguration : IEntityTypeConfiguration<Us
     public void Configure(EntityTypeBuilder<UserInteraction> builder)
     {
         builder.ConfigureCommon("UserInteractions");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.EntityType, x.EntityId, x.InteractionType, x.CreatedAt }); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.SetNull);
     }
 }

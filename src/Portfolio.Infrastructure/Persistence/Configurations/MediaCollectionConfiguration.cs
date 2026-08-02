@@ -9,6 +9,6 @@ internal sealed class MediaCollectionConfiguration : IEntityTypeConfiguration<Me
     public void Configure(EntityTypeBuilder<MediaCollection> builder)
     {
         builder.ConfigureCommon("MediaCollections");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

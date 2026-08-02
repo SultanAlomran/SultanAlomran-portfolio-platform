@@ -9,6 +9,6 @@ internal sealed class ExperienceItemConfiguration : IEntityTypeConfiguration<Exp
     public void Configure(EntityTypeBuilder<ExperienceItem> builder)
     {
         builder.ConfigureCommon("ExperienceItems");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.StartDate, x.DisplayOrder }); builder.ToTable(t => { t.HasCheckConstraint("CK_ExperienceItems_DateRange", "[EndDate] IS NULL OR [EndDate] >= [StartDate]"); t.HasCheckConstraint("CK_ExperienceItems_DisplayOrder", "[DisplayOrder] >= 0"); });
     }
 }

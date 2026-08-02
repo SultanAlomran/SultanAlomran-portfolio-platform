@@ -1,95 +1,51 @@
 # Sultan Alomran Portfolio Platform
 
-A premium personal engineering portfolio and technical-content showcase. The solution contains an independently deployable public Angular application, private Angular CMS shell, and ASP.NET Core API, following the approved Clean Architecture and feature-oriented boundaries.
+A personal engineering portfolio and technical-content platform built as two independent Angular clients and an ASP.NET Core Clean Architecture backend.
 
-## Current milestone
+## Foundation status
 
-**Solution foundation** establishes buildable hosts, dependency boundaries, local configuration, validation tests, and CI. The visible Angular content is deliberately a minimal responsive shell, not the approved homepage or admin dashboard.
+1. **Solution foundation — complete.** The API composition root, dependency boundaries, public/client shells, automated tests, and CI validation are established.
+2. **Complete data foundation — complete.** SQL Server and EF Core model the approved 45 entities for profile, taxonomy, Visual Handbook, projects, media, learning paths, engagement, analytics, authorization, tokens, and auditing.
+3. **Data-foundation cleanup — in progress.** Entity mappings are colocated with their `IEntityTypeConfiguration<TEntity>` implementations, DbSet naming is consistent, committed credentials are removed, and migration validation is enforced once generated artifacts are available.
 
-## Solution structure
+The model supports Arabic and other multilingual text through Unicode `nvarchar` columns. Selective soft deletion applies only to Category, Infographic, Project, Series, and ReadingPath, with active-row filtered uniqueness. Custom authorization persistence stores users, roles, permissions, junctions, sessions, and cryptographic token hashes—never raw tokens. Deterministic reference seed data contains roles, permissions, and safe configuration only; it contains no account, credential, secret, token, or analytics data.
+
+## Structure and dependency direction
+
+`Domain` and `Shared` are innermost. `Application` references them; `Infrastructure` owns EF Core and references the inner projects; `Portfolio.Api` is the composition root. The Angular applications communicate only through HTTP/API contracts.
 
 ```text
-src/
-├── Portfolio.Api             ASP.NET Core API host
-├── Portfolio.Application     use-case boundary
-├── Portfolio.Domain          dependency-free domain boundary
-├── Portfolio.Infrastructure  technical adapters boundary
-├── Portfolio.Shared          narrowly shared .NET primitives
-├── Portfolio.Web             public Angular + Tailwind shell
-└── Portfolio.Admin           private Angular shell
-tests/
-├── Portfolio.ArchitectureTests
-├── Portfolio.UnitTests
-└── Portfolio.IntegrationTests
+src/Portfolio.Api             API composition root
+src/Portfolio.Application     use-case boundary
+src/Portfolio.Domain          dependency-free domain model
+src/Portfolio.Infrastructure  EF Core and technical adapters
+src/Portfolio.Shared          shared .NET primitives
+src/Portfolio.Web             public Angular client
+src/Portfolio.Admin           private Angular client
+tests/                        unit, architecture, metadata, and integration tests
 ```
 
-### Dependency direction
+## Database environments and configuration
 
-`Domain` and `Shared` are innermost. `Application` references `Domain` and `Shared`. `Infrastructure` references `Application`, `Domain`, and `Shared`. The API composition root references `Application`, `Infrastructure`, and `Shared`. Neither Angular app shares C# DTOs or accesses persistence. Future capabilities should be cohesive vertical slices while preserving these compile-time directions.
+Development requires SQL Server Developer Edition, compatible LocalDB, or a local SQL Server container. CI should use a disposable SQL Server container/database. Production targets Azure SQL Database; configuration belongs in Azure environment variables or Key Vault, with managed identity preferred when supported.
 
-## Frontend version strategy
+Supply `ConnectionStrings__PortfolioDatabase` locally. The committed `appsettings.json` deliberately contains an empty value. Development alternatives include environment variables, `dotnet user-secrets`, local Docker configuration, or an ignored developer-local settings file. Copy `.env.example` and replace `<LOCAL_PASSWORD>` locally; never commit it.
 
-| Application | Angular | TypeScript | Styling | Node.js |
-|---|---|---|---|---|
-| Portfolio.Web | Stable 22 (`^22.0.0`) | Stable `>=6.0.0 <6.1.0` | Tailwind CSS 4.1.14+, custom public design | 22 LTS (`>=22.12.0 <23`) |
-| Portfolio.Admin | Stable 20.3.7 | 5.9.3 | Tailwind CSS 4.1.14+, future Metronic Tailwind integration | 22 LTS (`>=22.12.0 <23`) |
+The intended initial migration is `InitialDataFoundation`. Migration artifacts remain pending where the pinned .NET 10 SDK is unavailable; see `docs/database/README.md` for the exact generation and validation commands. The API never applies migrations automatically at startup.
 
-The version difference is intentional. The applications have independent manifests, future lockfiles, tool configurations, builds, deployments, and upgrade reviews; they do not share Angular runtime code or dependencies. Both consume `Portfolio.Api` through HTTP/OpenAPI contracts. `Portfolio.Web` uses the current stable Angular major for its custom experience, while `Portfolio.Admin` stays on Angular 20 because the current official Metronic Tailwind Angular integration example targets Angular 20 with Tailwind CSS v4+.
-
-The .NET SDK is pinned to 10.0.100 with latest-patch roll-forward and previews disabled. Node.js 22 LTS is the common runtime range selected for both frontends rather than an unnecessarily exact patch.
-
-## Prerequisites
-
-Install the pinned .NET SDK and a Node.js version in each application's declared `engines` range. Trust the ASP.NET Core development HTTPS certificate when running HTTPS locally. No database, storage emulator, credentials, or secrets are required for this milestone.
-
-## Restore, build, and test
+## Validation
 
 ```bash
 dotnet restore Portfolio.sln
 dotnet build Portfolio.sln --configuration Release --no-restore
 dotnet test Portfolio.sln --configuration Release --no-build
-
-npm --prefix src/Portfolio.Web ci
-npm --prefix src/Portfolio.Web run build
-npm --prefix src/Portfolio.Admin ci
-npm --prefix src/Portfolio.Admin run build
+dotnet format Portfolio.sln --verify-no-changes --no-restore
+dotnet list Portfolio.sln package --vulnerable --include-transitive
+dotnet ef migrations has-pending-model-changes --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
 ```
 
-Run all available validation with `./scripts/validate.sh`. Formatting can be checked with `dotnet format Portfolio.sln --verify-no-changes --no-restore`; each Angular project supports `npm run lint`.
+SQL Server integration tests require Docker or another isolated SQL Server. Metadata and architecture tests validate the model without touching production. NuGet auditing, warnings-as-errors, and NU1903 enforcement remain enabled.
 
-Each Angular application requires its own `package-lock.json`. These lockfiles must be generated and committed separately from an environment with npm registry access before `npm ci`, Angular builds, or Angular CI validation can run. CI reports this temporary limitation and automatically enables each application's install, lint, and production-build steps when its lockfile exists; it does not substitute `npm install` for reproducible validation.
+## Next work
 
-## Run locally
-
-| Application | Command | Local URL |
-|---|---|---|
-| API | `dotnet run --project src/Portfolio.Api` | `http://localhost:5100` / `https://localhost:7100` |
-| API health | — | `http://localhost:5100/health` |
-| OpenAPI (Development) | — | `http://localhost:5100/openapi/v1.json` |
-| Public web | `npm --prefix src/Portfolio.Web start` | `http://localhost:4200` |
-| Admin | `npm --prefix src/Portfolio.Admin start` | `http://localhost:4300` |
-
-Configuration is layered through `appsettings.json` and environment-specific ASP.NET Core files. Override non-secret values with environment variables such as `Cors__AllowedOrigins__0`. Angular development and production environment files define only the public API base URL.
-
-## Intentionally not implemented
-
-This milestone contains no database entities, DbContext, EF Core packages/configuration, migrations, seed data, repositories, authentication/authorization, JWTs, business APIs or services, portfolio features, analytics, uploads, full homepage, dashboard, Metronic assets, Azure deployment, or persistence. Those require their dedicated approved milestones.
-
-## Next milestone
-
-`feature/persistence-foundation`, after the blocking database decisions in `docs/Database_Specification.md` are resolved.
-
-## Complete data-foundation milestone
-
-The complete 45-entity SQL Server/EF Core persistence model is now established, including the professional profile, Visual Handbook, projects, reusable media, learning journeys, engagement, analytics, custom authorization/token persistence, auditing, constraints, deterministic non-secret seed data, and an EF database health check. Articles and `PublicCount` are intentionally excluded; administrator account bootstrap and all authentication/business APIs remain deferred.
-
-Install SQL Server and .NET 10, then provide `ConnectionStrings__PortfolioDatabase` (or `ConnectionStrings:PortfolioDatabase` in local configuration). All bilingual fields use Unicode `nvarchar`; no duplicate language columns are used. Selective soft deletion applies only to Category, Infographic, Project, Series, and ReadingPath.
-
-Migration generation is pending in this SDK-less execution environment. Generate and apply it with:
-
-```bash
-dotnet ef migrations add InitialDataFoundation --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api --output-dir Persistence/Migrations
-dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
-```
-
-The deterministic seed contains only a role, permissions, and a safe setting—never users, credentials, secrets, raw tokens, analytics, or public claims. Run `dotnet test Portfolio.sln --configuration Release` for domain, architecture, metadata, and integration validation. SQL Server container tests require Docker.
+Future work must proceed as complete end-to-end vertical slices rather than another horizontal foundation. The recommended first slice is `feature/projects`, covering one coherent project capability from persistence through API contract and user experience without broad unrelated redesign.
