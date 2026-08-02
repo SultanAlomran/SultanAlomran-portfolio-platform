@@ -1,6 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <!-- Overrides Microsoft.Data.SqlClient's vulnerable 9.0.0 transitive cryptography dependency. -->
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <ProjectReference Include="../Portfolio.Application/Portfolio.Application.csproj" />
     <ProjectReference Include="../Portfolio.Domain/Portfolio.Domain.csproj" />
     <ProjectReference Include="../Portfolio.Shared/Portfolio.Shared.csproj" />

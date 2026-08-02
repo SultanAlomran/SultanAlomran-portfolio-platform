@@ -1,0 +1,711 @@
+// Sultan Alomran Portfolio Platform
+// DBML draft for dbdiagram.io
+// Source priority: Database Specification Draft 0.1 -> Project 00 -> ERD image
+//
+// IMPORTANT MODELING NOTES
+// 1) All user-facing and potentially Arabic text uses SQL Server nvarchar.
+// 2) This enables Arabic storage, but does NOT yet create separate Arabic/English columns.
+// 3) Lengths that were TBD in the source specification are proposed for diagramming.
+// 4) Infographics.SeriesId is omitted; SeriesItems is authoritative.
+// 5) ProjectImages uses required reusable MediaFileId references.
+// 6) Soft delete is not applied.
+// 8) Proposed status/publication fields are marked for confirmation.
+
+Project SultanAlomranPortfolioPlatform {
+  database_type: 'SQLServer'
+  Note: 'Draft ERD for validation. Arabic-capable strings use nvarchar.'
+}
+
+Table Users {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserName nvarchar(100) [not null]
+  Email nvarchar(320) [not null]
+  PasswordHash nvarchar(500) [not null]
+  FullName nvarchar(200) [not null]
+  IsActive bit [not null, default: 1]
+  EmailVerified bit [not null, default: 0]
+  CreatedAt datetime2 [not null]
+  UpdatedAt datetime2
+
+  indexes {
+    UserName [unique, name: 'UX_Users_UserName']
+    Email [unique, name: 'UX_Users_Email']
+  }
+}
+
+Table Roles {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(150) [not null]
+  Description nvarchar(500)
+
+  indexes {
+    Name [unique, name: 'UX_Roles_Name']
+  }
+}
+
+Table Permissions {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(150) [not null]
+  Description nvarchar(500)
+
+  indexes {
+    Name [unique, name: 'UX_Permissions_Name']
+  }
+}
+
+Table UserRoles {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  RoleId uniqueidentifier [not null]
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (UserId, RoleId) [unique, name: 'UX_UserRoles_UserId_RoleId']
+    UserId [name: 'IX_UserRoles_UserId']
+    RoleId [name: 'IX_UserRoles_RoleId']
+  }
+}
+
+Table RolePermissions {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  RoleId uniqueidentifier [not null]
+  PermissionId uniqueidentifier [not null]
+
+  indexes {
+    (RoleId, PermissionId) [unique, name: 'UX_RolePermissions_RoleId_PermissionId']
+    RoleId [name: 'IX_RolePermissions_RoleId']
+    PermissionId [name: 'IX_RolePermissions_PermissionId']
+  }
+}
+
+Table Categories {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(150) [not null]
+  Slug nvarchar(200) [not null]
+  Description nvarchar(max)
+  ParentId uniqueidentifier
+  Icon nvarchar(200)
+  DisplayOrder int [not null, default: 0]
+  IsActive bit [not null, default: 1]
+  CreatedAt datetime2 [not null]
+  UpdatedAt datetime2
+
+  indexes {
+    Name [unique, name: 'UX_Categories_Name']
+    Slug [unique, name: 'UX_Categories_Slug']
+    ParentId [name: 'IX_Categories_ParentId']
+  }
+}
+
+Table Tags {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(150) [not null]
+  Slug nvarchar(200) [not null]
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    Name [unique, name: 'UX_Tags_Name']
+    Slug [unique, name: 'UX_Tags_Slug']
+  }
+}
+
+Table Series {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(200) [not null]
+  Slug nvarchar(200) [not null]
+  Description nvarchar(max)
+  DisplayOrder int [not null, default: 0]
+  IsActive bit [not null, default: 1]
+  CreatedAt datetime2 [not null]
+  UpdatedAt datetime2
+
+  indexes {
+    Slug [unique, name: 'UX_Series_Slug']
+  }
+}
+
+Table Infographics {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Title nvarchar(250) [not null]
+  Slug nvarchar(200) [not null]
+  ShortDescription nvarchar(500) [not null]
+  Description nvarchar(max)
+  CategoryId uniqueidentifier [not null]
+  DifficultyLevel tinyint [not null, note: '1 Beginner, 2 Intermediate, 3 Advanced']
+  Status tinyint [not null, default: 0, note: 'Proposed: 0 Draft, 1 Published, 2 Archived']
+  PublishedAt datetime2 [note: 'Proposed; confirm']
+  ViewCount int [not null, default: 0]
+  CreatedAt datetime2 [not null]
+  CreatedBy uniqueidentifier
+  UpdatedAt datetime2
+  UpdatedBy uniqueidentifier
+
+  indexes {
+    Slug [unique, name: 'UX_Infographics_Slug']
+    CategoryId [name: 'IX_Infographics_CategoryId']
+    (Status, PublishedAt) [name: 'IX_Infographics_Status_PublishedAt']
+  }
+
+  Note: 'Series membership is modeled through SeriesItems only.'
+}
+
+Table SeriesItems {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SeriesId uniqueidentifier [not null]
+  InfographicId uniqueidentifier [not null]
+  Position int [not null]
+
+  indexes {
+    (SeriesId, InfographicId) [unique]
+    (SeriesId, Position) [unique, note: 'Proposed; confirm']
+  }
+}
+
+Table InfographicTags {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  InfographicId uniqueidentifier [not null]
+  TagId uniqueidentifier [not null]
+
+  indexes {
+    (InfographicId, TagId) [unique]
+  }
+}
+
+Table InfographicSteps {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  InfographicId uniqueidentifier [not null]
+  StepNumber int [not null]
+  Title nvarchar(250) [not null]
+  Content nvarchar(max)
+  ImageId uniqueidentifier
+  DisplayOrder int [not null, default: 0]
+
+  indexes {
+    (InfographicId, StepNumber) [unique]
+  }
+}
+
+Table InfographicResources {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  InfographicId uniqueidentifier [not null]
+  Title nvarchar(250) [not null]
+  Url nvarchar(2048) [not null]
+  ResourceType nvarchar(100) [not null]
+  DisplayOrder int [not null, default: 0]
+}
+
+Table InfographicCodeExamples {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  InfographicId uniqueidentifier [not null]
+  Title nvarchar(250) [not null]
+  Language nvarchar(100) [not null]
+  Code nvarchar(max) [not null]
+  FilePath nvarchar(1000)
+  DisplayOrder int [not null, default: 0]
+}
+
+Table Projects {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Title nvarchar(250) [not null]
+  Slug nvarchar(200) [not null]
+  ShortDescription nvarchar(500) [not null]
+  Description nvarchar(max)
+  ThumbnailMediaFileId uniqueidentifier
+  LiveUrl nvarchar(2048)
+  Status tinyint [not null, default: 0, note: 'Proposed: 0 Draft, 1 Published, 2 Archived']
+  PublishedAt datetime2 [note: 'Proposed; confirm']
+  CreatedBy uniqueidentifier
+  CreatedAt datetime2 [not null]
+  UpdatedBy uniqueidentifier
+  UpdatedAt datetime2
+
+  indexes {
+    Slug [unique, name: 'UX_Projects_Slug']
+    ThumbnailMediaFileId [name: 'IX_Projects_ThumbnailMediaFileId']
+    (Status, PublishedAt) [name: 'IX_Projects_Status_PublishedAt']
+  }
+}
+
+Table Technologies {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(150) [not null]
+  Icon nvarchar(200)
+  Category nvarchar(100) [not null]
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    Name [unique, name: 'UX_Technologies_Name']
+  }
+}
+
+Table ProjectTechnologies {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  ProjectId uniqueidentifier [not null]
+  TechnologyId uniqueidentifier [not null]
+
+  indexes {
+    (ProjectId, TechnologyId) [unique]
+  }
+}
+
+Table ProjectImages {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  ProjectId uniqueidentifier [not null]
+  MediaFileId uniqueidentifier [not null]
+  AltText nvarchar(500) [not null]
+  Caption nvarchar(500)
+  DisplayOrder int [not null, default: 0]
+}
+
+Table ProjectLinks {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  ProjectId uniqueidentifier [not null]
+  Title nvarchar(250) [not null]
+  Url nvarchar(2048) [not null]
+  LinkType nvarchar(100) [not null]
+  DisplayOrder int [not null, default: 0]
+}
+
+Table MediaFiles {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  FileName nvarchar(255) [not null]
+  OriginalFileName nvarchar(255) [not null]
+  FilePath nvarchar(1000) [not null]
+  FileType nvarchar(150) [not null]
+  FileSize bigint [not null]
+  Width int
+  Height int
+  Checksum nvarchar(128) [note: 'Proposed']
+  AltText nvarchar(500) [note: 'Proposed']
+  StorageProvider nvarchar(100) [note: 'Proposed']
+  UploadedBy uniqueidentifier
+  UploadedAt datetime2 [not null]
+
+  indexes {
+    FilePath [unique]
+    Checksum
+  }
+
+  Note: 'OriginalFileName is intentionally not unique.'
+}
+
+Table MediaCollections {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(200) [not null]
+  Description nvarchar(500)
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    Name [unique]
+  }
+}
+
+Table MediaCollectionItems {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  CollectionId uniqueidentifier [not null]
+  MediaFileId uniqueidentifier [not null]
+  DisplayOrder int [not null, default: 0]
+
+  indexes {
+    (CollectionId, MediaFileId) [unique]
+  }
+}
+
+Table ReadingPaths {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Title nvarchar(250) [not null]
+  Slug nvarchar(200) [not null]
+  Description nvarchar(max)
+  Level nvarchar(50) [not null]
+  Icon nvarchar(200)
+  IsActive bit [not null, default: 1]
+  DisplayOrder int [not null, default: 0]
+  CreatedAt datetime2 [not null]
+  UpdatedAt datetime2
+
+  indexes {
+    Slug [unique]
+  }
+}
+
+Table ReadingPathItems {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  ReadingPathId uniqueidentifier [not null]
+  EntityId uniqueidentifier [not null, note: 'Polymorphic; no SQL FK']
+  Title nvarchar(250)
+  Position int [not null]
+  IsOptional bit [not null, default: 0]
+
+  indexes {
+    (ReadingPathId, Position) [unique]
+    (ReadingPathId, EntityType, EntityId) [unique]
+  }
+}
+
+Table UserBookmarks {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier [not null]
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (UserId, EntityType, EntityId) [unique]
+  }
+}
+
+Table UserRatings {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier [not null]
+  Rating tinyint [not null, note: 'CHECK 1 through 5']
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (UserId, EntityType, EntityId) [unique]
+  }
+}
+
+Table UserHelpfulVotes {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier [not null]
+  IsHelpful bit [not null]
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (UserId, EntityType, EntityId) [unique]
+  }
+}
+
+Table UserInteractions {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier [not null]
+  InteractionType nvarchar(50) [not null]
+  IpAddress nvarchar(45) [note: 'Privacy review']
+  UserAgent nvarchar(1000) [note: 'Privacy review']
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (EntityType, EntityId, InteractionType, CreatedAt)
+    CreatedAt
+  }
+}
+
+Table ContactMessages {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(200) [not null]
+  Email nvarchar(320) [not null]
+  Subject nvarchar(250) [not null]
+  Message nvarchar(max) [not null]
+  PageRoute nvarchar(2048)
+  Referrer nvarchar(2048)
+  Status tinyint [not null, default: 0, note: '0 New, 1 InProgress, 2 Closed']
+  CreatedAt datetime2 [not null]
+  UpdatedAt datetime2
+
+  indexes {
+    (Status, CreatedAt)
+  }
+}
+
+Table Sessions {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SessionId nvarchar(200) [not null]
+  UserId uniqueidentifier
+  IpAddress nvarchar(45)
+  Device nvarchar(150)
+  Browser nvarchar(150)
+  Country nvarchar(100)
+  StartedAt datetime2 [not null]
+  EndedAt datetime2
+
+  indexes {
+    SessionId [unique]
+    UserId
+    StartedAt
+  }
+}
+
+Table PageViews {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Url nvarchar(2048) [not null]
+  Title nvarchar(250) [not null]
+  Referrer nvarchar(2048)
+  UserId uniqueidentifier
+  SessionId uniqueidentifier
+  Country nvarchar(100)
+  Device nvarchar(150)
+  Browser nvarchar(150)
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    CreatedAt
+    Url
+    UserId
+    SessionId
+  }
+}
+
+Table DailyStats {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Date date [not null]
+  VisitorCount int [not null, default: 0]
+  SessionCount int [not null, default: 0]
+  PageViewCount int [not null, default: 0]
+  UniqueUsers int [not null, default: 0]
+  BounceRate decimal(5,2)
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    Date [unique]
+  }
+}
+
+Table PopularSearches {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SearchTerm nvarchar(300) [not null]
+  SearchCount int [not null, default: 0]
+
+  indexes {
+    SearchTerm [unique]
+  }
+}
+
+Table EntityStatistics {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier [not null]
+  ViewCount int [not null, default: 0]
+  UniqueViewCount int [not null, default: 0]
+  DownloadCount int [not null, default: 0]
+  ShareCount int [not null, default: 0]
+  HelpfulCount int [not null, default: 0]
+  RatingAverage decimal(5,2) [not null, default: 0]
+  UpdatedAt datetime2 [not null]
+
+  indexes {
+    (EntityType, EntityId) [unique]
+  }
+
+  Note: 'Denormalized cache; source events remain authoritative.'
+}
+
+Table SiteSettings {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SettingKey nvarchar(200) [not null]
+  SettingValue nvarchar(max)
+  Description nvarchar(500)
+  IsEncrypted bit [not null, default: 0]
+  UpdatedAt datetime2
+
+  indexes {
+    SettingKey [unique]
+  }
+}
+
+Table AuditLogs {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier
+  Action nvarchar(150) [not null]
+  EntityType nvarchar(100) [not null]
+  EntityId uniqueidentifier
+  OldValues nvarchar(max)
+  NewValues nvarchar(max)
+  IpAddress nvarchar(45)
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (EntityType, EntityId, CreatedAt)
+    CreatedAt
+  }
+}
+
+Table Notifications {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier
+  Title nvarchar(250) [not null]
+  Message nvarchar(max) [not null]
+  Type tinyint [not null, note: 'Numeric mapping TBD']
+  IsRead bit [not null, default: 0]
+  ReadAt datetime2
+  CreatedAt datetime2 [not null]
+
+  indexes {
+    (UserId, IsRead, CreatedAt)
+  }
+}
+
+Table RefreshTokens {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  TokenHash nvarchar(500) [not null]
+  ExpiresAt datetime2 [not null]
+  RevokedAt datetime2
+  CreatedAt datetime2 [not null]
+  CreatedByIp nvarchar(45)
+  ReplacedByTokenId uniqueidentifier
+  ReplacedByIp nvarchar(45)
+
+  indexes {
+    TokenHash [unique]
+    (UserId, RevokedAt)
+  }
+}
+
+Table PasswordResetTokens {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  TokenHash nvarchar(500) [not null]
+  ExpiresAt datetime2 [not null]
+  CreatedAt datetime2 [not null]
+  UsedAt datetime2
+  IpUsed nvarchar(45)
+  IpUsedFrom nvarchar(45) [note: 'ERD label unclear']
+
+  indexes {
+    TokenHash [unique]
+    (UserId, ExpiresAt)
+  }
+}
+
+Table EmailVerificationTokens {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  UserId uniqueidentifier [not null]
+  TokenHash nvarchar(500) [not null]
+  ExpiresAt datetime2 [not null]
+  CreatedAt datetime2 [not null]
+  UsedAt datetime2
+  IpUsed nvarchar(45)
+
+  indexes {
+    TokenHash [unique]
+    (UserId, ExpiresAt)
+  }
+}
+
+// Relationships
+
+Ref: UserRoles.UserId > Users.Id [delete: cascade]
+Ref: UserRoles.RoleId > Roles.Id [delete: restrict]
+
+Ref: RolePermissions.RoleId > Roles.Id [delete: cascade]
+Ref: RolePermissions.PermissionId > Permissions.Id [delete: restrict]
+
+Ref: Categories.ParentId > Categories.Id [delete: restrict]
+
+Ref: Infographics.CategoryId > Categories.Id [delete: restrict]
+Ref: Infographics.CreatedBy > Users.Id [delete: set null]
+Ref: Infographics.UpdatedBy > Users.Id [delete: set null]
+
+Ref: SeriesItems.SeriesId > Series.Id [delete: cascade]
+Ref: SeriesItems.InfographicId > Infographics.Id [delete: cascade]
+
+Ref: InfographicTags.InfographicId > Infographics.Id [delete: cascade]
+Ref: InfographicTags.TagId > Tags.Id [delete: cascade]
+
+Ref: InfographicSteps.InfographicId > Infographics.Id [delete: cascade]
+Ref: InfographicSteps.ImageId > MediaFiles.Id [delete: restrict]
+
+Ref: InfographicResources.InfographicId > Infographics.Id [delete: cascade]
+Ref: InfographicCodeExamples.InfographicId > Infographics.Id [delete: cascade]
+
+Ref: Projects.ThumbnailMediaFileId > MediaFiles.Id [delete: restrict]
+Ref: Projects.CreatedBy > Users.Id [delete: set null]
+Ref: Projects.UpdatedBy > Users.Id [delete: set null]
+
+Ref: ProjectTechnologies.ProjectId > Projects.Id [delete: cascade]
+Ref: ProjectTechnologies.TechnologyId > Technologies.Id [delete: restrict]
+
+Ref: ProjectImages.ProjectId > Projects.Id [delete: cascade]
+Ref: ProjectImages.MediaFileId > MediaFiles.Id [delete: restrict]
+Ref: ProjectLinks.ProjectId > Projects.Id [delete: cascade]
+
+Ref: MediaFiles.UploadedBy > Users.Id [delete: set null]
+
+Ref: MediaCollectionItems.CollectionId > MediaCollections.Id [delete: cascade]
+Ref: MediaCollectionItems.MediaFileId > MediaFiles.Id [delete: restrict]
+
+Ref: ReadingPathItems.ReadingPathId > ReadingPaths.Id [delete: cascade]
+
+Ref: UserBookmarks.UserId > Users.Id [delete: cascade]
+Ref: UserRatings.UserId > Users.Id [delete: cascade]
+Ref: UserHelpfulVotes.UserId > Users.Id [delete: cascade]
+Ref: UserInteractions.UserId > Users.Id [delete: set null]
+
+Ref: Sessions.UserId > Users.Id [delete: set null]
+
+Ref: PageViews.UserId > Users.Id [delete: set null]
+Ref: PageViews.SessionId > Sessions.Id [delete: set null]
+
+Ref: AuditLogs.UserId > Users.Id [delete: set null]
+Ref: Notifications.UserId > Users.Id [delete: set null]
+
+Ref: RefreshTokens.UserId > Users.Id [delete: cascade]
+Ref: RefreshTokens.ReplacedByTokenId > RefreshTokens.Id [delete: no action]
+
+Ref: PasswordResetTokens.UserId > Users.Id [delete: cascade]
+Ref: EmailVerificationTokens.UserId > Users.Id [delete: cascade]
+
+Table Profiles {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SingletonKey nvarchar(20) [not null, unique]
+  FullName nvarchar(200) [not null]
+  Headline nvarchar(250)
+  Summary nvarchar(max)
+  Location nvarchar(200)
+  Email nvarchar(320)
+  WebsiteUrl nvarchar(2048)
+  ProfileImageMediaFileId uniqueidentifier
+  CvMediaFileId uniqueidentifier
+  CreatedAt datetime2 [not null]
+  CreatedBy uniqueidentifier
+  UpdatedAt datetime2
+  UpdatedBy uniqueidentifier
+}
+Table ExperienceItems {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  JobTitle nvarchar(250) [not null]
+  OrganizationName nvarchar(250) [not null]
+  Description nvarchar(max)
+  StartDate date [not null]
+  EndDate date
+  IsCurrent bit [not null]
+  DisplayOrder int [not null, default: 0]
+  CreatedAt datetime2 [not null]
+}
+Table SkillCategories {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(200) [not null, unique]
+  Description nvarchar(max)
+  DisplayOrder int [not null, default: 0]
+  IsActive bit [not null, default: 1]
+}
+Table Skills {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  SkillCategoryId uniqueidentifier [not null]
+  Name nvarchar(200) [not null]
+  Description nvarchar(max)
+  Proficiency int [not null]
+  DisplayOrder int [not null, default: 0]
+  IsActive bit [not null, default: 1]
+}
+Table Certifications {
+  Id uniqueidentifier [pk, default: `NEWSEQUENTIALID()`]
+  Name nvarchar(200) [not null]
+  Issuer nvarchar(250) [not null]
+  IssuedDate date [not null]
+  ExpiresDate date
+  CredentialId nvarchar(500)
+  VerificationUrl nvarchar(2048)
+  MediaFileId uniqueidentifier
+  DisplayOrder int [not null, default: 0]
+}
+Ref: Profiles.ProfileImageMediaFileId > MediaFiles.Id [delete: restrict]
+Ref: Profiles.CvMediaFileId > MediaFiles.Id [delete: restrict]
+Ref: Skills.SkillCategoryId > SkillCategories.Id [delete: restrict]
+Ref: Certifications.MediaFileId > MediaFiles.Id [delete: restrict]

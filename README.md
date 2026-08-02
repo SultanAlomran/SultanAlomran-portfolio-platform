@@ -78,3 +78,18 @@ This milestone contains no database entities, DbContext, EF Core packages/config
 ## Next milestone
 
 `feature/persistence-foundation`, after the blocking database decisions in `docs/Database_Specification.md` are resolved.
+
+## Complete data-foundation milestone
+
+The complete 45-entity SQL Server/EF Core persistence model is now established, including the professional profile, Visual Handbook, projects, reusable media, learning journeys, engagement, analytics, custom authorization/token persistence, auditing, constraints, deterministic non-secret seed data, and an EF database health check. Articles and `PublicCount` are intentionally excluded; administrator account bootstrap and all authentication/business APIs remain deferred.
+
+Install SQL Server and .NET 10, then provide `ConnectionStrings__PortfolioDatabase` (or `ConnectionStrings:PortfolioDatabase` in local configuration). All bilingual fields use Unicode `nvarchar`; no duplicate language columns are used. Selective soft deletion applies only to Category, Infographic, Project, Series, and ReadingPath.
+
+Migration generation is pending in this SDK-less execution environment. Generate and apply it with:
+
+```bash
+dotnet ef migrations add InitialDataFoundation --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api --output-dir Persistence/Migrations
+dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
+```
+
+The deterministic seed contains only a role, permissions, and a safe setting—never users, credentials, secrets, raw tokens, analytics, or public claims. Run `dotnet test Portfolio.sln --configuration Release` for domain, architecture, metadata, and integration validation. SQL Server container tests require Docker.

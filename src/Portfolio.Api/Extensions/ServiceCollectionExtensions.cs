@@ -25,7 +25,7 @@ internal static class ServiceCollectionExtensions
             policy.WithOrigins(configuration.GetSection(CorsOptions.SectionName).Get<CorsOptions>()?.AllowedOrigins ?? [])
                 .AllowAnyHeader().AllowAnyMethod()));
         services.AddApplication();
-        services.AddInfrastructure();
+        services.AddInfrastructure(configuration);
         return services;
     }
 
