@@ -98,8 +98,8 @@ internal static class EntityRelationships
 
     private static void Soft<T>(EntityTypeBuilder<T> b) where T : SoftDeletableEntity { b.HasQueryFilter(x => !x.IsDeleted); }
     private static void DisplayOrder<T>(EntityTypeBuilder<T> b, string table) where T : Entity => b.ToTable(t => t.HasCheckConstraint($"CK_{table}_DisplayOrder", "[DisplayOrder] >= 0"));
-    private static void Engagement<T>(EntityTypeBuilder<T> b, System.Linq.Expressions.Expression<Func<T, User>> nav) where T : Entity
-    { b.HasIndex("UserId", "EntityType", "EntityId").IsUnique(); b.HasOne(nav).WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade); }
-    private static void Token<T>(EntityTypeBuilder<T> b, System.Linq.Expressions.Expression<Func<T, User>> nav) where T : Entity
-    { b.HasIndex("TokenHash").IsUnique(); b.HasIndex("UserId", "ExpiresAt"); b.HasOne(nav).WithMany().HasForeignKey("UserId").OnDelete(DeleteBehavior.Cascade); }
+    private static void Engagement<T>(EntityTypeBuilder<T> b, System.Linq.Expressions.Expression<Func<T, User?>> nav) where T : Entity
+    { b.HasIndex("UserId", "EntityType", "EntityId").IsUnique(); b.HasOne(nav).WithMany().HasForeignKey("UserId").IsRequired().OnDelete(DeleteBehavior.Cascade); }
+    private static void Token<T>(EntityTypeBuilder<T> b, System.Linq.Expressions.Expression<Func<T, User?>> nav) where T : Entity
+    { b.HasIndex("TokenHash").IsUnique(); b.HasIndex("UserId", "ExpiresAt"); b.HasOne(nav).WithMany().HasForeignKey("UserId").IsRequired().OnDelete(DeleteBehavior.Cascade); }
 }
