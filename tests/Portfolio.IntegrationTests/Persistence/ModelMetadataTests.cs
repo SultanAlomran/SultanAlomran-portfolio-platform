@@ -25,8 +25,8 @@ public sealed class ModelMetadataTests
     public void Only_approved_content_has_soft_delete_filters()
     {
         Type[] filtered = [typeof(Category), typeof(Infographic), typeof(Project), typeof(Series), typeof(ReadingPath)];
-        Assert.All(filtered, type => Assert.NotNull(Model.FindEntityType(type)!.GetQueryFilter()));
-        Assert.Null(Model.FindEntityType(typeof(Session))!.GetQueryFilter());
+        Assert.All(filtered, type => Assert.NotEmpty(Model.FindEntityType(type)!.GetDeclaredQueryFilters()));
+        Assert.Empty(Model.FindEntityType(typeof(Session))!.GetDeclaredQueryFilters());
     }
 
     [Fact]
