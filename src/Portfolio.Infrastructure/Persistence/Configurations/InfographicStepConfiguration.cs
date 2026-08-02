@@ -9,6 +9,6 @@ internal sealed class InfographicStepConfiguration : IEntityTypeConfiguration<In
     public void Configure(EntityTypeBuilder<InfographicStep> builder)
     {
         builder.ConfigureCommon("InfographicSteps");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.InfographicId, x.StepNumber }).IsUnique(); builder.HasOne(x => x.Infographic).WithMany(x => x.Steps).HasForeignKey(x => x.InfographicId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.HasOne(x => x.MediaFile).WithMany().HasForeignKey(x => x.MediaFileId).OnDelete(DeleteBehavior.Restrict); builder.ToTable(t => t.HasCheckConstraint("CK_InfographicSteps_DisplayOrder", "[DisplayOrder] >= 0"));
     }
 }

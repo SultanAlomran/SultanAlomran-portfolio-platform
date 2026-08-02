@@ -9,6 +9,6 @@ internal sealed class PopularSearchConfiguration : IEntityTypeConfiguration<Popu
     public void Configure(EntityTypeBuilder<PopularSearch> builder)
     {
         builder.ConfigureCommon("PopularSearches");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.SearchTerm).IsUnique(); builder.ToTable(t => t.HasCheckConstraint("CK_PopularSearches_Count", "[SearchCount] >= 0"));
     }
 }

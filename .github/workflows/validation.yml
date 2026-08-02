@@ -20,7 +20,7 @@ jobs:
       - run: dotnet list Portfolio.sln package --vulnerable --include-transitive
       - name: Verify migration model snapshot
         run: dotnet ef migrations has-pending-model-changes --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
-        continue-on-error: true
+        continue-on-error: true # Remove when InitialDataFoundation is generated in a .NET 10 environment.
   portfolio-web:
     runs-on: ubuntu-latest
     defaults:

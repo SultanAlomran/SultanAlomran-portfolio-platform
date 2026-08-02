@@ -9,6 +9,6 @@ internal sealed class ProjectTechnologyConfiguration : IEntityTypeConfiguration<
     public void Configure(EntityTypeBuilder<ProjectTechnology> builder)
     {
         builder.ConfigureCommon("ProjectTechnologys");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.ProjectId, x.TechnologyId }).IsUnique(); builder.HasOne(x => x.Project).WithMany(x => x.ProjectTechnologies).HasForeignKey(x => x.ProjectId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.HasOne(x => x.Technology).WithMany(x => x.ProjectTechnologies).HasForeignKey(x => x.TechnologyId).IsRequired().OnDelete(DeleteBehavior.Restrict);
     }
 }

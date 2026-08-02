@@ -9,6 +9,6 @@ internal sealed class PageViewConfiguration : IEntityTypeConfiguration<PageView>
     public void Configure(EntityTypeBuilder<PageView> builder)
     {
         builder.ConfigureCommon("PageViews");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.CreatedAt); builder.HasIndex(x => x.Url); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.NoAction); builder.HasOne(x => x.Session).WithMany(x => x.PageViews).HasForeignKey(x => x.SessionId).OnDelete(DeleteBehavior.SetNull);
     }
 }

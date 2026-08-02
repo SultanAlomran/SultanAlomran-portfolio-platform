@@ -9,6 +9,6 @@ internal sealed class InfographicTagConfiguration : IEntityTypeConfiguration<Inf
     public void Configure(EntityTypeBuilder<InfographicTag> builder)
     {
         builder.ConfigureCommon("InfographicTags");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.InfographicId, x.TagId }).IsUnique(); builder.HasOne(x => x.Infographic).WithMany(x => x.InfographicTags).HasForeignKey(x => x.InfographicId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.HasOne(x => x.Tag).WithMany().HasForeignKey(x => x.TagId).IsRequired().OnDelete(DeleteBehavior.Cascade);
     }
 }

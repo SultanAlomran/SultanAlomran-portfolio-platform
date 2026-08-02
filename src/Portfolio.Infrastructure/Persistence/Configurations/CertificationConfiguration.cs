@@ -9,6 +9,6 @@ internal sealed class CertificationConfiguration : IEntityTypeConfiguration<Cert
     public void Configure(EntityTypeBuilder<Certification> builder)
     {
         builder.ConfigureCommon("Certifications");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.Name, x.Issuer }).IsUnique(); builder.HasOne(x => x.MediaFile).WithMany().HasForeignKey(x => x.MediaFileId).OnDelete(DeleteBehavior.Restrict); builder.ToTable(t => t.HasCheckConstraint("CK_Certifications_DateRange", "[ExpiresDate] IS NULL OR [ExpiresDate] >= [IssuedDate]"));
     }
 }

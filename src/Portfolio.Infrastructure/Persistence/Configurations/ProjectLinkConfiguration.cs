@@ -9,6 +9,6 @@ internal sealed class ProjectLinkConfiguration : IEntityTypeConfiguration<Projec
     public void Configure(EntityTypeBuilder<ProjectLink> builder)
     {
         builder.ConfigureCommon("ProjectLinks");
-        EntityRelationships.Configure(builder);
+        builder.HasOne(x => x.Project).WithMany(x => x.Links).HasForeignKey(x => x.ProjectId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.ToTable(t => t.HasCheckConstraint("CK_ProjectLinks_DisplayOrder", "[DisplayOrder] >= 0"));
     }
 }

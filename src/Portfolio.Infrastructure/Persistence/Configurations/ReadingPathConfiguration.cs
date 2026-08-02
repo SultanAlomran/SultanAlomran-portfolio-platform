@@ -9,6 +9,6 @@ internal sealed class ReadingPathConfiguration : IEntityTypeConfiguration<Readin
     public void Configure(EntityTypeBuilder<ReadingPath> builder)
     {
         builder.ConfigureCommon("ReadingPaths");
-        EntityRelationships.Configure(builder);
+        builder.HasQueryFilter(x => !x.IsDeleted); builder.HasIndex(x => x.Slug).IsUnique().HasFilter("[IsDeleted] = 0");
     }
 }

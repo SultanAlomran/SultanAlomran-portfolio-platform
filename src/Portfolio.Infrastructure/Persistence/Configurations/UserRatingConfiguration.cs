@@ -9,6 +9,6 @@ internal sealed class UserRatingConfiguration : IEntityTypeConfiguration<UserRat
     public void Configure(EntityTypeBuilder<UserRating> builder)
     {
         builder.ConfigureCommon("UserRatings");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.UserId, x.EntityType, x.EntityId }).IsUnique(); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade); builder.ToTable(t => t.HasCheckConstraint("CK_UserRatings_Rating", "[Rating] BETWEEN 1 AND 5"));
     }
 }

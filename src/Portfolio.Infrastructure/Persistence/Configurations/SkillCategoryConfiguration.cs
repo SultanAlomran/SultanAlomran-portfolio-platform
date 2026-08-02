@@ -9,6 +9,6 @@ internal sealed class SkillCategoryConfiguration : IEntityTypeConfiguration<Skil
     public void Configure(EntityTypeBuilder<SkillCategory> builder)
     {
         builder.ConfigureCommon("SkillCategorys");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => x.Name).IsUnique();
     }
 }

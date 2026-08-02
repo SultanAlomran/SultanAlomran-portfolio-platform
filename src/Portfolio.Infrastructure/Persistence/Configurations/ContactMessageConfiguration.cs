@@ -9,6 +9,6 @@ internal sealed class ContactMessageConfiguration : IEntityTypeConfiguration<Con
     public void Configure(EntityTypeBuilder<ContactMessage> builder)
     {
         builder.ConfigureCommon("ContactMessages");
-        EntityRelationships.Configure(builder);
+        builder.HasIndex(x => new { x.Status, x.CreatedAt });
     }
 }
