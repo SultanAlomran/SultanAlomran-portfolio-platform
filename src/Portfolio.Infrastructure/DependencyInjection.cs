@@ -15,7 +15,9 @@ public static class DependencyInjection
         services.AddDbContext<PortfolioDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
         services.AddScoped<IPortfolioDbContext>(provider => provider.GetRequiredService<PortfolioDbContext>());
-        services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>("portfolio-database");
+        services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>(
+            "portfolio-database",
+            tags: ["ready"]);
         return services;
     }
 }
