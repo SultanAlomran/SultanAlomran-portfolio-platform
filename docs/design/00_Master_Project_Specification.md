@@ -301,7 +301,7 @@ Feature Documents
 
 # 24. Source of Truth
 
-This document is the highest authority for design decisions.
+This document is the highest authority for visual and UX design decisions, subordinate to the overall product scope defined in `/Project_00_Master_Document.md`.
 
 ------------------------------------------------------------------------
 
