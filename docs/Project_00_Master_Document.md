@@ -13,6 +13,13 @@ Prepared for staged generation in Figma AI • Version 1.1 • August 2026
 
 > **OUTCOME** Use this document as the single source of truth for Figma AI generation, UX review, prototype wiring, and later Angular/.NET implementation. It consolidates the earlier portfolio decisions without changing the product into a course platform or generic dashboard.
 
+
+## Document hierarchy
+
+This document is the overall product specification and primary source of truth for project scope, architecture, verified content, and implementation direction.
+
+Detailed visual and user experience decisions are delegated to `docs/design/00_Master_Project_Specification.md` and its specialized design documents.
+
 | **Project control** |                                                                           |
 |---------------------|---------------------------------------------------------------------------|
 | **Project owner**   | Sultan Alomran                                                            |
