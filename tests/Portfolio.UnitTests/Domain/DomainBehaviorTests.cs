@@ -30,6 +30,23 @@ public sealed class DomainBehaviorTests
     }
 
     [Fact]
+    public void Project_lifecycle_and_feature_state_are_explicit()
+    {
+        var project = Project.Create("Portfolio Platform", "portfolio-platform", "A complete project summary.");
+        project.UpdateContent("Portfolio Platform", "portfolio-platform", "A complete project summary.",
+            "Overview", "Problem", "Solution", "Architecture", "Features", "Challenges", "Impact", "Lessons",
+            null, "https://example.com");
+        project.SetFeatured(true);
+        project.Publish();
+        Assert.Equal(ContentStatus.Published, project.Status);
+        Assert.True(project.IsFeatured);
+        Assert.Equal("Problem", project.BusinessProblem);
+        project.SaveDraft();
+        Assert.Equal(ContentStatus.Draft, project.Status);
+        Assert.Null(project.PublishedAt);
+    }
+
+    [Fact]
     public void Ordered_items_reject_non_positive_positions() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => Create<SeriesItem>().SetPosition(0));
 

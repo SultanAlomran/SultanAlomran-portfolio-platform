@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
+using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -26,6 +27,7 @@ app.MapHealthChecks("/health", new HealthCheckOptions
 app.MapHealthChecks("/health/ready");
 app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" }))
     .WithName("ApiVerification");
+app.MapProjectEndpoints();
 app.Run();
 
 public partial class Program;
