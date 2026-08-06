@@ -1,4 +1,48 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-@Component({ selector: 'app-admin-layout', imports: [RouterOutlet], template: `<div class="min-h-screen bg-page md:grid md:grid-cols-[250px_1fr]"><aside class="bg-ink px-6 py-6 text-white"><p class="text-lg font-bold">Portfolio Admin</p><p class="mt-2 text-sm text-slate-400">Foundation shell</p></aside><div><header class="border-b border-border bg-white px-6 py-4"><span class="font-semibold">Content workspace</span></header><main class="p-6 md:p-10"><router-outlet /></main></div></div>`, changeDetection: ChangeDetectionStrategy.OnPush })
-export class AdminLayoutComponent {}
+import { DOCUMENT } from '@angular/common';
+import { AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MetronicInitService } from '../../core/services/metronic-init.service';
+import { AdminFooterComponent } from '../admin-footer/admin-footer.component';
+import { AdminHeaderComponent } from '../admin-header/admin-header.component';
+import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
+
+@Component({
+  selector: 'app-admin-layout',
+  imports: [RouterOutlet, AdminSidebarComponent, AdminHeaderComponent, AdminFooterComponent],
+  templateUrl: './admin-layout.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class AdminLayoutComponent implements AfterViewInit {
+  private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
+  private readonly metronic = inject(MetronicInitService);
+
+  readonly sidebarCollapsed = signal(false);
+  readonly mobileSidebarOpen = signal(false);
+
+  constructor() {
+    this.document.body.classList.add('portfolio-admin');
+    this.destroyRef.onDestroy(() => this.document.body.classList.remove('portfolio-admin'));
+    this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed())
+      .subscribe(() => {
+        this.mobileSidebarOpen.set(false);
+        queueMicrotask(() => this.metronic.init());
+      });
+  }
+
+  ngAfterViewInit(): void {
+    this.metronic.init();
+  }
+
+  toggleDesktopSidebar(): void {
+    this.sidebarCollapsed.update((collapsed) => !collapsed);
+  }
+
+  toggleMobileSidebar(): void {
+    this.mobileSidebarOpen.update((open) => !open);
+  }
+}

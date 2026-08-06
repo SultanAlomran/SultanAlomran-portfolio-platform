@@ -10,8 +10,24 @@
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
-          "options": { "browser": "src/main.ts", "polyfills": ["zone.js"], "tsConfig": "tsconfig.app.json", "inlineStyleLanguage": "css", "assets": [{"glob":"**/*","input":"public"}], "styles": ["src/styles.css"] },
-          "configurations": { "production": { "budgets": [{"type":"initial","maximumWarning":"600kB","maximumError":"1MB"}], "outputHashing": "all" }, "development": { "optimization": false, "extractLicenses": false, "sourceMap": true } },
+          "options": {
+            "outputPath": "dist/portfolio.admin",
+            "browser": "src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "css",
+            "assets": [{ "glob": "**/*", "input": "public" }],
+            "styles": [
+              "public/assets/vendors/keenicons/styles.bundle.css",
+              "public/assets/css/styles.css",
+              "src/styles.css"
+            ],
+            "scripts": [
+              "public/assets/js/core.bundle.js",
+              "public/assets/vendors/ktui/ktui.min.js"
+            ]
+          },
+          "configurations": { "production": { "budgets": [{"type":"initial","maximumWarning":"2MB","maximumError":"2.5MB"}], "outputHashing": "all" }, "development": { "optimization": false, "extractLicenses": false, "sourceMap": true } },
           "defaultConfiguration": "production"
         },
         "serve": { "builder": "@angular-devkit/build-angular:dev-server", "configurations": { "production": { "buildTarget": "portfolio.admin:build:production" }, "development": { "buildTarget": "portfolio.admin:build:development" } }, "defaultConfiguration": "development" },
