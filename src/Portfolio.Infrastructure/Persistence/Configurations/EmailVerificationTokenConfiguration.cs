@@ -9,6 +9,6 @@ internal sealed class EmailVerificationTokenConfiguration : IEntityTypeConfigura
     public void Configure(EntityTypeBuilder<EmailVerificationToken> builder)
     {
         builder.ConfigureCommon("EmailVerificationTokens");
-        builder.HasIndex(x => x.TokenHash).IsUnique(); builder.HasIndex(x => new { x.UserId, x.ExpiresAt }); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.TokenHash).IsUnique(); builder.HasIndex(x => new { x.UserId, x.ExpiresAt }); builder.HasOne(x => x.User).WithMany(x => x.EmailVerificationTokens).HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
     }
 }

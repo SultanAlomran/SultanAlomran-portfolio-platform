@@ -6,7 +6,7 @@ A personal engineering portfolio and technical-content platform built as two ind
 
 1. **Solution foundation — complete.** The API composition root, dependency boundaries, public/client shells, automated tests, and CI validation are established.
 2. **Complete data foundation — complete.** SQL Server and EF Core model the approved 45 entities for profile, taxonomy, Visual Handbook, projects, media, learning paths, engagement, analytics, authorization, tokens, and auditing.
-3. **Data-foundation cleanup — in progress.** Entity mappings are colocated with their `IEntityTypeConfiguration<TEntity>` implementations, DbSet naming is consistent, committed credentials are removed, and migration validation is enforced once generated artifacts are available.
+3. **Data-foundation cleanup — complete.** Entity mappings are colocated with their `IEntityTypeConfiguration<TEntity>` implementations, DbSet naming is consistent, committed credentials are removed, and the reviewed `InitialDataFoundation` migration is available.
 
 The model supports Arabic and other multilingual text through Unicode `nvarchar` columns. Selective soft deletion applies only to Category, Infographic, Project, Series, and ReadingPath, with active-row filtered uniqueness. Custom authorization persistence stores users, roles, permissions, junctions, sessions, and cryptographic token hashes—never raw tokens. Deterministic reference seed data contains roles, permissions, and safe configuration only; it contains no account, credential, secret, token, or analytics data.
 
@@ -31,7 +31,49 @@ Development requires SQL Server Developer Edition, compatible LocalDB, or a loca
 
 Supply `ConnectionStrings__PortfolioDatabase` locally. The committed `appsettings.json` deliberately contains an empty value. Development alternatives include environment variables, `dotnet user-secrets`, local Docker configuration, or an ignored developer-local settings file. Copy `.env.example` and replace `<LOCAL_PASSWORD>` locally; never commit it.
 
-The intended initial migration is `InitialDataFoundation`. Migration artifacts remain pending where the pinned .NET 10 SDK is unavailable; see `docs/database/README.md` for the exact generation and validation commands. The API never applies migrations automatically at startup.
+The initial migration is `InitialDataFoundation`. The API never applies migrations automatically at startup.
+
+## Local prerequisites
+
+- Visual Studio Community 2026 18.8.2 with the ASP.NET and web development workload
+- .NET SDK 10.0.100 (selected through `global.json`)
+- Node.js `>=22.12.0 <23` (verified with 22.23.1) and npm 10.9.8
+- SQL Server LocalDB, SQL Server Developer, or an isolated local SQL Server container
+
+The verified local setup uses a dedicated LocalDB instance named `PortfolioPlatformLocal`. Start it and store the development connection outside Git:
+
+```powershell
+sqllocaldb start PortfolioPlatformLocal
+dotnet user-secrets set "ConnectionStrings:PortfolioDatabase" "Server=(localdb)\PortfolioPlatformLocal;Database=PortfolioPlatformDev;Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True" --project src/Portfolio.Api
+dotnet dev-certs https --trust
+```
+
+## Restore, build, and run
+
+```powershell
+dotnet tool restore
+dotnet restore Portfolio.sln
+dotnet build Portfolio.sln --configuration Release --no-restore
+dotnet test Portfolio.sln --configuration Release --no-build
+dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
+dotnet run --project src/Portfolio.Api --launch-profile https
+```
+
+Restore and run each Angular application independently. Their committed lockfiles make `npm ci` the normal restore command.
+
+```powershell
+Set-Location src/Portfolio.Web
+npm ci
+npm run build
+npm start # http://localhost:4200
+
+Set-Location ../Portfolio.Admin
+npm ci
+npm run build
+npm start # http://localhost:4300
+```
+
+The API listens on `https://localhost:7100` and `http://localhost:5100`. Its OpenAPI document is at `https://localhost:7100/openapi/v1.json`; this foundation does not include a Swagger UI page.
 
 ## Validation
 
