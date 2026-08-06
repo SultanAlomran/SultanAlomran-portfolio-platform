@@ -1,0 +1,42 @@
+<header class="admin-header fixed inset-x-0 top-0 z-20 h-[76px] border-b border-border bg-background/95 backdrop-blur transition-[left] duration-200">
+  <div class="flex h-full items-center gap-3 px-4 sm:px-6 lg:px-8">
+    <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon size-11 lg:hidden" [attr.aria-expanded]="mobileSidebarOpen()" aria-controls="admin-sidebar" aria-label="Open navigation" (click)="toggleMobileSidebar.emit()">
+      <i class="ki-filled ki-menu text-xl" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon hidden size-10 lg:inline-flex" [attr.aria-expanded]="!sidebarCollapsed()" aria-controls="admin-sidebar" [attr.aria-label]="sidebarCollapsed() ? 'Expand navigation' : 'Collapse navigation'" (click)="toggleDesktopSidebar.emit()">
+      <i class="ki-filled ki-left text-lg transition-transform" [class.rotate-180]="sidebarCollapsed()" aria-hidden="true"></i>
+    </button>
+
+    <form class="mx-auto hidden w-full max-w-md md:block" role="search" (submit)="$event.preventDefault()">
+      <label class="relative block">
+        <span class="sr-only">Search administration</span>
+        <i class="ki-filled ki-magnifier absolute start-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true"></i>
+        <input class="kt-input h-11 w-full ps-10" type="search" placeholder="Search administration…" aria-label="Search administration" />
+      </label>
+    </form>
+
+    <div class="ms-auto flex items-center gap-1 sm:gap-2">
+      <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon size-11" [attr.aria-label]="themeService.theme() === 'light' ? 'Use dark theme' : 'Use light theme'" (click)="themeService.toggle()">
+        <i class="ki-filled text-lg" [class.ki-moon]="themeService.theme() === 'light'" [class.ki-sun]="themeService.theme() === 'dark'" aria-hidden="true"></i>
+      </button>
+      <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon relative size-11" aria-label="Notifications">
+        <i class="ki-filled ki-notification text-lg" aria-hidden="true"></i><span class="absolute end-2 top-2 size-2 rounded-full bg-primary" aria-hidden="true"></span>
+      </button>
+
+      <div class="relative">
+        <button type="button" class="flex min-h-11 items-center gap-2 rounded-xl px-2 text-start hover:bg-accent" aria-haspopup="menu" [attr.aria-expanded]="profileOpen()" (click)="toggleProfile()">
+          <span class="grid size-9 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">SA</span>
+          <span class="hidden leading-tight sm:block"><strong class="block text-sm">Administrator</strong><span class="text-xs text-muted-foreground">Portfolio Admin</span></span>
+          <i class="ki-filled ki-down text-xs text-muted-foreground" aria-hidden="true"></i>
+        </button>
+        @if (profileOpen()) {
+          <div class="kt-dropdown-menu absolute end-0 top-[calc(100%+8px)] z-50 block w-64 p-2 shadow-xl" role="menu">
+            <div class="border-b border-border px-3 py-3"><p class="text-sm font-semibold">Sultan Alomran</p><p class="text-xs text-muted-foreground">Local development shell</p></div>
+            <a routerLink="/settings" class="kt-dropdown-menu-link mt-2" role="menuitem" (click)="profileOpen.set(false)"><i class="ki-filled ki-setting-2" aria-hidden="true"></i>Settings</a>
+            <button type="button" class="kt-dropdown-menu-link w-full" role="menuitem" (click)="themeService.toggle(); profileOpen.set(false)"><i class="ki-filled ki-moon" aria-hidden="true"></i>Toggle theme</button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>

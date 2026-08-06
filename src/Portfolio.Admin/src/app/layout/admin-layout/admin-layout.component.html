@@ -1,0 +1,33 @@
+<div class="admin-shell min-h-screen bg-page text-foreground">
+  <app-admin-sidebar
+    [collapsed]="sidebarCollapsed()"
+    [mobileOpen]="mobileSidebarOpen()"
+    (closeMobile)="mobileSidebarOpen.set(false)"
+  />
+
+  @if (mobileSidebarOpen()) {
+    <button
+      type="button"
+      class="fixed inset-0 z-30 bg-slate-950/55 backdrop-blur-[1px] lg:hidden"
+      aria-label="Close navigation"
+      (click)="mobileSidebarOpen.set(false)"
+    ></button>
+  }
+
+  <div class="admin-wrapper flex min-h-screen min-w-0 flex-col transition-[padding] duration-200" [class.admin-wrapper-collapsed]="sidebarCollapsed()">
+    <app-admin-header
+      [sidebarCollapsed]="sidebarCollapsed()"
+      [mobileSidebarOpen]="mobileSidebarOpen()"
+      (toggleDesktopSidebar)="toggleDesktopSidebar()"
+      (toggleMobileSidebar)="toggleMobileSidebar()"
+    />
+
+    <main id="main-content" class="grow px-4 pb-8 pt-24 sm:px-6 lg:px-8" tabindex="-1">
+      <div class="mx-auto w-full max-w-[1280px]">
+        <router-outlet />
+      </div>
+    </main>
+
+    <app-admin-footer />
+  </div>
+</div>
