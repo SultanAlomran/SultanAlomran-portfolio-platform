@@ -37,6 +37,16 @@ public sealed class ModelMetadataTests
     }
 
     [Fact]
+    public void Project_model_supports_featured_case_studies()
+    {
+        var project = Model.FindEntityType(typeof(Project))!;
+        Assert.NotNull(project.FindProperty(nameof(Project.IsFeatured)));
+        Assert.NotNull(project.FindProperty(nameof(Project.BusinessProblem)));
+        Assert.Contains(project.GetIndexes(), index => index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(Project.IsFeatured), nameof(Project.Status), nameof(Project.PublishedAt)]));
+    }
+
+    [Fact]
     public void Media_reference_and_category_delete_behaviors_are_restrict()
     {
         var image = Model.FindEntityType(typeof(ProjectImage))!;

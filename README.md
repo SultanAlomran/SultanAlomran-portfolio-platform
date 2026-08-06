@@ -2,11 +2,12 @@
 
 A personal engineering portfolio and technical-content platform built as two independent Angular clients and an ASP.NET Core Clean Architecture backend.
 
-## Foundation status
+## Foundation status 
 
 1. **Solution foundation — complete.** The API composition root, dependency boundaries, public/client shells, automated tests, and CI validation are established.
 2. **Complete data foundation — complete.** SQL Server and EF Core model the approved 45 entities for profile, taxonomy, Visual Handbook, projects, media, learning paths, engagement, analytics, authorization, tokens, and auditing.
 3. **Data-foundation cleanup — complete.** Entity mappings are colocated with their `IEntityTypeConfiguration<TEntity>` implementations, DbSet naming is consistent, committed credentials are removed, and the reviewed `InitialDataFoundation` migration is available.
+4. **Projects vertical slice — implemented.** Published listing/details and the Admin management/wizard experience are connected end-to-end through typed API contracts. The `ProjectsVerticalSlice` migration adds featured and structured case-study content.
 
 The model supports Arabic and other multilingual text through Unicode `nvarchar` columns. Selective soft deletion applies only to Category, Infographic, Project, Series, and ReadingPath, with active-row filtered uniqueness. Custom authorization persistence stores users, roles, permissions, junctions, sessions, and cryptographic token hashes—never raw tokens. Deterministic reference seed data contains roles, permissions, and safe configuration only; it contains no account, credential, secret, token, or analytics data.
 
@@ -31,7 +32,7 @@ Development requires SQL Server Developer Edition, compatible LocalDB, or a loca
 
 Supply `ConnectionStrings__PortfolioDatabase` locally. The committed `appsettings.json` deliberately contains an empty value. Development alternatives include environment variables, `dotnet user-secrets`, local Docker configuration, or an ignored developer-local settings file. Copy `.env.example` and replace `<LOCAL_PASSWORD>` locally; never commit it.
 
-The initial migration is `InitialDataFoundation`. The API never applies migrations automatically at startup.
+The initial migration is `InitialDataFoundation`; the Projects extension is `ProjectsVerticalSlice`. The API never applies migrations automatically at startup.
 
 ## Local prerequisites
 
@@ -86,8 +87,17 @@ dotnet list Portfolio.sln package --vulnerable --include-transitive
 dotnet ef migrations has-pending-model-changes --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
 ```
 
-SQL Server integration tests require Docker or another isolated SQL Server. Metadata and architecture tests validate the model without touching production. NuGet auditing, warnings-as-errors, and NU1903 enforcement remain enabled.
+Projects integration tests use a uniquely named disposable database on the local `PortfolioPlatformLocal` LocalDB instance and remove it afterward. Metadata and architecture tests validate the model without touching production. NuGet auditing, warnings-as-errors, and NU1903 enforcement remain enabled.
+
+## Projects routes and boundaries
+
+- Public UI: `/projects` and `/projects/:slug`
+- Admin UI: `/projects`, `/projects/create`, and `/projects/:id/edit`
+- Public API: `GET /api/projects`, `GET /api/projects/{slug}`, and `GET /api/technologies`
+- Admin API: list/details/create/update/delete, draft, publish readiness, publish, archive, feature/unfeature, and technology lookup under `/api/admin`
+
+Project images reference existing `MediaFile` records. Binary upload/storage, authentication, project categories/types, related content, and view tracking remain deferred; the UI does not simulate those capabilities.
 
 ## Next work
 
-Future work must proceed as complete end-to-end vertical slices rather than another horizontal foundation. The recommended first slice is `feature/projects`, covering one coherent project capability from persistence through API contract and user experience without broad unrelated redesign.
+Complete manual visual and accessibility review of the Projects pages, then connect Media Library storage and authentication when those slices are approved.

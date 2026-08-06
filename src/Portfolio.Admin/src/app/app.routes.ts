@@ -10,7 +10,7 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', title: 'Dashboard | Portfolio Admin', loadComponent: () => import('./features/dashboard/dashboard.component') },
-      { path: 'projects', title: 'Projects | Portfolio Admin', loadComponent: placeholder, data: { title: 'Projects', description: 'Manage portfolio case studies, publishing status, and presentation.', icon: 'ki-briefcase', capability: 'Project management will be delivered as the next approved vertical slice.' } },
+      { path: 'projects', title: 'Projects | Portfolio Admin', loadChildren: () => import('./features/projects/projects.routes').then(m => m.PROJECT_ROUTES) },
       { path: 'visual-handbook', title: 'Visual Handbook | Portfolio Admin', loadComponent: placeholder, data: { title: 'Visual Handbook', description: 'Organize technical infographics and structured educational content.', icon: 'ki-book-open', capability: 'Infographic authoring and publishing are intentionally deferred.' } },
       { path: 'categories', title: 'Categories | Portfolio Admin', loadComponent: placeholder, data: { title: 'Categories', description: 'Maintain the taxonomy used to organize portfolio content.', icon: 'ki-category', capability: 'Category hierarchy and editing will be added with its feature slice.' } },
       { path: 'tags', title: 'Tags | Portfolio Admin', loadComponent: placeholder, data: { title: 'Tags', description: 'Maintain reusable content labels and discoverability metadata.', icon: 'ki-tag', capability: 'Tag management is ready to be implemented without changing the shell.' } },
