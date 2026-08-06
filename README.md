@@ -2,7 +2,7 @@
 
 A personal engineering portfolio and technical-content platform built as two independent Angular clients and an ASP.NET Core Clean Architecture backend.
 
-## Foundation status
+## Foundation status 
 
 1. **Solution foundation — complete.** The API composition root, dependency boundaries, public/client shells, automated tests, and CI validation are established.
 2. **Complete data foundation — complete.** SQL Server and EF Core model the approved 45 entities for profile, taxonomy, Visual Handbook, projects, media, learning paths, engagement, analytics, authorization, tokens, and auditing.
