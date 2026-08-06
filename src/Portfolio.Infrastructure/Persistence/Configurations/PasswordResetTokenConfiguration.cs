@@ -9,6 +9,6 @@ internal sealed class PasswordResetTokenConfiguration : IEntityTypeConfiguration
     public void Configure(EntityTypeBuilder<PasswordResetToken> builder)
     {
         builder.ConfigureCommon("PasswordResetTokens");
-        builder.HasIndex(x => x.TokenHash).IsUnique(); builder.HasIndex(x => new { x.UserId, x.ExpiresAt }); builder.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
+        builder.HasIndex(x => x.TokenHash).IsUnique(); builder.HasIndex(x => new { x.UserId, x.ExpiresAt }); builder.HasOne(x => x.User).WithMany(x => x.PasswordResetTokens).HasForeignKey(x => x.UserId).IsRequired().OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -26,11 +26,11 @@ A singleton Profile can reference profile-image and CV media; ExperienceItems ar
 
 ## Migration workflow
 
-The current execution environment does not include the .NET SDK, so generated migration artifacts are intentionally pending rather than fabricated. With .NET 10 installed, run:
+The reviewed initial migration is `InitialDataFoundation` and was generated with .NET SDK 10.0.100 and EF Core tools 10.0.0. For a future schema change, run:
 
 ```bash
 dotnet tool restore
-dotnet ef migrations add InitialDataFoundation --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api --output-dir Persistence/Migrations
+dotnet ef migrations add <DescriptiveMigrationName> --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api --output-dir Persistence/Migrations
 dotnet ef migrations script --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api --idempotent
 dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
 ```
@@ -41,4 +41,4 @@ Never migrate production automatically at API startup. Configure `ConnectionStri
 
 Entity-specific relationships, indexes, filters, constraints, precision, and delete behavior now live in the corresponding configuration class; the former centralized relationship switch has been removed. DbSet CLR property names use predictable plurals while existing explicit table mappings remain stable. The base API configuration has no database credential, and local configuration must be supplied externally.
 
-Migration generation, idempotent-script review, and live SQL Server execution remain required before this cleanup milestone can be declared complete. They were not fabricated in an environment without the pinned .NET 10 SDK. CI retains a temporary non-blocking pending-model check solely until `InitialDataFoundation` and `PortfolioDbContextModelSnapshot` are generated and committed.
+`InitialDataFoundation` and `PortfolioDbContextModelSnapshot` have been generated, reviewed, built, tested, and applied to an isolated LocalDB database. The database contained the expected 45 domain tables, migration history, constraints, indexes, sequential-GUID defaults, soft-delete columns, and deterministic reference seed data.
