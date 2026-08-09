@@ -91,7 +91,7 @@ public sealed class ProjectsApiTests : IAsyncLifetime
 
 internal sealed class ProjectsApiFactory : WebApplicationFactory<Program>
 {
-    private readonly string connectionString = $"Server=(localdb)\\PortfolioPlatformLocal;Database=PortfolioProjectsTests_{Guid.NewGuid():N};Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True";
+    private readonly string connectionString = CreateConnectionString();
     public Guid TechnologyId { get; private set; }
     public Guid MediaFileId { get; private set; }
 
@@ -114,5 +114,17 @@ internal sealed class ProjectsApiFactory : WebApplicationFactory<Program>
     {
         using var scope = Services.CreateScope();
         await scope.ServiceProvider.GetRequiredService<PortfolioDbContext>().Database.EnsureDeletedAsync();
+    }
+
+    private static string CreateConnectionString()
+    {
+        var databaseName = $"PortfolioProjectsTests_{Guid.NewGuid():N}";
+        var configuredConnection = Environment.GetEnvironmentVariable("PORTFOLIO_TEST_SQL_CONNECTION_STRING");
+        if (!string.IsNullOrWhiteSpace(configuredConnection))
+        {
+            return $"{configuredConnection.TrimEnd(';')};Database={databaseName}";
+        }
+
+        return $"Server=(localdb)\\PortfolioPlatformLocal;Database={databaseName};Trusted_Connection=True;MultipleActiveResultSets=True;TrustServerCertificate=True";
     }
 }
