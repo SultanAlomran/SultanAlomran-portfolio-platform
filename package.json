@@ -10,6 +10,7 @@
     "e2e:smoke": "node tests/playwright/scripts/run.mjs --suite smoke",
     "e2e:admin": "node tests/playwright/scripts/run.mjs --suite admin",
     "e2e:web": "node tests/playwright/scripts/run.mjs --suite public",
+    "e2e:quality": "node tests/playwright/scripts/run.mjs --suite quality",
     "e2e:responsive": "node tests/playwright/scripts/run.mjs --suite responsive",
     "e2e:visual": "node tests/playwright/scripts/run.mjs --mode visual",
     "e2e:record": "node tests/playwright/scripts/run.mjs --mode record",

@@ -19,6 +19,8 @@ const testMatch = mode === 'visual'
     ? feature === 'all' ? '**/recording/**/*.spec.ts' : `**/recording/${feature}/**/*.spec.ts`
     : feature === 'projects'
       ? ['**/projects/**/*.spec.ts']
+      : feature === 'quality'
+        ? ['**/quality/**/*.spec.ts']
       : feature === 'smoke'
         ? ['**/smoke.spec.ts']
         : '**/*.spec.ts';
@@ -36,8 +38,8 @@ export default defineConfig({
   timeout: 45_000,
   expect: { timeout: 7_500 },
   reporter: process.env.CI
-    ? [['line'], ['html', { outputFolder: path.join(repositoryRoot, 'playwright-report'), open: 'never' }], ['junit', { outputFile: path.join(repositoryRoot, 'test-results/junit.xml') }]]
-    : [['list'], ['html', { outputFolder: path.join(repositoryRoot, 'playwright-report'), open: 'never' }]],
+    ? [['line'], ['html', { outputFolder: path.join(repositoryRoot, 'playwright-report'), open: 'never' }], ['junit', { outputFile: path.join(repositoryRoot, 'test-results/junit.xml') }], ['json', { outputFile: path.join(repositoryRoot, 'test-results/results.json') }]]
+    : [['list'], ['html', { outputFolder: path.join(repositoryRoot, 'playwright-report'), open: 'never' }], ['json', { outputFile: path.join(repositoryRoot, 'test-results/results.json') }]],
   grep: mode === 'visual' ? /@visual/ : mode === 'record' ? /@record/ : undefined,
   grepInvert: mode === 'standard' ? /@(visual|record)/ : undefined,
   use: {

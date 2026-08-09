@@ -31,12 +31,14 @@ npm run e2e
 npm run e2e:admin
 npm run e2e:web
 npm run e2e:responsive
+npm run e2e:quality
 npm run e2e:visual
 npm run e2e:record
 npm run e2e:headed
 npm run e2e:debug
 npm run e2e:report
 node tests/playwright/scripts/run.mjs --suite projects --browser firefox
+node tests/playwright/scripts/build-telemetry.mjs --mode standard --feature quality --browser chromium
 ```
 
 Set `E2E_MANAGE_SERVERS=false` when all applications are already running. Override `API_BASE_URL`, `WEB_BASE_URL`, or `ADMIN_BASE_URL` when necessary. `E2E_BROWSER` supports Chromium, Firefox, and WebKit; the default PR path uses Chromium to control duration.
@@ -70,6 +72,8 @@ Commit a baseline only after intentional review. Baselines are platform-specific
 
 ## GitHub Actions
 
-Every applicable PR runs the standard smoke suite after .NET and Angular validation. Apply `e2e-visual` for successful visual evidence or `e2e-record` for full workflow evidence. The **Playwright E2E** workflow can also be dispatched manually with feature (`smoke`, `projects`, `all`), evidence (`standard`, `visual`, `full-recording`), and browser inputs. Reports are retained for 14 days, visual evidence for 21 days, and full recordings for 30 days.
+Every applicable PR runs the standard smoke suite after .NET and Angular validation. Apply `e2e-visual` for successful visual evidence or `e2e-record` for full workflow evidence. The **Playwright E2E** workflow can also be dispatched manually with feature (`smoke`, `projects`, `quality`, `all`), evidence (`standard`, `visual`, `full-recording`), and browser inputs. Reports are retained for 14 days, visual evidence for 21 days, and full recordings for 30 days.
+
+Each CI run also generates ignored `test-results/telemetry.json` from the Playwright JSON report and uploads it for 90 days. The normalized file contains run, test, and artifact metadata only—never evidence binaries or credentials—and can be imported into Test Analytics. CI does not try to connect to a developer-local SQL Server.
 
 If startup fails, verify ports are free, the connection string points only to a local/disposable database, migrations exist, and all lockfiles were restored. Inspect the HTML report and attached `browser-diagnostics` before weakening an assertion or allowlist.

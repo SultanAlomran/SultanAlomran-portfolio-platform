@@ -27,7 +27,7 @@ const child = spawn(process.execPath, [playwrightCli, ...cliArgs], {
     ...process.env,
     E2E_MODE: mode,
     E2E_BROWSER: browser,
-    E2E_FEATURE: ['smoke', 'projects'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
+    E2E_FEATURE: ['smoke', 'projects', 'quality'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
     PWDEBUG: args.includes('--debug') ? '1' : process.env.PWDEBUG,
   },
 });

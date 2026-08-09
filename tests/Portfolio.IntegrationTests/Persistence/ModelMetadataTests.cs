@@ -12,7 +12,7 @@ public sealed class ModelMetadataTests
         .Options).Model;
 
     [Fact]
-    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(45, Model.GetEntityTypes().Count());
+    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(48, Model.GetEntityTypes().Count());
 
     [Fact]
     public void Arabic_capable_fields_are_unicode_and_bounded()
@@ -44,6 +44,18 @@ public sealed class ModelMetadataTests
         Assert.NotNull(project.FindProperty(nameof(Project.BusinessProblem)));
         Assert.Contains(project.GetIndexes(), index => index.Properties.Select(x => x.Name)
             .SequenceEqual([nameof(Project.IsFeatured), nameof(Project.Status), nameof(Project.PublishedAt)]));
+    }
+
+    [Fact]
+    public void Test_telemetry_has_unique_provider_identity_and_external_artifact_metadata()
+    {
+        var run = Model.FindEntityType(typeof(TestRun))!;
+        Assert.Contains(run.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(TestRun.Provider), nameof(TestRun.ProviderRunId)]));
+        var artifact = Model.FindEntityType(typeof(TestArtifact))!;
+        Assert.Null(artifact.FindProperty("BinaryData"));
+        Assert.NotNull(artifact.FindProperty(nameof(TestArtifact.ExternalUrl)));
+        Assert.NotNull(artifact.FindProperty(nameof(TestArtifact.StoragePath)));
     }
 
     [Fact]
