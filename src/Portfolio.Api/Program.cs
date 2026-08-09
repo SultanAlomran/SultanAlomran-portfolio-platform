@@ -3,6 +3,7 @@ using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
+using Portfolio.Infrastructure.Persistence.Seed;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,17 @@ builder.Logging.AddJsonConsole();
 builder.Services.AddApiFoundation(builder.Configuration);
 
 var app = builder.Build();
+if (args.Contains("--seed-development-projects", StringComparer.OrdinalIgnoreCase))
+{
+    if (!app.Environment.IsDevelopment())
+        throw new InvalidOperationException("Project development seed can run only in the Development environment.");
+    var connectionString = builder.Configuration.GetConnectionString("PortfolioDatabase")
+        ?? throw new InvalidOperationException("Connection string 'PortfolioDatabase' is required.");
+    var result = await DevelopmentProjectSeed.SeedAsync(app.Services, connectionString);
+    Console.WriteLine("Development project seed complete: {0} projects, {1} technologies, {2} relationships added.",
+        result.ProjectsAdded, result.TechnologiesAdded, result.RelationshipsAdded);
+    return;
+}
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 if (!app.Environment.IsDevelopment())
