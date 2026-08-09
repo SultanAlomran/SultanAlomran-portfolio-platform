@@ -6,6 +6,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design"><PrivateAssets>all</PrivateAssets></PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" />
     <ProjectReference Include="../Portfolio.Application/Portfolio.Application.csproj" />
     <ProjectReference Include="../Portfolio.Infrastructure/Portfolio.Infrastructure.csproj" />
     <ProjectReference Include="../Portfolio.Shared/Portfolio.Shared.csproj" />

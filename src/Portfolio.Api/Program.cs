@@ -3,6 +3,7 @@ using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
@@ -20,6 +21,11 @@ app.UseConfiguredCors();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options => options
+        .WithTitle("Portfolio Platform API")
+        .AddDocument("v1", "Portfolio Platform API")
+        .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient)
+        .DisableAgent());
 }
 app.MapHealthChecks("/health", new HealthCheckOptions
 {

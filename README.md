@@ -74,7 +74,14 @@ npm run build
 npm start # http://localhost:4300
 ```
 
-The API listens on `https://localhost:7100` and `http://localhost:5100`. Its OpenAPI document is at `https://localhost:7100/openapi/v1.json`; this foundation does not include a Swagger UI page.
+The API listens on `https://localhost:7100` and `http://localhost:5100` in local development.
+
+### API documentation
+
+- Raw OpenAPI document: `/openapi/v1.json`
+- Interactive Scalar API reference: `/scalar`
+
+Microsoft ASP.NET Core OpenAPI generates the specification, and Scalar renders the interactive developer UI for browsing endpoints, inspecting schemas, and sending development requests. Both routes are mapped only in the Development environment; no Swagger dependency is used. While the private Dev Tunnel is running, append `/scalar` or `/openapi/v1.json` to the current API tunnel URL.
 
 ## Remote development with Microsoft Dev Tunnels
 
