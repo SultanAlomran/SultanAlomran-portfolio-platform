@@ -7,6 +7,7 @@
   },
   "scripts": {
     "start": "ng serve --port 4300",
+    "start:tunnel": "ng serve --configuration dev-tunnel --port 4300",
     "build": "ng build --configuration production",
     "lint": "ng lint"
   },
