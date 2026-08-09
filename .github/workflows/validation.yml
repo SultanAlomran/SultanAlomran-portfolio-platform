@@ -13,6 +13,30 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
+      - name: Start ephemeral SQL Server for integration tests
+        shell: bash
+        run: |
+          sql_password="$(openssl rand -base64 24)"
+          echo "::add-mask::$sql_password"
+          docker run --name portfolio-ci-sql --detach \
+            --env ACCEPT_EULA=Y \
+            --env MSSQL_SA_PASSWORD="$sql_password" \
+            --publish 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+
+          for attempt in {1..30}; do
+            if docker exec portfolio-ci-sql /opt/mssql-tools18/bin/sqlcmd \
+              -S localhost -U sa -P "$sql_password" -C -Q "SELECT 1" >/dev/null 2>&1; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then
+              docker logs portfolio-ci-sql
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "PORTFOLIO_TEST_SQL_CONNECTION_STRING=Server=localhost,1433;User ID=sa;Password=$sql_password;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True" >> "$GITHUB_ENV"
       - run: dotnet restore Portfolio.sln
       - run: dotnet build Portfolio.sln --configuration Release --no-restore
       - run: dotnet test Portfolio.sln --configuration Release --no-build
