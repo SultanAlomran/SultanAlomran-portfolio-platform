@@ -8,6 +8,7 @@ using Portfolio.Application.Projects;
 using Portfolio.Domain.Entities;
 using Portfolio.Domain.Enums;
 using Portfolio.Infrastructure.Persistence;
+using Portfolio.Infrastructure.Persistence.Seed;
 
 namespace Portfolio.IntegrationTests;
 
@@ -73,6 +74,31 @@ public sealed class ProjectsApiTests : IAsyncLifetime
         using var response = await client.PostAsJsonAsync("/api/admin/projects", invalid);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+    }
+
+    [Fact]
+    public async Task Development_project_seed_is_idempotent_and_returns_three_published_featured_projects()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
+
+        var first = await DevelopmentProjectSeed.SeedAsync(db);
+        var second = await DevelopmentProjectSeed.SeedAsync(db);
+
+        Assert.Equal(6, first.ProjectsAdded);
+        Assert.True(first.TechnologiesAdded > 0);
+        Assert.True(first.RelationshipsAdded > 0);
+        Assert.Equal(new DevelopmentProjectSeed.Result(0, 0, 0), second);
+        Assert.Equal(6, await db.Projects.CountAsync());
+        Assert.Equal(3, await db.Projects.CountAsync(x => x.Status == ContentStatus.Published && x.IsFeatured));
+        Assert.Equal(await db.Technologies.CountAsync(), await db.Technologies.Select(x => x.Name.ToLower()).Distinct().CountAsync());
+
+        var featured = await client.GetFromJsonAsync<PagedResult<ProjectListItemDto>>("/api/projects?featured=true&page=1&pageSize=3");
+        Assert.NotNull(featured);
+        Assert.Equal(3, featured.TotalCount);
+        Assert.Equal(
+            ["Request & Approval Management System", "Government Web Systems Portfolio", "RSAF OutSystems Solutions"],
+            featured.Items.Select(x => x.Title).ToArray());
     }
 
     public async Task DisposeAsync()

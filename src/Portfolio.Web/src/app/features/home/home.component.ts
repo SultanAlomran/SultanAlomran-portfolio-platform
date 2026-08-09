@@ -1,3 +1,50 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-@Component({ selector: 'app-home', template: `<section class="mx-auto grid max-w-6xl items-center gap-10 px-5 py-20 md:grid-cols-[1.3fr_.7fr] md:py-28"><div><p class="mb-4 font-semibold uppercase tracking-[.2em] text-primary">Foundation milestone</p><h1 class="max-w-3xl text-4xl font-bold tracking-tight text-ink sm:text-6xl">A dependable foundation for a premium engineering portfolio.</h1><p class="mt-6 max-w-2xl text-lg leading-8 text-muted">The public application shell is ready for accessible, responsive feature development. Portfolio content will arrive in later milestones.</p></div><div class="rounded-3xl border border-border bg-white p-8 shadow-xl shadow-primary/5"><div class="mb-6 grid h-14 w-14 place-items-center rounded-2xl bg-primary text-2xl font-bold text-white" aria-hidden="true">SA</div><h2 class="text-xl font-bold">Solution foundation</h2><p class="mt-2 leading-7 text-muted">Routing, layout, design tokens, and responsive styles are configured.</p></div></section>`, changeDetection: ChangeDetectionStrategy.OnPush })
-export default class HomeComponent {}
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Meta, Title } from '@angular/platform-browser';
+import { RouterLink } from '@angular/router';
+import { finalize } from 'rxjs';
+import ProjectCardComponent from '../projects/components/project-card/project-card.component';
+import { ProjectListItem } from '../projects/data-access/project.models';
+import { ProjectsApiService } from '../projects/data-access/projects-api.service';
+import { CERTIFICATIONS, DEVELOPMENT, EXPERIENCE, PROOF_POINTS, SKILL_GROUPS, TECHNICAL_SERIES } from './home.data';
+
+@Component({
+  selector: 'app-home',
+  imports: [RouterLink, ProjectCardComponent],
+  templateUrl: './home.component.html',
+  styleUrl: './home.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export default class HomeComponent {
+  private readonly projectsApi = inject(ProjectsApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
+  readonly projects = signal<ProjectListItem[]>([]);
+  readonly projectsLoading = signal(true);
+  readonly projectsError = signal(false);
+  readonly proofPoints = PROOF_POINTS;
+  readonly experience = EXPERIENCE;
+  readonly skillGroups = SKILL_GROUPS;
+  readonly certifications = CERTIFICATIONS;
+  readonly development = DEVELOPMENT;
+  readonly series = TECHNICAL_SERIES;
+
+  constructor() {
+    this.title.setTitle('Sultan Alomran | Senior Full-Stack Software Engineer');
+    const description = 'Senior Full-Stack Software Engineer building secure enterprise systems with .NET, Angular, TypeScript, SQL Server, and OutSystems.';
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: 'Sultan Alomran | Senior Full-Stack Software Engineer' });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ property: 'og:type', content: 'website' });
+    this.loadFeaturedProjects();
+  }
+
+  loadFeaturedProjects(): void {
+    this.projectsLoading.set(true);
+    this.projectsError.set(false);
+    this.projectsApi.list({ featured: true, sort: 'newest', page: 1, pageSize: 3 })
+      .pipe(finalize(() => this.projectsLoading.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: result => this.projects.set(result.items), error: () => this.projectsError.set(true) });
+  }
+}

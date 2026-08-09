@@ -1,0 +1,60 @@
+<section class="hero relative overflow-hidden bg-ink text-white" aria-labelledby="home-title">
+  <div class="hero-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
+  <div class="relative mx-auto grid max-w-7xl items-center gap-14 px-4 pb-28 pt-20 sm:px-6 lg:grid-cols-[1.1fr_.9fr] lg:px-8 lg:pb-36 lg:pt-28">
+    <div>
+      <p class="text-sm font-bold uppercase tracking-[.24em] text-violet-300">Hi, I’m</p>
+      <h1 id="home-title" class="mt-4 text-5xl font-black tracking-[-.04em] sm:text-6xl lg:text-7xl">Sultan <span class="gradient-text">Alomran</span></h1>
+      <p class="mt-5 text-xl font-semibold text-slate-200 sm:text-2xl">Senior Full-Stack Software Engineer</p>
+      <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300">I build secure enterprise solutions and explain technology visually—combining .NET engineering, Angular and TypeScript interfaces, SQL Server, and OutSystems architecture.</p>
+      <div class="mt-9 flex flex-wrap gap-3">
+        <a routerLink="/projects" class="button-primary">View My Projects <span aria-hidden="true">→</span></a>
+        <a href="#visual-handbook" class="button-secondary">Explore Visual Handbook</a>
+        <a href="/documents/cv/Sultan-Alomran-CV.pdf" target="_blank" rel="noopener" class="button-ghost" aria-label="Download Sultan Alomran CV (PDF)">Download CV <span class="text-xs">PDF</span></a>
+      </div>
+      <ul class="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-slate-300" aria-label="Core technologies">
+        <li>.NET</li><li>Angular</li><li>TypeScript</li><li>SQL Server</li><li>OutSystems</li>
+      </ul>
+    </div>
+    <div class="relative mx-auto w-full max-w-md" aria-hidden="true">
+      <div class="absolute -inset-10 rounded-full bg-violet-600/20 blur-3xl"></div>
+      <div class="relative rounded-[28px] border border-white/15 bg-slate-900/70 p-5 shadow-2xl shadow-violet-950/50 backdrop-blur">
+        <div class="flex items-center gap-2 border-b border-white/10 pb-4"><span class="size-2.5 rounded-full bg-rose-400"></span><span class="size-2.5 rounded-full bg-amber-300"></span><span class="size-2.5 rounded-full bg-emerald-400"></span><span class="ms-auto text-xs text-slate-500">portfolio-platform</span></div>
+        <div class="space-y-4 py-6 font-mono text-sm"><p class="text-violet-300">public interface IEngineer</p><p class="ps-5 text-slate-300">BuildEnterpriseSolutions();</p><p class="ps-5 text-slate-300">ExplainTechnologyVisually();</p><p class="ps-5 text-slate-300">DeliverWithQuality();</p></div>
+        <div class="grid grid-cols-2 gap-3"><div class="rounded-2xl bg-violet-500/15 p-4"><span class="text-xs text-violet-300">PRIMARY</span><p class="mt-2 font-bold">.NET Engineering</p></div><div class="rounded-2xl bg-indigo-500/15 p-4"><span class="text-xs text-indigo-300">FRONTEND</span><p class="mt-2 font-bold">Angular + TS</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="relative z-10 mx-auto -mt-14 max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Engineering proof">
+  <div class="grid overflow-hidden rounded-[20px] border border-border bg-white shadow-xl shadow-slate-900/10 sm:grid-cols-2 lg:grid-cols-4">
+    @for (item of proofPoints; track item.label) { <div class="border-b border-border p-6 text-center last:border-0 sm:border-e lg:border-b-0"><strong class="block text-3xl font-black text-primary">{{ item.value }}</strong><span class="mt-1 block text-sm font-semibold text-muted">{{ item.label }}</span></div> }
+  </div>
+</section>
+
+<section class="section" aria-labelledby="featured-projects-title">
+  <div class="section-heading"><div><p class="eyebrow">Selected work</p><h2 id="featured-projects-title">Featured Projects</h2><p>Enterprise case studies focused on decisions, architecture, and delivery.</p></div><a routerLink="/projects" class="text-link">View all projects →</a></div>
+  @if (projectsLoading()) { <div class="card-grid" aria-label="Loading featured projects">@for (item of [1,2,3]; track item) { <div class="h-[420px] animate-pulse rounded-[20px] bg-slate-200"></div> }</div> }
+  @else if (projectsError()) { <div class="state-card"><h3>Featured projects are temporarily unavailable</h3><p>The rest of the portfolio remains available.</p><button type="button" class="button-primary mt-5" (click)="loadFeaturedProjects()">Try again</button></div> }
+  @else if (!projects().length) { <div class="state-card"><h3>Case studies are being prepared</h3><p>Browse the Projects area for currently published work.</p><a routerLink="/projects" class="text-link mt-4 inline-flex">Browse projects →</a></div> }
+  @else { <div class="card-grid">@for (project of projects(); track project.id) { <app-project-card [project]="project" /> }</div> }
+</section>
+
+<section id="visual-handbook" class="bg-ink py-20 text-white sm:py-24" aria-labelledby="handbook-title">
+  <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[.85fr_1.15fr] lg:px-8">
+    <div><p class="eyebrow text-violet-300">Visual Handbook</p><h2 id="handbook-title" class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Complex engineering ideas, made clear.</h2><p class="mt-5 text-lg leading-8 text-slate-300">A growing visual knowledge library for architecture, .NET, Angular, APIs, data, and enterprise delivery. The full handbook experience is coming next.</p><a href="#technical-series" class="button-secondary mt-8">Explore the preview</a></div>
+    <div class="grid gap-4 sm:grid-cols-2"><article class="handbook-card sm:translate-y-8"><span>.NET Architecture</span><h3>From request to reliable system</h3><p>Visual explanations of boundaries, workflows, and maintainable application design.</p></article><article class="handbook-card"><span>APIs & Integration</span><h3>Make system conversations visible</h3><p>Patterns for contracts, integrations, validation, and operational reliability.</p></article><article class="handbook-card sm:translate-y-8"><span>Frontend Engineering</span><h3>Interfaces built as systems</h3><p>Responsive Angular composition, accessible interaction, and typed state.</p></article><article class="handbook-card"><span>Data & Performance</span><h3>Understand the work behind speed</h3><p>SQL thinking, diagnostics, and practical performance decisions.</p></article></div>
+  </div>
+</section>
+
+<section id="technical-series" class="section" aria-labelledby="series-title"><div class="section-heading"><div><p class="eyebrow">Technical collections</p><h2 id="series-title">Featured Series</h2><p>Focused visual collections around the technologies behind enterprise systems.</p></div></div><div class="card-grid">@for (item of series; track item.title) { <article class="surface-card"><span class="eyebrow">{{ item.eyebrow }}</span><h3>{{ item.title }}</h3><p>{{ item.description }}</p></article> }</div></section>
+
+<section id="experience" class="bg-white py-20 sm:py-24" aria-labelledby="experience-title"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div class="section-heading"><div><p class="eyebrow">Career progression</p><h2 id="experience-title">Enterprise Experience</h2><p>From frontend delivery to full-stack ownership and architecture.</p></div></div><ol class="relative ms-3 border-s-2 border-violet-200">@for (item of experience; track item.period) { <li class="relative pb-10 ps-9 last:pb-0"><span class="absolute -start-[9px] top-1 size-4 rounded-full border-4 border-white bg-primary shadow"></span><p class="text-sm font-bold text-primary">{{ item.period }}</p><h3 class="mt-2 text-xl font-bold">{{ item.role }}</h3><p class="mt-1 font-semibold text-slate-500">{{ item.employer }}</p><p class="mt-3 max-w-3xl leading-7 text-muted">{{ item.summary }}</p></li> }</ol></div></section>
+
+<section id="about" class="section" aria-labelledby="skills-title"><div class="section-heading"><div><p class="eyebrow">Engineering toolkit</p><h2 id="skills-title">Technologies & Skills</h2><p>Broad delivery capability, anchored in .NET enterprise engineering.</p></div></div><div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">@for (group of skillGroups; track group.title) { <article class="surface-card"><h3>{{ group.title }}</h3><ul class="mt-5 flex flex-wrap gap-2">@for (skill of group.skills; track skill) { <li class="rounded-full bg-violet-50 px-3 py-1.5 text-sm font-semibold text-violet-800">{{ skill }}</li> }</ul></article> }</div></section>
+
+<section id="credentials" class="bg-white py-20 sm:py-24" aria-labelledby="certifications-title"><div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"><div class="section-heading"><div><p class="eyebrow">Professional proof</p><h2 id="certifications-title">Certifications & Credentials</h2><p>Verified CV credentials. Document links appear only when original certificate evidence is available.</p></div></div><div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">@for (item of certifications; track item.title) { <article class="surface-card relative"><div class="flex items-start justify-between gap-3"><span class="eyebrow">{{ item.issuer }}</span>@if (item.score) { <strong class="rounded-xl bg-violet-100 px-3 py-2 text-xl text-violet-800">{{ item.score }}</strong> }</div><h3 class="mt-5">{{ item.title }}</h3>@if (item.credentialType) { <p class="mt-3 text-sm font-bold text-slate-700">{{ item.credentialType }}</p> }<p class="mt-3 text-sm text-muted">Issued {{ item.issued }}</p>@if (item.credentialUrl) { <a [href]="item.credentialUrl" target="_blank" rel="noopener" class="text-link mt-5 inline-flex" [attr.aria-label]="'View ' + item.title + ' credential (PDF)'">View Credential (PDF)</a> }</article> }</div></div></section>
+
+<section class="section" aria-labelledby="development-title"><div class="grid gap-10 lg:grid-cols-[1.35fr_.65fr]"><div><div class="section-heading"><div><p class="eyebrow">Continued growth</p><h2 id="development-title">Professional Development</h2></div></div><div class="divide-y divide-border rounded-[20px] border border-border bg-white px-6">@for (item of development; track item.title) { <article class="flex flex-col gap-1 py-5 sm:flex-row sm:items-center sm:justify-between"><div><h3 class="text-base font-bold">{{ item.title }}</h3><p class="text-sm text-muted">{{ item.provider }}</p></div><time class="text-sm font-semibold text-primary">{{ item.completed }}</time></article> }</div></div><aside class="surface-card self-end"><p class="eyebrow">Education</p><h2 class="mt-4 text-2xl font-black">King Saud University</h2><p class="mt-3 font-semibold">Bachelor’s degree</p><p class="text-muted">Computer Software Engineering</p><p class="mt-6 text-sm font-bold text-primary">2011 — 2017</p></aside></div></section>
+
+<section id="contact" class="px-4 pb-20 sm:px-6 sm:pb-24 lg:px-8"><div class="mx-auto max-w-7xl overflow-hidden rounded-[28px] bg-gradient-to-br from-violet-700 to-indigo-950 px-6 py-14 text-center text-white shadow-2xl sm:px-12 sm:py-16"><p class="text-sm font-bold uppercase tracking-[.22em] text-violet-200">Build with purpose</p><h2 class="mx-auto mt-4 max-w-3xl text-3xl font-black sm:text-5xl">Let’s build something valuable together.</h2><p class="mx-auto mt-5 max-w-2xl text-lg text-violet-100">Explore the engineering work, connect professionally, or start a conversation.</p><div class="mt-8 flex flex-wrap justify-center gap-3"><a href="mailto:sultan.alomran.9@gmail.com" class="button-light">Contact Me</a><a routerLink="/projects" class="button-secondary">View Projects</a><a href="https://www.linkedin.com/in/sultan-alomran-917708149" target="_blank" rel="noopener" class="button-secondary">LinkedIn</a></div></div></section>
