@@ -17,7 +17,7 @@ on:
       feature:
         description: Test suite
         type: choice
-        options: [smoke, projects, all]
+        options: [smoke, projects, quality, all]
         default: smoke
       evidence:
         description: Evidence mode
@@ -83,6 +83,8 @@ jobs:
       - name: Install Playwright browser
         run: npx playwright install --with-deps "${{ inputs.browser }}"
       - name: Run Playwright
+        id: playwright
+        continue-on-error: true
         shell: bash
         run: |
           mode="${{ inputs.evidence }}"
@@ -90,6 +92,21 @@ jobs:
           node tests/playwright/scripts/run.mjs --mode "$mode" --suite "${{ inputs.feature }}" --browser "${{ inputs.browser }}"
         env:
           CI: true
+      - name: Build normalized test telemetry
+        if: always()
+        run: node tests/playwright/scripts/build-telemetry.mjs --mode "${{ inputs.evidence }}" --feature "${{ inputs.feature }}" --browser "${{ inputs.browser }}"
+        env:
+          E2E_MODE: ${{ inputs.evidence }}
+          E2E_FEATURE: ${{ inputs.feature }}
+          E2E_BROWSER: ${{ inputs.browser }}
+      - name: Upload normalized telemetry
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-telemetry-${{ github.run_id }}-${{ inputs.feature }}-${{ inputs.browser }}
+          path: test-results/telemetry.json
+          if-no-files-found: warn
+          retention-days: 90
       - name: Upload HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -99,7 +116,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Upload failure diagnostics
-        if: failure()
+        if: always() && steps.playwright.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-failures-${{ inputs.feature }}-${{ inputs.browser }}
@@ -107,7 +124,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
       - name: Upload successful visual evidence
-        if: success() && inputs.evidence == 'visual'
+        if: always() && steps.playwright.outcome == 'success' && inputs.evidence == 'visual'
         uses: actions/upload-artifact@v4
         with:
           name: playwright-visual-evidence-${{ inputs.feature }}-${{ inputs.browser }}
@@ -122,3 +139,6 @@ jobs:
           path: test-results/
           if-no-files-found: error
           retention-days: 30
+      - name: Preserve Playwright result
+        if: always() && steps.playwright.outcome == 'failure'
+        run: exit 1

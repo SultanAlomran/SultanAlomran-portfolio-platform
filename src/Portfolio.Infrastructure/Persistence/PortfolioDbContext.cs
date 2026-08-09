@@ -47,6 +47,9 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
     public DbSet<SkillCategory> SkillCategories => Set<SkillCategory>();
     public DbSet<Tag> Tags => Set<Tag>();
     public DbSet<Technology> Technologies => Set<Technology>();
+    public DbSet<TestRun> TestRuns => Set<TestRun>();
+    public DbSet<TestCaseResult> TestCaseResults => Set<TestCaseResult>();
+    public DbSet<TestArtifact> TestArtifacts => Set<TestArtifact>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserBookmark> UserBookmarks => Set<UserBookmark>();
     public DbSet<UserHelpfulVote> UserHelpfulVotes => Set<UserHelpfulVote>();

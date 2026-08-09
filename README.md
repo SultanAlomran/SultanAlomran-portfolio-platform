@@ -110,6 +110,10 @@ See [docs/development/DevTunnel.md](docs/development/DevTunnel.md) for setup, se
 
 Playwright provides automated Admin and public-site regression testing without Dev Tunnels. After restoring the root lockfile and installing Chromium, run `npm run e2e:smoke`; Playwright owns application startup/readiness/cleanup. Normal PRs run the efficient smoke suite automatically, while the `e2e-visual` and `e2e-record` labels request successful screenshots or full review recordings. See [tests/playwright/README.md](tests/playwright/README.md) for local commands, artifacts, debugging, and the future vertical-slice convention.
 
+## Test Analytics
+
+Portfolio.Admin exposes permanent Playwright/CI history at `/quality/tests`. SQL Server stores normalized metrics and artifact metadata—not evidence binaries—so history survives GitHub artifact expiration. Generate `test-results/telemetry.json` through Playwright and import it locally with `.\scripts\import-test-telemetry.ps1`. See [docs/development/TestAnalytics.md](docs/development/TestAnalytics.md) for the data model, routes, retention behavior, and future Azure Blob extension.
+
 ## Validation
 
 ```bash
