@@ -76,6 +76,36 @@ npm start # http://localhost:4300
 
 The API listens on `https://localhost:7100` and `http://localhost:5100`. Its OpenAPI document is at `https://localhost:7100/openapi/v1.json`; this foundation does not include a Swagger UI page.
 
+## Remote development with Microsoft Dev Tunnels
+
+Portfolio.Web (`4200`), Portfolio.Admin (`4300`), and Portfolio.Api (`5100`) run locally while Microsoft Dev Tunnels exposes each service through a private HTTPS development URL. This is development and testing infrastructure, not production hosting.
+
+![Portfolio Dev Tunnel Architecture](docs/development/DevTunnels-HowItRuns.png)
+
+Start the local applications and private, authenticated tunnel from the repository root:
+
+```powershell
+.\scripts\start-dev-environment.ps1
+```
+
+While the development PC and tunnel host are running, authorized accounts can access:
+
+- Public Web: `https://snbh8kgz-4200.asse.devtunnels.ms/`
+- Admin: `https://snbh8kgz-4300.asse.devtunnels.ms/`
+- API: `https://snbh8kgz-5100.asse.devtunnels.ms/`
+- API health: `https://snbh8kgz-5100.asse.devtunnels.ms/health`
+- OpenAPI: `https://snbh8kgz-5100.asse.devtunnels.ms/openapi/v1.json`
+
+The development PC, all local applications, and the tunnel host must remain running. Access is private and authenticated; remote users must sign in with an account authorized for the tunnel. URLs may change when the tunnel expires or is recreated. Never place credentials, tokens, secrets, or authentication data in this README.
+
+Real-device access has been verified over the Internet from an iPhone for Portfolio.Web, Portfolio.Admin, and the API health endpoint. Stop the complete environment with:
+
+```powershell
+.\scripts\stop-dev-environment.ps1
+```
+
+See [docs/development/DevTunnel.md](docs/development/DevTunnel.md) for setup, security, reuse, and troubleshooting details.
+
 ## Validation
 
 ```bash
