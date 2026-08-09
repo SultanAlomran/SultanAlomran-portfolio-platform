@@ -1,0 +1,23 @@
+{
+  "name": "portfolio-platform-e2e",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
+  "scripts": {
+    "e2e": "node tests/playwright/scripts/run.mjs",
+    "e2e:smoke": "node tests/playwright/scripts/run.mjs --suite smoke",
+    "e2e:admin": "node tests/playwright/scripts/run.mjs --suite admin",
+    "e2e:web": "node tests/playwright/scripts/run.mjs --suite public",
+    "e2e:responsive": "node tests/playwright/scripts/run.mjs --suite responsive",
+    "e2e:visual": "node tests/playwright/scripts/run.mjs --mode visual",
+    "e2e:record": "node tests/playwright/scripts/run.mjs --mode record",
+    "e2e:headed": "node tests/playwright/scripts/run.mjs --headed",
+    "e2e:debug": "node tests/playwright/scripts/run.mjs --debug",
+    "e2e:report": "playwright show-report playwright-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1"
+  }
+}

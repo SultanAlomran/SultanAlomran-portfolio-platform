@@ -1,0 +1,124 @@
+name: Playwright E2E
+
+on:
+  workflow_call:
+    inputs:
+      feature:
+        type: string
+        default: smoke
+      evidence:
+        type: string
+        default: standard
+      browser:
+        type: string
+        default: chromium
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: Test suite
+        type: choice
+        options: [smoke, projects, all]
+        default: smoke
+      evidence:
+        description: Evidence mode
+        type: choice
+        options: [standard, visual, full-recording]
+        default: standard
+      browser:
+        description: Browser
+        type: choice
+        options: [chromium, firefox, webkit]
+        default: chromium
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: ${{ inputs.feature }} / ${{ inputs.evidence }} / ${{ inputs.browser }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            src/Portfolio.Admin/package-lock.json
+            src/Portfolio.Web/package-lock.json
+      - name: Start ephemeral SQL Server
+        shell: bash
+        run: |
+          sql_password="Aa1!$(openssl rand -hex 16)"
+          echo "::add-mask::$sql_password"
+          docker run --name portfolio-e2e-sql --detach \
+            --env ACCEPT_EULA=Y \
+            --env MSSQL_SA_PASSWORD="$sql_password" \
+            --publish 1433:1433 \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for attempt in {1..30}; do
+            if docker exec portfolio-e2e-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$sql_password" -C -Q "SELECT 1" >/dev/null 2>&1; then
+              break
+            fi
+            if [[ "$attempt" == "30" ]]; then docker logs portfolio-e2e-sql; exit 1; fi
+            sleep 2
+          done
+          connection="Server=localhost,1433;Database=PortfolioE2E;User ID=sa;Password=$sql_password;Encrypt=True;TrustServerCertificate=True;MultipleActiveResultSets=True"
+          echo "::add-mask::$connection"
+          echo "ConnectionStrings__PortfolioDatabase=$connection" >> "$GITHUB_ENV"
+      - name: Restore application and E2E dependencies
+        run: |
+          dotnet restore Portfolio.sln
+          dotnet tool restore
+          npm ci
+          npm --prefix src/Portfolio.Admin ci
+          npm --prefix src/Portfolio.Web ci
+      - name: Prepare disposable E2E database
+        run: dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps "${{ inputs.browser }}"
+      - name: Run Playwright
+        shell: bash
+        run: |
+          mode="${{ inputs.evidence }}"
+          if [[ "$mode" == "full-recording" ]]; then mode="record"; fi
+          node tests/playwright/scripts/run.mjs --mode "$mode" --suite "${{ inputs.feature }}" --browser "${{ inputs.browser }}"
+        env:
+          CI: true
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.feature }}-${{ inputs.evidence }}-${{ inputs.browser }}
+          path: playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload failure diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-failures-${{ inputs.feature }}-${{ inputs.browser }}
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
+      - name: Upload successful visual evidence
+        if: success() && inputs.evidence == 'visual'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-visual-evidence-${{ inputs.feature }}-${{ inputs.browser }}
+          path: test-results/**/evidence/*.png
+          if-no-files-found: error
+          retention-days: 21
+      - name: Upload full recording evidence
+        if: always() && inputs.evidence == 'full-recording'
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-full-recording-${{ inputs.feature }}-${{ inputs.browser }}
+          path: test-results/
+          if-no-files-found: error
+          retention-days: 30

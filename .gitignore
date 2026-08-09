@@ -318,6 +318,12 @@ dist/
 .angular/
 .dev-environment/
 .dev-tunnel/
+playwright-report/
+test-results/
+blob-report/
+.playwright-artifacts/
+!tests/playwright/snapshots/win32/
+!tests/playwright/snapshots/win32/**
 .idea/
 .DS_Store
 
