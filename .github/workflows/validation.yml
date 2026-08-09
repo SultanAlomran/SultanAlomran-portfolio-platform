@@ -89,3 +89,26 @@ jobs:
         run: npm run lint
       - if: ${{ hashFiles('src/Portfolio.Admin/package-lock.json') != '' }}
         run: npm run build
+  playwright:
+    needs: [dotnet, portfolio-web, portfolio-admin]
+    uses: ./.github/workflows/playwright.yml
+    with:
+      feature: smoke
+      evidence: standard
+      browser: chromium
+  playwright-visual:
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e-visual')
+    needs: [dotnet, portfolio-web, portfolio-admin]
+    uses: ./.github/workflows/playwright.yml
+    with:
+      feature: all
+      evidence: visual
+      browser: chromium
+  playwright-record:
+    if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'e2e-record')
+    needs: [dotnet, portfolio-web, portfolio-admin]
+    uses: ./.github/workflows/playwright.yml
+    with:
+      feature: all
+      evidence: full-recording
+      browser: chromium
