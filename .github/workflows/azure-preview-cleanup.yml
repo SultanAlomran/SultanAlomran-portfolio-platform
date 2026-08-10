@@ -1,0 +1,30 @@
+name: Azure PR preview cleanup
+on:
+  pull_request:
+    branches: [dev]
+    types: [closed]
+  workflow_dispatch:
+    inputs:
+      pr_number: { description: 'PR number (1-999999)', required: true }
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: azure-preview-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: false
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    environment: azure-preview
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      AZURE_PREVIEW_RESOURCE_GROUP: ${{ vars.AZURE_PREVIEW_RESOURCE_GROUP }}
+      AZURE_SQL_SERVER_NAME: portfolio-preview-${{ vars.AZURE_RESOURCE_SUFFIX }}-sql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - run: scripts/azure/destroy-preview.sh "$PR_NUMBER"

@@ -1,0 +1,110 @@
+name: Azure PR preview
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Existing open PR number (1-999999)
+        required: true
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+concurrency:
+  group: azure-preview-${{ github.event.pull_request.number || inputs.pr_number }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'azure-preview')
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment:
+      name: azure-preview
+      url: ${{ steps.urls.outputs.web }}
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+      RESOURCE_GROUP: ${{ vars.AZURE_PREVIEW_RESOURCE_GROUP }}
+      LOCATION: ${{ vars.AZURE_LOCATION }}
+      SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
+      SQL_PASSWORD: ${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { global-json-file: global.json }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Validate input and applications
+        shell: bash
+        run: |
+          [[ "$PR_NUMBER" =~ ^[1-9][0-9]{0,5}$ ]]
+          dotnet build Portfolio.sln --configuration Release
+          npm --prefix src/Portfolio.Web ci
+          npm --prefix src/Portfolio.Web run build -- --configuration preview
+          npm --prefix src/Portfolio.Admin ci
+          npm --prefix src/Portfolio.Admin run build -- --configuration preview
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Build immutable images in shared registry
+        run: |
+          registry="portfoliopreview${SUFFIX}acr"
+          az acr build -r "$registry" -t "portfolio-api:${GITHUB_SHA}" -f src/Portfolio.Api/Dockerfile .
+          az acr build -r "$registry" -t "portfolio-web:${GITHUB_SHA}" -f deploy/preview/Dockerfile.web .
+          az acr build -r "$registry" -t "portfolio-admin:${GITHUB_SHA}" -f deploy/preview/Dockerfile.admin .
+      - name: Provision isolated preview
+        id: provision
+        shell: bash
+        run: |
+          registry="portfoliopreview${SUFFIX}acr"
+          sql_server="portfolio-preview-${SUFFIX}-sql"
+          env_id="$(az containerapp env show -g "$RESOURCE_GROUP" -n "portfolio-preview-${SUFFIX}-env" --query id -o tsv)"
+          result="$(az deployment group create -g "$RESOURCE_GROUP" -f infra/azure/preview/main.bicep \
+            -p location="$LOCATION" prNumber="$PR_NUMBER" containerAppsEnvironmentId="$env_id" \
+               registryName="$registry" sqlServerName="$sql_server" sqlAdministratorLogin=portfolioadmin \
+               sqlAdministratorPassword="$SQL_PASSWORD" imageTag="$GITHUB_SHA" -o json)"
+          for key in apiUrl webUrl adminUrl databaseName; do
+            echo "$key=$(jq -r ".properties.outputs.${key}.value" <<<"$result")" >> "$GITHUB_OUTPUT"
+          done
+          echo "sql_server=$sql_server" >> "$GITHUB_OUTPUT"
+      - name: Migrate and seed disposable database
+        shell: bash
+        run: |
+          runner_ip="$(curl -fsS https://api.ipify.org)"
+          rule="github-${GITHUB_RUN_ID}"
+          trap 'az sql server firewall-rule delete -g "$RESOURCE_GROUP" -s "${{ steps.provision.outputs.sql_server }}" -n "$rule" --yes >/dev/null 2>&1 || true' EXIT
+          az sql server firewall-rule create -g "$RESOURCE_GROUP" -s "${{ steps.provision.outputs.sql_server }}" -n "$rule" --start-ip-address "$runner_ip" --end-ip-address "$runner_ip"
+          export ASPNETCORE_ENVIRONMENT=Preview
+          export ConnectionStrings__PortfolioDatabase="Server=tcp:${{ steps.provision.outputs.sql_server }}.database.windows.net,1433;Initial Catalog=${{ steps.provision.outputs.databaseName }};User ID=portfolioadmin;Password=${SQL_PASSWORD};Encrypt=True;TrustServerCertificate=False;"
+          export Cors__AllowedOrigins__0="${{ steps.provision.outputs.webUrl }}"
+          export Cors__AllowedOrigins__1="${{ steps.provision.outputs.adminUrl }}"
+          dotnet tool restore
+          dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
+          dotnet run --project src/Portfolio.Api --configuration Release --no-build -- --seed-preview-projects
+      - name: Smoke check and publish URLs
+        id: urls
+        shell: bash
+        run: |
+          api='${{ steps.provision.outputs.apiUrl }}'; web='${{ steps.provision.outputs.webUrl }}'; admin='${{ steps.provision.outputs.adminUrl }}'
+          for url in "$api/health/ready" "$api/openapi/v1.json" "$web/health" "$admin/health"; do
+            for attempt in {1..18}; do curl -fsS --retry 2 "$url" >/dev/null && break; [[ "$attempt" == 18 ]] && exit 1; sleep 10; done
+          done
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+      - name: Update preview comment
+        uses: actions/github-script@v7
+        env:
+          API_URL: ${{ steps.provision.outputs.apiUrl }}
+          WEB_URL: ${{ steps.provision.outputs.webUrl }}
+          ADMIN_URL: ${{ steps.provision.outputs.adminUrl }}
+        with:
+          script: |
+            const marker = '<!-- portfolio-azure-preview -->';
+            const issue_number = Number(process.env.PR_NUMBER);
+            const body = `${marker}\n## Azure Preview Environment\n\n| Service | URL |\n|---|---|\n| Public Web | ${process.env.WEB_URL} |\n| Admin (authentication not implemented) | ${process.env.ADMIN_URL} |\n| API | ${process.env.API_URL} |\n| API Health | ${process.env.API_URL}/health/ready |\n| Scalar | ${process.env.API_URL}/scalar/v1 |\n| OpenAPI | ${process.env.API_URL}/openapi/v1.json |\n\n**Commit:** \`${context.sha.slice(0, 7)}\`  \n**Environment:** PR #${issue_number}  \n**Status:** Ready`;
+            const comments = await github.paginate(github.rest.issues.listComments, {owner: context.repo.owner, repo: context.repo.repo, issue_number});
+            const previous = comments.find(c => c.user.type === 'Bot' && c.body?.includes(marker));
+            if (previous) await github.rest.issues.updateComment({owner: context.repo.owner, repo: context.repo.repo, comment_id: previous.id, body});
+            else await github.rest.issues.createComment({owner: context.repo.owner, repo: context.repo.repo, issue_number, body});

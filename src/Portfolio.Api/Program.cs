@@ -12,10 +12,12 @@ builder.Logging.AddJsonConsole();
 builder.Services.AddApiFoundation(builder.Configuration);
 
 var app = builder.Build();
-if (args.Contains("--seed-development-projects", StringComparer.OrdinalIgnoreCase))
+var seedDevelopment = args.Contains("--seed-development-projects", StringComparer.OrdinalIgnoreCase);
+var seedPreview = args.Contains("--seed-preview-projects", StringComparer.OrdinalIgnoreCase);
+if (seedDevelopment || seedPreview)
 {
-    if (!app.Environment.IsDevelopment())
-        throw new InvalidOperationException("Project development seed can run only in the Development environment.");
+    if (!(seedDevelopment && app.Environment.IsDevelopment()) && !(seedPreview && app.Environment.IsEnvironment("Preview")))
+        throw new InvalidOperationException("Project seed command does not match the current environment.");
     var connectionString = builder.Configuration.GetConnectionString("PortfolioDatabase")
         ?? throw new InvalidOperationException("Connection string 'PortfolioDatabase' is required.");
     var result = await DevelopmentProjectSeed.SeedAsync(app.Services, connectionString);
@@ -30,7 +32,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseConfiguredCors();
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Preview"))
 {
     app.MapOpenApi();
     app.MapScalarApiReference(options => options
