@@ -1,9 +1,25 @@
 import { test, expect } from '../../fixtures/diagnostics';
 import { e2eEnvironment } from '../../config/environment';
 import { addInfographicStep, completeInfographicBasics, infographicIds, mockAdminInfographics } from '../../data/infographic';
+import { mediaItems, mockMediaApi } from '../../data/media';
 
 test.describe('Admin Infographics', () => {
-  test.beforeEach(async ({ page }) => mockAdminInfographics(page));
+  test.beforeEach(async ({ page }) => {
+    await mockAdminInfographics(page);
+    await mockMediaApi(page);
+  });
+
+  test('selects, previews, replaces, and removes reusable media', async ({ page }) => {
+    await page.goto(`${e2eEnvironment.adminUrl}/infographics/create`);
+    await completeInfographicBasics(page);
+    await page.getByRole('button', { name: 'Media & Files' }).click();
+    await page.getByRole('button', { name: 'Select from Media Library' }).first().click();
+    const picker = page.getByRole('dialog', { name: 'Select media' });
+    await picker.getByRole('button', { name: mediaItems[0].originalFileName }).click();
+    await expect(page.getByText(mediaItems[0].originalFileName)).toBeVisible();
+    await page.getByRole('button', { name: 'Remove' }).first().click();
+    await expect(page.getByText('No file selected').first()).toBeVisible();
+  });
 
   test('renders and filters the server-backed Infographics list', async ({ page }) => {
     await page.goto(`${e2eEnvironment.adminUrl}/infographics`);

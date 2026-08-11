@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Portfolio.Application.Infographics;
-using Portfolio.Application.Projects;
 using Portfolio.Application.Media;
+using Portfolio.Application.Projects;
 
 namespace Portfolio.Api.Common;
 

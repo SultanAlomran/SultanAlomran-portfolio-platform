@@ -1,5 +1,5 @@
-using Portfolio.Application.Media;
 using Microsoft.Extensions.Configuration;
+using Portfolio.Application.Media;
 
 namespace Portfolio.Infrastructure.Media;
 
@@ -18,8 +18,14 @@ internal sealed class LocalMediaStorage : IMediaStorage
         await using var output = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, true);
         await content.CopyToAsync(output, token);
     }
-    public Task DeleteAsync(string key, CancellationToken token) { File.Delete(Resolve(key)); return Task.CompletedTask; }
+    public Task DeleteAsync(string key, CancellationToken token)
+    {
+        File.Delete(Resolve(key));
+        return Task.CompletedTask;
+    }
+
     public string GetUrl(string key) => key.StartsWith("/media/", StringComparison.Ordinal) ? key : $"/media/{Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}";
+
     private string Resolve(string key)
     {
         key = key.StartsWith("/media/", StringComparison.Ordinal) ? key[7..] : key;
