@@ -20,7 +20,8 @@ if (seedDevelopment || seedPreview)
         throw new InvalidOperationException("Project seed command does not match the current environment.");
     var connectionString = builder.Configuration.GetConnectionString("PortfolioDatabase")
         ?? throw new InvalidOperationException("Connection string 'PortfolioDatabase' is required.");
-    var result = await DevelopmentProjectSeed.SeedAsync(app.Services, connectionString);
+    var allowRemoteDatabase = seedPreview && app.Environment.IsEnvironment("Preview");
+    var result = await DevelopmentProjectSeed.SeedAsync(app.Services, connectionString, allowRemoteDatabase);
     Console.WriteLine("Development project seed complete: {0} projects, {1} technologies, {2} relationships added.",
         result.ProjectsAdded, result.TechnologiesAdded, result.RelationshipsAdded);
     return;

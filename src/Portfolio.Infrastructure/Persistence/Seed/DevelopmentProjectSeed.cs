@@ -131,9 +131,10 @@ public static class DevelopmentProjectSeed
             ["ASP.NET Core", "EF Core", "LINQ", "SQL Server", "Razor", "Bootstrap 5", "Metronic 8.29 RTL", "JavaScript", "jQuery", "SignalR", "REST API", "ApexCharts.js", "SweetAlert2", "Lottie", "Git", "Azure Boards", "CI/CD"])
     ];
 
-    public static async Task<Result> SeedAsync(IServiceProvider services, string connectionString, CancellationToken cancellationToken = default)
+    public static async Task<Result> SeedAsync(IServiceProvider services, string connectionString, bool allowRemoteDatabase = false,
+        CancellationToken cancellationToken = default)
     {
-        EnsureLocalDatabase(connectionString);
+        if (!allowRemoteDatabase) EnsureLocalDatabase(connectionString);
         using var scope = services.CreateScope();
         return await SeedAsync(scope.ServiceProvider.GetRequiredService<PortfolioDbContext>(), cancellationToken);
     }
