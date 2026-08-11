@@ -53,6 +53,7 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
         image: identityBootstrap ? bootstrapImage : '${registryServer}/portfolio-api:${imageTag}'
         env: identityBootstrap ? [] : [
           { name: 'ASPNETCORE_ENVIRONMENT', value: 'Preview' }
+          { name: 'ASPNETCORE_FORWARDEDHEADERS_ENABLED', value: 'true' }
           { name: 'ConnectionStrings__PortfolioDatabase', secretRef: 'database' }
           { name: 'Cors__AllowedOrigins__0', value: 'https://${webName}.${environment.properties.defaultDomain}' }
           { name: 'Cors__AllowedOrigins__1', value: 'https://${adminName}.${environment.properties.defaultDomain}' }
