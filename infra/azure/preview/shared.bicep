@@ -19,7 +19,7 @@ resource registry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
 resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: '${baseName}-env'
   location: location
-  properties: { appLogsConfiguration: { destination: 'none' } }
+  properties: {}
   tags: { repository: 'SultanAlomran-portfolio-platform', environment: 'preview-shared' }
 }
 resource sql 'Microsoft.Sql/servers@2023-08-01-preview' = {
