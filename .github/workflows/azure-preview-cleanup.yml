@@ -20,6 +20,7 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
       AZURE_PREVIEW_RESOURCE_GROUP: ${{ vars.AZURE_PREVIEW_RESOURCE_GROUP }}
       AZURE_SQL_SERVER_NAME: portfolio-preview-${{ vars.AZURE_RESOURCE_SUFFIX }}-sql
+      AZURE_CONTAINER_REGISTRY_NAME: portfoliopreview${{ vars.AZURE_RESOURCE_SUFFIX }}acr
     steps:
       - uses: actions/checkout@v4
       - uses: azure/login@v2
