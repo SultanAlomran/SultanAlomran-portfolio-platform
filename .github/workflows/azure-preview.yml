@@ -92,7 +92,7 @@ jobs:
           export Cors__AllowedOrigins__1="${{ steps.provision.outputs.adminUrl }}"
           dotnet tool restore
           dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
-          dotnet run --project src/Portfolio.Api --configuration Release --no-build -- --seed-preview-projects
+          dotnet run --project src/Portfolio.Api --configuration Release --no-build --no-launch-profile -- --seed-preview-projects
       - name: Smoke check and publish URLs
         id: urls
         shell: bash
