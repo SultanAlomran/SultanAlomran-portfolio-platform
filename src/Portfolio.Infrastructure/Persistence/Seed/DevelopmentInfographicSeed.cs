@@ -75,9 +75,13 @@ public static class DevelopmentInfographicSeed
             [new("Project the response", "Select only the columns required by the API contract instead of materializing full entity graphs."), new("Disable tracking for reads", "Use AsNoTracking when the result will not be updated in the current unit of work."), new("Bound every list", "Apply server-side filtering, stable sorting, and pagination before materialization."), new("Watch relationship access", "Prefer one translated projection over per-row relationship queries that create N+1 traffic."), new("Validate with SQL", "Inspect generated SQL and query plans against realistic data before declaring an optimization complete.")])
     ];
 
-    public static async Task<Result> SeedAsync(IServiceProvider services, string connectionString, CancellationToken token = default)
+    public static async Task<Result> SeedAsync(
+        IServiceProvider services,
+        string connectionString,
+        bool allowRemoteDatabase = false,
+        CancellationToken token = default)
     {
-        EnsureLocalDatabase(connectionString);
+        EnsureDatabaseAllowed(connectionString, allowRemoteDatabase);
         using var scope = services.CreateScope();
         return await SeedAsync(scope.ServiceProvider.GetRequiredService<PortfolioDbContext>(), token);
     }
@@ -129,8 +133,9 @@ public static class DevelopmentInfographicSeed
     private static string Slugify(string value) => value.ToLowerInvariant().Replace("&", "and")
         .Replace(".", "dot").Replace(" ", "-").Replace("/", "-");
 
-    private static void EnsureLocalDatabase(string connectionString)
+    private static void EnsureDatabaseAllowed(string connectionString, bool allowRemoteDatabase)
     {
+        if (allowRemoteDatabase) return;
         var dataSource = new SqlConnectionStringBuilder(connectionString).DataSource;
         if (!dataSource.StartsWith("(localdb)\\", StringComparison.OrdinalIgnoreCase))
             throw new InvalidOperationException("Development infographic seed is restricted to a SQL Server LocalDB data source.");

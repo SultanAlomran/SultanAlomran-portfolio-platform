@@ -1,0 +1,36 @@
+name: Azure preview orphan cleanup
+on:
+  schedule: [{ cron: '23 4 * * 1' }]
+  workflow_dispatch:
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: read
+jobs:
+  reap-closed-previews:
+    runs-on: ubuntu-latest
+    environment: azure-preview
+    env:
+      GH_TOKEN: ${{ github.token }}
+      AZURE_PREVIEW_RESOURCE_GROUP: ${{ vars.AZURE_PREVIEW_RESOURCE_GROUP }}
+      AZURE_SQL_SERVER_NAME: portfolio-preview-${{ vars.AZURE_RESOURCE_SUFFIX }}-sql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Remove only previews whose GitHub PR is no longer open
+        shell: bash
+        run: |
+          mapfile -t prs < <(az containerapp list -g "$AZURE_PREVIEW_RESOURCE_GROUP" --query "[?tags.environment=='preview'].tags.pr" -o tsv | sort -nu)
+          for pr in "${prs[@]}"; do
+            [[ "$pr" =~ ^[1-9][0-9]{0,5}$ ]] || continue
+            state="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr}" --jq .state 2>/dev/null || echo unknown)"
+            if [[ "$state" == closed ]]; then
+              scripts/azure/destroy-preview.sh "$pr"
+            else
+              echo "Keeping PR #$pr (state: $state)."
+            fi
+          done
