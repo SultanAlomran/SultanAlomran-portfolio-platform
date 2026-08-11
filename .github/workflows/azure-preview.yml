@@ -101,7 +101,7 @@ jobs:
         run: |
           runner_ip="$(curl -fsS https://api.ipify.org)"
           rule="github-${GITHUB_RUN_ID}"
-          trap 'az sql server firewall-rule delete -g "$RESOURCE_GROUP" -s "${{ steps.provision.outputs.sql_server }}" -n "$rule" --yes >/dev/null 2>&1 || true' EXIT
+          trap 'az sql server firewall-rule delete -g "$RESOURCE_GROUP" -s "${{ steps.provision.outputs.sql_server }}" -n "$rule" >/dev/null 2>&1 || true' EXIT
           az sql server firewall-rule create -g "$RESOURCE_GROUP" -s "${{ steps.provision.outputs.sql_server }}" -n "$rule" --start-ip-address "$runner_ip" --end-ip-address "$runner_ip"
           export ASPNETCORE_ENVIRONMENT=Preview
           export ConnectionStrings__PortfolioDatabase="Server=tcp:${{ steps.provision.outputs.sql_server }}.database.windows.net,1433;Initial Catalog=${{ steps.provision.outputs.databaseName }};User ID=portfolioadmin;Password=${SQL_PASSWORD};Encrypt=True;TrustServerCertificate=False;"
