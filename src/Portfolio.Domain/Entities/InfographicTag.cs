@@ -6,6 +6,7 @@ namespace Portfolio.Domain.Entities;
 public sealed class InfographicTag : Entity
 {
     private InfographicTag() { }
+    public static InfographicTag Create(Guid tagId) => new() { TagId = tagId };
     public Guid InfographicId { get; private set; }
     public Guid TagId { get; private set; }
     public Infographic Infographic { get; private set; } = null!;

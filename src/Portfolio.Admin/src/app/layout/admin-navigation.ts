@@ -15,8 +15,13 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationGroup[] = [
     label: 'Main',
     items: [
       { label: 'Dashboard', path: '/dashboard', icon: 'ki-home-2', exact: true },
+    ],
+  },
+  {
+    label: 'Content',
+    items: [
       { label: 'Projects', path: '/projects', icon: 'ki-briefcase' },
-      { label: 'Visual Handbook', path: '/visual-handbook', icon: 'ki-book-open' },
+      { label: 'Infographics', path: '/infographics', icon: 'ki-book-open' },
       { label: 'Categories', path: '/categories', icon: 'ki-category' },
       { label: 'Tags', path: '/tags', icon: 'ki-tag' },
       { label: 'Series', path: '/series', icon: 'ki-abstract-26' },

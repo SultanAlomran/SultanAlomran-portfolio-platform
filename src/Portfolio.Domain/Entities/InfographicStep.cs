@@ -6,6 +6,15 @@ namespace Portfolio.Domain.Entities;
 public sealed class InfographicStep : Entity
 {
     private InfographicStep() { }
+    public static InfographicStep Create(int stepNumber, string title, string? content, Guid? mediaFileId,
+        int displayOrder) => new()
+        {
+            StepNumber = stepNumber,
+            Title = title.Trim(),
+            Content = string.IsNullOrWhiteSpace(content) ? null : content.Trim(),
+            MediaFileId = mediaFileId,
+            DisplayOrder = displayOrder
+        };
     public Guid InfographicId { get; private set; }
     public int StepNumber { get; private set; }
     public string Title { get; private set; } = "";

@@ -8,7 +8,7 @@
       <p class="mt-6 max-w-2xl text-lg leading-8 text-slate-300">I build secure enterprise solutions and explain technology visually—combining .NET engineering, Angular and TypeScript interfaces, SQL Server, and OutSystems architecture.</p>
       <div class="mt-9 flex flex-wrap gap-3">
         <a routerLink="/projects" class="button-primary">View My Projects <span aria-hidden="true">→</span></a>
-        <a href="#visual-handbook" class="button-secondary">Explore Visual Handbook</a>
+        <a routerLink="/visual-handbook" class="button-secondary">Explore Visual Handbook</a>
         <a href="/documents/cv/Sultan-Alomran-CV.pdf" target="_blank" rel="noopener" class="button-ghost" aria-label="Download Sultan Alomran CV (PDF)">Download CV <span class="text-xs">PDF</span></a>
       </div>
       <ul class="mt-10 flex flex-wrap gap-x-7 gap-y-3 text-sm font-semibold text-slate-300" aria-label="Core technologies">
@@ -41,9 +41,15 @@
 </section>
 
 <section id="visual-handbook" class="bg-ink py-20 text-white sm:py-24" aria-labelledby="handbook-title">
-  <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[.85fr_1.15fr] lg:px-8">
-    <div><p class="eyebrow text-violet-300">Visual Handbook</p><h2 id="handbook-title" class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Complex engineering ideas, made clear.</h2><p class="mt-5 text-lg leading-8 text-slate-300">A growing visual knowledge library for architecture, .NET, Angular, APIs, data, and enterprise delivery. The full handbook experience is coming next.</p><a href="#technical-series" class="button-secondary mt-8">Explore the preview</a></div>
-    <div class="grid gap-4 sm:grid-cols-2"><article class="handbook-card sm:translate-y-8"><span>.NET Architecture</span><h3>From request to reliable system</h3><p>Visual explanations of boundaries, workflows, and maintainable application design.</p></article><article class="handbook-card"><span>APIs & Integration</span><h3>Make system conversations visible</h3><p>Patterns for contracts, integrations, validation, and operational reliability.</p></article><article class="handbook-card sm:translate-y-8"><span>Frontend Engineering</span><h3>Interfaces built as systems</h3><p>Responsive Angular composition, accessible interaction, and typed state.</p></article><article class="handbook-card"><span>Data & Performance</span><h3>Understand the work behind speed</h3><p>SQL thinking, diagnostics, and practical performance decisions.</p></article></div>
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div><p class="eyebrow text-violet-300">Visual Handbook</p><h2 id="handbook-title" class="mt-3 text-4xl font-black tracking-tight sm:text-5xl">Complex engineering ideas, made clear.</h2><p class="mt-5 max-w-3xl text-lg leading-8 text-slate-300">Persisted visual guides for architecture, .NET, Angular, APIs, data, and enterprise delivery.</p></div>
+      <a routerLink="/visual-handbook" class="button-secondary">Explore Visual Handbook</a>
+    </div>
+    @if (infographicsLoading()) { <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Loading featured infographics">@for (item of [1,2,3]; track item) { <div class="h-[420px] animate-pulse rounded-[20px] bg-white/10"></div> }</div> }
+    @else if (infographicsError()) { <div class="mt-10 rounded-2xl border border-white/15 bg-white/5 p-10 text-center"><h3 class="text-xl font-bold">Visual guides are temporarily unavailable</h3><p class="mt-2 text-slate-300">Projects and the rest of the portfolio remain available.</p><button class="button-secondary mt-5" (click)="loadFeaturedInfographics()">Try again</button></div> }
+    @else if (!infographics().length) { <div class="mt-10 rounded-2xl border border-dashed border-white/20 p-10 text-center"><h3 class="text-xl font-bold">Visual guides are being prepared</h3><p class="mt-2 text-slate-300">The Visual Handbook will grow with practical engineering explanations.</p><a routerLink="/visual-handbook" class="button-secondary mt-5">Open Visual Handbook</a></div> }
+    @else { <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">@for (item of infographics(); track item.id) { <app-infographic-card [item]="item" /> }</div> }
   </div>
 </section>
 

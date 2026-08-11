@@ -6,23 +6,30 @@ import { finalize } from 'rxjs';
 import ProjectCardComponent from '../projects/components/project-card/project-card.component';
 import { ProjectListItem } from '../projects/data-access/project.models';
 import { ProjectsApiService } from '../projects/data-access/projects-api.service';
+import InfographicCardComponent from '../visual-handbook/components/infographic-card/infographic-card.component';
+import { InfographicListItem } from '../visual-handbook/data-access/infographic.models';
+import { InfographicsApiService } from '../visual-handbook/data-access/infographics-api.service';
 import { CERTIFICATIONS, DEVELOPMENT, EXPERIENCE, PROOF_POINTS, SKILL_GROUPS, TECHNICAL_SERIES } from './home.data';
 
 @Component({
   selector: 'app-home',
-  imports: [RouterLink, ProjectCardComponent],
+  imports: [RouterLink, ProjectCardComponent, InfographicCardComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class HomeComponent {
   private readonly projectsApi = inject(ProjectsApiService);
+  private readonly infographicsApi = inject(InfographicsApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   readonly projects = signal<ProjectListItem[]>([]);
   readonly projectsLoading = signal(true);
   readonly projectsError = signal(false);
+  readonly infographics = signal<InfographicListItem[]>([]);
+  readonly infographicsLoading = signal(true);
+  readonly infographicsError = signal(false);
   readonly proofPoints = PROOF_POINTS;
   readonly experience = EXPERIENCE;
   readonly skillGroups = SKILL_GROUPS;
@@ -38,6 +45,7 @@ export default class HomeComponent {
     this.meta.updateTag({ property: 'og:description', content: description });
     this.meta.updateTag({ property: 'og:type', content: 'website' });
     this.loadFeaturedProjects();
+    this.loadFeaturedInfographics();
   }
 
   loadFeaturedProjects(): void {
@@ -46,5 +54,13 @@ export default class HomeComponent {
     this.projectsApi.list({ featured: true, sort: 'newest', page: 1, pageSize: 3 })
       .pipe(finalize(() => this.projectsLoading.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({ next: result => this.projects.set(result.items), error: () => this.projectsError.set(true) });
+  }
+
+  loadFeaturedInfographics(): void {
+    this.infographicsLoading.set(true);
+    this.infographicsError.set(false);
+    this.infographicsApi.featured(3)
+      .pipe(finalize(() => this.infographicsLoading.set(false)), takeUntilDestroyed(this.destroyRef))
+      .subscribe({ next: items => this.infographics.set(items), error: () => this.infographicsError.set(true) });
   }
 }

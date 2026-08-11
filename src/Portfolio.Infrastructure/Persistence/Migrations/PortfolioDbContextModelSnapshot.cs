@@ -469,6 +469,9 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("CoverMediaFileId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -488,8 +491,17 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                     b.Property<byte>("DifficultyLevel")
                         .HasColumnType("tinyint");
 
+                    b.Property<Guid?>("InfographicMediaFileId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<bool>("IsFeatured")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("PdfMediaFileId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime?>("PublishedAt")
                         .HasColumnType("datetime2");
@@ -525,13 +537,21 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("CoverMediaFileId");
+
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("InfographicMediaFileId");
+
+                    b.HasIndex("PdfMediaFileId");
 
                     b.HasIndex("Slug")
                         .IsUnique()
                         .HasFilter("[IsDeleted] = 0");
 
                     b.HasIndex("Status", "PublishedAt");
+
+                    b.HasIndex("IsFeatured", "Status", "PublishedAt");
 
                     b.ToTable("Infographics", (string)null);
                 });
@@ -2495,7 +2515,28 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Portfolio.Domain.Entities.MediaFile", "CoverMediaFile")
+                        .WithMany()
+                        .HasForeignKey("CoverMediaFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Portfolio.Domain.Entities.MediaFile", "InfographicMediaFile")
+                        .WithMany()
+                        .HasForeignKey("InfographicMediaFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Portfolio.Domain.Entities.MediaFile", "PdfMediaFile")
+                        .WithMany()
+                        .HasForeignKey("PdfMediaFileId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.Navigation("Category");
+
+                    b.Navigation("CoverMediaFile");
+
+                    b.Navigation("InfographicMediaFile");
+
+                    b.Navigation("PdfMediaFile");
                 });
 
             modelBuilder.Entity("Portfolio.Domain.Entities.InfographicCodeExample", b =>
