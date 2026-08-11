@@ -67,10 +67,27 @@ jobs:
           registry="portfoliopreview${SUFFIX}acr"
           sql_server="portfolio-preview-${SUFFIX}-sql"
           env_id="$(az containerapp env show -g "$RESOURCE_GROUP" -n "portfolio-preview-${SUFFIX}-env" --query id -o tsv)"
-          az deployment group create -g "$RESOURCE_GROUP" -f infra/azure/preview/main.bicep \
-            -p location="$LOCATION" prNumber="$PR_NUMBER" containerAppsEnvironmentId="$env_id" \
-               registryName="$registry" sqlServerName="$sql_server" sqlAdministratorLogin=portfolioadmin \
-               sqlAdministratorPassword="$SQL_PASSWORD" imageTag="$GITHUB_SHA" identityBootstrap=true -o none
+          registry_id="$(az acr show -g "$RESOURCE_GROUP" -n "$registry" --query id -o tsv)"
+          bootstrap_required=false
+          for service in api web admin; do
+            app="portfolio-${service}-pr-${PR_NUMBER}"
+            principal_id="$(az containerapp show -g "$RESOURCE_GROUP" -n "$app" --query identity.principalId -o tsv 2>/dev/null || true)"
+            if [[ -z "$principal_id" ]]; then
+              bootstrap_required=true
+              break
+            fi
+            pull_roles="$(az role assignment list --scope "$registry_id" --assignee-object-id "$principal_id" --query "[?roleDefinitionName=='AcrPull'] | length(@)" -o tsv)"
+            if [[ "$pull_roles" == "0" ]]; then
+              bootstrap_required=true
+              break
+            fi
+          done
+          if [[ "$bootstrap_required" == "true" ]]; then
+            az deployment group create -g "$RESOURCE_GROUP" -f infra/azure/preview/main.bicep \
+              -p location="$LOCATION" prNumber="$PR_NUMBER" containerAppsEnvironmentId="$env_id" \
+                 registryName="$registry" sqlServerName="$sql_server" sqlAdministratorLogin=portfolioadmin \
+                 sqlAdministratorPassword="$SQL_PASSWORD" imageTag="$GITHUB_SHA" identityBootstrap=true -o none
+          fi
           result="$(az deployment group create -g "$RESOURCE_GROUP" -f infra/azure/preview/main.bicep \
             -p location="$LOCATION" prNumber="$PR_NUMBER" containerAppsEnvironmentId="$env_id" \
                registryName="$registry" sqlServerName="$sql_server" sqlAdministratorLogin=portfolioadmin \
