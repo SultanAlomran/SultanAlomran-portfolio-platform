@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Infographics;
+using Portfolio.Api.Features.Media;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
@@ -15,6 +16,8 @@ builder.Logging.AddJsonConsole();
 builder.Services.AddApiFoundation(builder.Configuration);
 
 var app = builder.Build();
+var mediaRoot = Path.GetFullPath(builder.Configuration["Media:LocalPath"] ?? Path.Combine(AppContext.BaseDirectory, "media"));
+Directory.CreateDirectory(mediaRoot);
 var seedDevelopment = args.Contains("--seed-development-projects", StringComparer.OrdinalIgnoreCase);
 var seedPreview = args.Contains("--seed-preview-projects", StringComparer.OrdinalIgnoreCase);
 var telemetryArgument = Array.FindIndex(args, value => value.Equals("--import-preview-test-telemetry", StringComparison.OrdinalIgnoreCase));
@@ -73,6 +76,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseConfiguredCors();
+app.UseStaticFiles(new StaticFileOptions { FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(mediaRoot), RequestPath = "/media", ServeUnknownFileTypes = false });
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Preview"))
 {
     app.MapOpenApi();
@@ -93,6 +97,7 @@ app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "read
     .WithName("ApiVerification");
 app.MapProjectEndpoints();
 app.MapInfographicEndpoints();
+app.MapMediaEndpoints();
 app.MapTestAnalyticsEndpoints();
 app.Run();
 
