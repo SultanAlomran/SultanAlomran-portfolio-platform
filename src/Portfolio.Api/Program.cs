@@ -1,8 +1,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
-using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.Infographics;
+using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
 using Portfolio.Application.TestAnalytics;

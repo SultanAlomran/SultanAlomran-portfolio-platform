@@ -61,7 +61,8 @@ public sealed class InfographicsApiTests : IAsyncLifetime
     public async Task Invalid_infographic_returns_stable_validation_problem()
     {
         var invalid = Request("INVALID SLUG", factory.CategoryId, factory.TagId, factory.ImageId, factory.PdfId)
-            with { Title = "", ShortDescription = "", CategoryId = Guid.NewGuid() };
+            with
+        { Title = "", ShortDescription = "", CategoryId = Guid.NewGuid() };
         using var response = await client.PostAsJsonAsync("/api/admin/infographics", invalid);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);

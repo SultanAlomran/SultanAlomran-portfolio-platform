@@ -8,7 +8,10 @@ public sealed class InfographicResource : Entity
     private InfographicResource() { }
     public static InfographicResource Create(string title, string url, string resourceType, int displayOrder) => new()
     {
-        Title = title.Trim(), Url = url.Trim(), ResourceType = resourceType.Trim(), DisplayOrder = displayOrder
+        Title = title.Trim(),
+        Url = url.Trim(),
+        ResourceType = resourceType.Trim(),
+        DisplayOrder = displayOrder
     };
     public Guid InfographicId { get; private set; }
     public string Title { get; private set; } = "";
