@@ -25,7 +25,7 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationGroup[] = [
       { label: 'Categories', path: '/categories', icon: 'ki-category' },
       { label: 'Tags', path: '/tags', icon: 'ki-tag' },
       { label: 'Series', path: '/series', icon: 'ki-abstract-26' },
-      { label: 'Media Library', path: '/media-library', icon: 'ki-picture' },
+      { label: 'Media Library', path: '/media', icon: 'ki-picture' },
     ],
   },
   {
