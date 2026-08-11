@@ -23,12 +23,12 @@ The Admin list exposes referenced/unreferenced filtering. Delete checks Project 
 - Local binary reads: `/media/{generated-key}`.
 - OpenAPI and Scalar use the existing Microsoft ASP.NET Core stack and document multipart upload; no Swagger tooling is introduced.
 
-The Admin screen provides summary metrics, search/type/usage filters, responsive previews, multiple-file selection, feedback, and deletion protection. `MediaPickerComponent` is content-agnostic and supports image, PDF, or unrestricted single selection. Existing Infographic foreign keys and Project `MediaFile` relationships remain authoritative. Infographics without media retain their public fallback visuals; the CV remains a static public document.
+The Admin screen provides summary metrics, search/type/usage filters, responsive previews, multiple-file selection, feedback, and deletion protection. `MediaPickerComponent` is content-agnostic and supports image, PDF, or unrestricted single selection. The Infographic Media & Files step uses it for cover, main-image, and PDF selection, as well as direct upload, preview/open, replacement, and reference removal. Existing Infographic foreign keys and Project `MediaFile` relationships remain authoritative. Infographics without media retain their public fallback visuals; the CV remains a static public document.
 
 ## Security, testing, and deferred work
 
 Uploads are untrusted. Filename metadata is sanitized with `Path.GetFileName`; only generated keys reach storage. Server validation is authoritative and internal filesystem paths are never returned. Admin authentication remains an existing platform limitation and is not simulated here.
 
-Focused API and Playwright coverage should exercise image/PDF upload, validation, filters, previews, picker selection, reference conflicts, orphan deletion, Infographic selection, and public rendering. Playwright telemetry remains compatible with `feature=media-library` and `mode=Full Recording` without changing Test Analytics.
+Focused integration and Playwright coverage exercises image/PDF upload, signature validation, filters, previews, picker selection, reference conflicts, orphan deletion, Infographic selection, and public rendering. Visual and full-recording specifications live under the existing `visual/media` and `recording/media` conventions, so normalized telemetry remains compatible with `feature=media` and Full Recording mode without changing Test Analytics.
 
 Deferred: Azure Blob provider and Bicep after explicit approval, richer usage labels, image dimensions, Project wizard picker adoption, automatic orphan cleanup, collections administration, and Series/Reading Paths.
