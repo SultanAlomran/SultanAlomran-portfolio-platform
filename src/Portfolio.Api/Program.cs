@@ -47,6 +47,8 @@ app.MapHealthChecks("/health", new HealthCheckOptions
     Predicate = registration => !registration.Tags.Contains("ready")
 });
 app.MapHealthChecks("/health/ready");
+app.MapGet("/", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" }))
+    .ExcludeFromDescription();
 app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" }))
     .WithName("ApiVerification");
 app.MapProjectEndpoints();
