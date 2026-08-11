@@ -147,6 +147,7 @@ jobs:
           name: azure-preview-telemetry-${{ github.run_id }}
           path: test-results/telemetry.json
           if-no-files-found: error
+          overwrite: true
           retention-days: 90
       - name: Upload preview Playwright report
         if: always() && steps.preview_playwright.outcome != 'skipped'
@@ -155,6 +156,7 @@ jobs:
           name: azure-preview-playwright-report-${{ github.run_id }}
           path: playwright-report/
           if-no-files-found: error
+          overwrite: true
           retention-days: 14
       - name: Upload preview test evidence
         if: always() && steps.preview_playwright.outcome != 'skipped'
@@ -163,6 +165,7 @@ jobs:
           name: azure-preview-playwright-results-${{ github.run_id }}
           path: test-results/
           if-no-files-found: error
+          overwrite: true
           retention-days: 14
       - name: Import normalized telemetry into the PR database
         if: always() && steps.preview_playwright.outcome != 'skipped'
@@ -176,7 +179,7 @@ jobs:
           export ConnectionStrings__PortfolioDatabase="Server=tcp:${{ steps.provision.outputs.sql_server }}.database.windows.net,1433;Initial Catalog=${{ steps.provision.outputs.databaseName }};User ID=portfolioadmin;Password=${SQL_PASSWORD};Encrypt=True;TrustServerCertificate=False;"
           export Cors__AllowedOrigins__0="${{ steps.provision.outputs.webUrl }}"
           export Cors__AllowedOrigins__1="${{ steps.provision.outputs.adminUrl }}"
-          dotnet run --project src/Portfolio.Api --configuration Release --no-build --no-launch-profile -- --import-preview-test-telemetry test-results/telemetry.json
+          dotnet run --project src/Portfolio.Api --configuration Release --no-build --no-launch-profile -- --import-preview-test-telemetry "$GITHUB_WORKSPACE/test-results/telemetry.json"
       - name: Preserve remote-preview Playwright result
         if: steps.preview_playwright.outcome == 'failure'
         run: exit 1
