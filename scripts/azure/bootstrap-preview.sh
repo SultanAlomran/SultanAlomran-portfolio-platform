@@ -44,6 +44,8 @@ else
 fi
 sql_password="$(openssl rand -base64 36 | tr -d '/+=' | head -c 32)Aa1!"
 az deployment group create --resource-group "$resource_group" --template-file infra/azure/preview/shared.bicep --parameters suffix="$suffix" location="$AZURE_LOCATION" sqlAdministratorPassword="$sql_password"
+registry_id="$(az acr show --resource-group "$resource_group" --name "portfoliopreview${suffix}acr" --query id -o tsv | tr -d '\r')"
+az role assignment create --assignee-object-id "$object_id" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$registry_id"
 tenant_id="$(az account show --query tenantId -o tsv | tr -d '\r')"
 gh api --method PUT "repos/${GITHUB_REPOSITORY}/environments/azure-preview" >/dev/null
 printf '%s' "$sql_password" | gh secret set AZURE_SQL_ADMIN_PASSWORD --env azure-preview --repo "$GITHUB_REPOSITORY"

@@ -52,9 +52,14 @@ jobs:
       - name: Build immutable images in shared registry
         run: |
           registry="portfoliopreview${SUFFIX}acr"
-          az acr build -r "$registry" -t "portfolio-api:${GITHUB_SHA}" -f src/Portfolio.Api/Dockerfile .
-          az acr build -r "$registry" -t "portfolio-web:${GITHUB_SHA}" -f deploy/preview/Dockerfile.web .
-          az acr build -r "$registry" -t "portfolio-admin:${GITHUB_SHA}" -f deploy/preview/Dockerfile.admin .
+          registry_server="${registry}.azurecr.io"
+          az acr login --name "$registry"
+          docker build -t "${registry_server}/portfolio-api:${GITHUB_SHA}" -f src/Portfolio.Api/Dockerfile .
+          docker push "${registry_server}/portfolio-api:${GITHUB_SHA}"
+          docker build -t "${registry_server}/portfolio-web:${GITHUB_SHA}" -f deploy/preview/Dockerfile.web .
+          docker push "${registry_server}/portfolio-web:${GITHUB_SHA}"
+          docker build -t "${registry_server}/portfolio-admin:${GITHUB_SHA}" -f deploy/preview/Dockerfile.admin .
+          docker push "${registry_server}/portfolio-admin:${GITHUB_SHA}"
       - name: Provision isolated preview
         id: provision
         shell: bash
