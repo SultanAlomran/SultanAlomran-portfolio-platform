@@ -18,6 +18,7 @@ if (suite === 'public') cliArgs.push('tests/playwright/public');
 if (suite === 'responsive') cliArgs.push('tests/playwright/responsive');
 if (args.includes('--headed')) cliArgs.push('--headed');
 if (args.includes('--debug')) cliArgs.push('--debug');
+if (suite === 'preview') cliArgs.push('tests/playwright/preview');
 if (args.includes('--update-snapshots')) cliArgs.push('--update-snapshots');
 
 const playwrightCli = path.resolve('node_modules/@playwright/test/cli.js');
@@ -27,7 +28,7 @@ const child = spawn(process.execPath, [playwrightCli, ...cliArgs], {
     ...process.env,
     E2E_MODE: mode,
     E2E_BROWSER: browser,
-    E2E_FEATURE: ['smoke', 'projects', 'quality'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
+    E2E_FEATURE: ['smoke', 'projects', 'quality', 'preview'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
     PWDEBUG: args.includes('--debug') ? '1' : process.env.PWDEBUG,
   },
 });

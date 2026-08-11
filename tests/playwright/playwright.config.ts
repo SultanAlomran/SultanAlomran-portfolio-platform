@@ -21,6 +21,8 @@ const testMatch = mode === 'visual'
       ? ['**/projects/**/*.spec.ts']
       : feature === 'quality'
         ? ['**/quality/**/*.spec.ts']
+      : feature === 'preview'
+        ? ['**/preview/**/*.spec.ts']
       : feature === 'smoke'
         ? ['**/smoke.spec.ts']
         : '**/*.spec.ts';
@@ -34,7 +36,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: browser === 'chromium' ? (process.env.CI ? 2 : undefined) : 1,
+  workers: feature === 'preview' ? 1 : browser === 'chromium' ? (process.env.CI ? 2 : undefined) : 1,
   timeout: 45_000,
   expect: { timeout: 7_500 },
   reporter: process.env.CI
