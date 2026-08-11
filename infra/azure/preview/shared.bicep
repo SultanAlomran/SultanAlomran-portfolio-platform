@@ -33,6 +33,14 @@ resource sql 'Microsoft.Sql/servers@2023-08-01-preview' = {
   }
   tags: { repository: 'SultanAlomran-portfolio-platform', environment: 'preview-shared' }
 }
+resource azureServicesFirewallRule 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+  parent: sql
+  name: 'AllowAllWindowsAzureIps'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
+  }
+}
 output registryName string = registry.name
 output registryServer string = registry.properties.loginServer
 output environmentId string = environment.id
