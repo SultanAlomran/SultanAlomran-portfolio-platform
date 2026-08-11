@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
-using Portfolio.Application.TestAnalytics;
 using Portfolio.Api.Middleware;
+using Portfolio.Application.TestAnalytics;
 using Portfolio.Infrastructure.Persistence.Seed;
 using Scalar.AspNetCore;
 
