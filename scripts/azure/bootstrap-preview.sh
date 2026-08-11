@@ -5,6 +5,11 @@ export MSYS_NO_PATHCONV=1
 : "${GITHUB_REPOSITORY:=SultanAlomran/SultanAlomran-portfolio-platform}"
 command -v gh >/dev/null 2>&1 || { echo "GitHub CLI is required to configure the azure-preview environment securely." >&2; exit 1; }
 gh auth status >/dev/null 2>&1 || { echo "Authenticate GitHub CLI before running bootstrap." >&2; exit 1; }
+github_owner="${GITHUB_REPOSITORY%%/*}"
+github_repo="${GITHUB_REPOSITORY#*/}"
+github_owner_id="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.owner.id' | tr -d '\r')"
+github_repo_id="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.id' | tr -d '\r')"
+oidc_subject="repo:${github_owner}@${github_owner_id}/${github_repo}@${github_repo_id}:environment:azure-preview"
 subscription_id="$(az account show --query id -o tsv | tr -d '\r')"
 suffix="$(printf '%s' "$subscription_id" | tr -d '-' | tail -c 7)"
 resource_group="${AZURE_PREVIEW_RESOURCE_GROUP:-portfolio-preview}"
@@ -30,9 +35,12 @@ scope="/subscriptions/$subscription_id/resourceGroups/$resource_group"
 az role assignment create --assignee-object-id "$object_id" --assignee-principal-type ServicePrincipal --role Contributor --scope "$scope"
 # Required only to grant each Container App identity AcrPull on the shared registry.
 az role assignment create --assignee-object-id "$object_id" --assignee-principal-type ServicePrincipal --role "Role Based Access Control Administrator" --scope "$scope"
-federation_json="{\"name\":\"portfolio-preview-dev-prs\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"repo:${GITHUB_REPOSITORY}:environment:azure-preview\",\"description\":\"PR preview deployments\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
-if [[ "$(az ad app federated-credential list --id "$app_id" --query "[?name=='portfolio-preview-dev-prs'] | length(@)" -o tsv | tr -d '\r')" == 0 ]]; then
+federation_json="{\"name\":\"portfolio-preview-dev-prs\",\"issuer\":\"https://token.actions.githubusercontent.com\",\"subject\":\"${oidc_subject}\",\"description\":\"PR preview deployments\",\"audiences\":[\"api://AzureADTokenExchange\"]}"
+federation_id="$(az ad app federated-credential show --id "$app_id" --federated-credential-id portfolio-preview-dev-prs --query id -o tsv 2>/dev/null | tr -d '\r' || true)"
+if [[ -z "$federation_id" ]]; then
   az ad app federated-credential create --id "$app_id" --parameters "$federation_json"
+else
+  az ad app federated-credential update --id "$app_id" --federated-credential-id "$federation_id" --parameters "$federation_json"
 fi
 sql_password="$(openssl rand -base64 36 | tr -d '/+=' | head -c 32)Aa1!"
 az deployment group create --resource-group "$resource_group" --template-file infra/azure/preview/shared.bicep --parameters suffix="$suffix" location="$AZURE_LOCATION" sqlAdministratorPassword="$sql_password"
