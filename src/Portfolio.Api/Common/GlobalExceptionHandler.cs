@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Portfolio.Application.Infographics;
 using Portfolio.Application.Projects;
 
 namespace Portfolio.Api.Common;
@@ -15,6 +16,9 @@ internal sealed class GlobalExceptionHandler(
             ProjectValidationException validation => (StatusCodes.Status400BadRequest, "Project validation failed.", validation.Errors),
             ProjectNotFoundException => (StatusCodes.Status404NotFound, "Project not found.", null),
             ProjectConflictException => (StatusCodes.Status409Conflict, "Project conflict.", null),
+            InfographicValidationException validation => (StatusCodes.Status400BadRequest, "Infographic validation failed.", validation.Errors),
+            InfographicNotFoundException => (StatusCodes.Status404NotFound, "Infographic not found.", null),
+            InfographicConflictException => (StatusCodes.Status409Conflict, "Infographic conflict.", null),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.", null)
         };
         if (status >= 500)

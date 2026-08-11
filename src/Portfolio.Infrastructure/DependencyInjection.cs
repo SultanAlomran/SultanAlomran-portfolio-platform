@@ -2,8 +2,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Portfolio.Application.Common.Abstractions;
+using Portfolio.Application.Infographics;
 using Portfolio.Application.Projects;
 using Portfolio.Application.TestAnalytics;
+using Portfolio.Infrastructure.Infographics;
 using Portfolio.Infrastructure.Persistence;
 using Portfolio.Infrastructure.Projects;
 using Portfolio.Infrastructure.TestAnalytics;
@@ -20,6 +22,7 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
         services.AddScoped<IPortfolioDbContext>(provider => provider.GetRequiredService<PortfolioDbContext>());
         services.AddScoped<IProjectsService, ProjectsService>();
+        services.AddScoped<IInfographicsService, InfographicsService>();
         services.AddScoped<ITestAnalyticsService, TestAnalyticsService>();
         services.AddScoped<ITestTelemetryImporter, TestAnalyticsService>();
         services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>(

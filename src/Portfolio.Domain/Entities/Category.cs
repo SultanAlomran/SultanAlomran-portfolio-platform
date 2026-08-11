@@ -6,6 +6,14 @@ namespace Portfolio.Domain.Entities;
 public sealed class Category : SoftDeletableEntity
 {
     private Category() { }
+    public static Category Create(string name, string slug, string? description, int displayOrder) => new()
+    {
+        Name = name.Trim(),
+        Slug = slug.Trim().ToLowerInvariant(),
+        Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+        DisplayOrder = displayOrder,
+        IsActive = true
+    };
     public string Name { get; private set; } = "";
     public string Slug { get; private set; } = "";
     public string? Description { get; private set; }

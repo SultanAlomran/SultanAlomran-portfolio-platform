@@ -1,0 +1,32 @@
+import { test, expect } from '../../fixtures/diagnostics';
+import { e2eEnvironment } from '../../config/environment';
+import { captureEvidence } from '../../helpers/evidence';
+import { addInfographicStep, completeInfographicBasics, infographicIds, mockAdminInfographics } from '../../data/infographic';
+
+test('@record records the safe Admin Create Infographic journey', async ({ page }, testInfo) => {
+  await mockAdminInfographics(page);
+  await page.goto(`${e2eEnvironment.adminUrl}/infographics`);
+  await expect(page.getByRole('link', { name: 'EF Core Performance Checklist' })).toBeVisible();
+  await captureEvidence(page, testInfo, '01-infographics-list');
+  await page.getByRole('link', { name: 'Create Infographic' }).click();
+  await expect(page.getByRole('heading', { name: 'Create Infographic' })).toBeVisible();
+  await captureEvidence(page, testInfo, '02-create-infographic');
+  await completeInfographicBasics(page);
+  await captureEvidence(page, testInfo, '03-basic-information');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await addInfographicStep(page);
+  await captureEvidence(page, testInfo, '04-content');
+  await page.getByRole('button', { name: 'Media & Files' }).click();
+  await captureEvidence(page, testInfo, '05-media-files');
+  await page.getByRole('button', { name: 'SEO & Settings' }).click();
+  await captureEvidence(page, testInfo, '06-seo-settings');
+  await page.getByRole('button', { name: 'Review & Publish' }).click();
+  await expect(page.getByText('Ready to publish.')).toBeVisible();
+  await captureEvidence(page, testInfo, '07-review-publish');
+  await page.getByRole('button', { name: 'Publish Infographic' }).click();
+  const dialog = page.getByRole('alertdialog', { name: 'Publish infographic?' });
+  await dialog.getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/infographics/${infographicIds.item}/edit$`));
+  await expect(page.getByLabel('Title *')).toHaveValue('EF Core Performance Checklist');
+  await captureEvidence(page, testInfo, '08-created-edit-state');
+});

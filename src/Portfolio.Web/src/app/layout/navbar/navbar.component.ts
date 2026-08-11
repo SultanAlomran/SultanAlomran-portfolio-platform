@@ -11,7 +11,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
         <div class="hidden items-center gap-1 xl:flex">
           <a routerLink="/" [routerLinkActiveOptions]="{ exact: true }" routerLinkActive="text-violet-300" class="nav-link">Home</a>
           <a routerLink="/projects" routerLinkActive="text-violet-300" class="nav-link">Projects</a>
-          <a routerLink="/" fragment="visual-handbook" class="nav-link">Visual Handbook</a>
+          <a routerLink="/visual-handbook" routerLinkActive="text-violet-300" class="nav-link">Visual Handbook</a>
           <a routerLink="/" fragment="experience" class="nav-link">Experience</a>
           <a routerLink="/" fragment="about" class="nav-link">About</a>
           <a routerLink="/" fragment="contact" class="nav-link">Contact</a>
@@ -24,7 +24,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
       </nav>
       @if (open()) {
         <div id="mobile-navigation" class="border-t border-white/10 px-4 py-4 xl:hidden"><div class="mx-auto grid max-w-7xl gap-1">
-          <a routerLink="/" class="mobile-link" (click)="open.set(false)">Home</a><a routerLink="/projects" class="mobile-link" (click)="open.set(false)">Projects</a><a routerLink="/" fragment="visual-handbook" class="mobile-link" (click)="open.set(false)">Visual Handbook</a><a routerLink="/" fragment="experience" class="mobile-link" (click)="open.set(false)">Experience</a><a routerLink="/" fragment="about" class="mobile-link" (click)="open.set(false)">About</a><a routerLink="/" fragment="contact" class="mobile-link" (click)="open.set(false)">Contact</a><a href="/documents/cv/Sultan-Alomran-CV.pdf" target="_blank" rel="noopener" class="mobile-link text-violet-300">Download CV (PDF)</a>
+          <a routerLink="/" class="mobile-link" (click)="open.set(false)">Home</a><a routerLink="/projects" class="mobile-link" (click)="open.set(false)">Projects</a><a routerLink="/visual-handbook" class="mobile-link" (click)="open.set(false)">Visual Handbook</a><a routerLink="/" fragment="experience" class="mobile-link" (click)="open.set(false)">Experience</a><a routerLink="/" fragment="about" class="mobile-link" (click)="open.set(false)">About</a><a routerLink="/" fragment="contact" class="mobile-link" (click)="open.set(false)">Contact</a><a href="/documents/cv/Sultan-Alomran-CV.pdf" target="_blank" rel="noopener" class="mobile-link text-violet-300">Download CV (PDF)</a>
         </div></div>
       }
     </header>`,
