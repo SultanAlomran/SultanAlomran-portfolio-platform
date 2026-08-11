@@ -89,7 +89,7 @@ resource admin 'Microsoft.App/containerApps@2024-03-01' = {
   properties: {
     managedEnvironmentId: containerAppsEnvironmentId
     configuration: { activeRevisionsMode: 'Single', ingress: { external: !identityBootstrap, targetPort: identityBootstrap ? 80 : 8080, allowInsecure: false }, registries: registryConfiguration }
-    template: { containers: [{ name: 'admin', image: identityBootstrap ? bootstrapImage : '${registryServer}/portfolio-admin:${imageTag}', env: identityBootstrap ? [] : [{ name: 'PREVIEW_API_URL', value: 'https://${api.properties.configuration.ingress.fqdn}' }], resources: { cpu: json('0.25'), memory: '0.5Gi' } }], scale: { minReplicas: 0, maxReplicas: 1 } }
+    template: { containers: [{ name: 'admin', image: identityBootstrap ? bootstrapImage : '${registryServer}/portfolio-admin:${imageTag}', env: identityBootstrap ? [] : [{ name: 'PREVIEW_API_URL', value: 'https://${api.properties.configuration.ingress.fqdn}' }, { name: 'PREVIEW_WEB_URL', value: 'https://${web.properties.configuration.ingress.fqdn}' }], resources: { cpu: json('0.25'), memory: '0.5Gi' } }], scale: { minReplicas: 0, maxReplicas: 1 } }
   }
 }
 resource adminPull 'Microsoft.Authorization/roleAssignments@2022-04-01' = { name: guid(registry.id, admin.id, 'AcrPull'), scope: registry, properties: { principalId: admin.identity.principalId, principalType: 'ServicePrincipal', roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '7f951dda-4ed3-4680-a7ca-43fe172d538d') } }
