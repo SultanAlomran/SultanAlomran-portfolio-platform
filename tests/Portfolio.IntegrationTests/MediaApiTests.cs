@@ -58,7 +58,9 @@ public sealed class MediaApiTests : IAsyncLifetime
     [Fact]
     public async Task Referenced_media_cannot_be_deleted()
     {
-        using var response = await client.DeleteAsync($"/api/admin/media/{factory.ReferencedMediaId}");
+        var referencedMediaId = await factory.CreateReferencedMediaAsync();
+
+        using var response = await client.DeleteAsync($"/api/admin/media/{referencedMediaId}");
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
@@ -87,8 +89,6 @@ internal sealed class MediaApiFactory : WebApplicationFactory<Program>
 {
     private readonly string connectionString = CreateConnectionString();
     private readonly string mediaPath = Path.Combine(Path.GetTempPath(), $"portfolio-media-tests-{Guid.NewGuid():N}");
-    public Guid ReferencedMediaId { get; private set; }
-
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:PortfolioDatabase", connectionString);
@@ -100,13 +100,21 @@ internal sealed class MediaApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync();
+    }
+
+    public async Task<Guid> CreateReferencedMediaAsync()
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         var media = MediaFile.Create("referenced.png", "referenced.png", "/media/referenced.png", "image/png", 9, "local");
+        db.MediaFiles.Add(media);
+        await db.SaveChangesAsync();
+
         var project = Project.Create("Media project", "media-project", "A project using reusable media.");
         project.UpdateContent("Media project", "media-project", "A project using reusable media.", null, null, null, null, null, null, null, null, media.Id, null);
-        db.MediaFiles.Add(media);
         db.Projects.Add(project);
         await db.SaveChangesAsync();
-        ReferencedMediaId = media.Id;
+        return media.Id;
     }
 
     public async Task DeleteDatabaseAsync()
