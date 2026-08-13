@@ -2,6 +2,8 @@ using Microsoft.Extensions.Options;
 using Portfolio.Api.Common;
 using Portfolio.Api.Configuration;
 using Portfolio.Application;
+using Portfolio.Application.Assistant;
+using System.Threading.RateLimiting;
 using Portfolio.Infrastructure;
 
 namespace Portfolio.Api.Extensions;
@@ -17,6 +19,14 @@ internal static class ServiceCollectionExtensions
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddHealthChecks();
         services.AddOpenApi();
+        services.AddOptions<AiAssistantOptions>().Bind(configuration.GetSection(AiAssistantOptions.SectionName));
+        services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("assistant", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+                { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+        });
         services.AddOptions<CorsOptions>()
             .Bind(configuration.GetSection(CorsOptions.SectionName))
             .Validate(options => options.AllowedOrigins.Length > 0, "At least one CORS origin is required.")
