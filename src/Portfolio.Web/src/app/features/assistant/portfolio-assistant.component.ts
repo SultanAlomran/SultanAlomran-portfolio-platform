@@ -14,7 +14,7 @@ interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: A
   template: `
     <button class="launcher" type="button" (click)="openAssistant()" aria-label="Open Portfolio Assistant" [attr.aria-expanded]="open()">✦ <span>Ask Portfolio</span></button>
     @if (open()) {
-      <div class="backdrop" (click)="close()"></div>
+      <button class="backdrop" type="button" (click)="close()" aria-label="Close Portfolio Assistant"></button>
       <section class="panel" role="dialog" aria-modal="true" aria-labelledby="assistant-title">
         <header><div><strong id="assistant-title">Portfolio Assistant</strong><small>Ask about projects, technologies and the Visual Handbook.</small></div><button #closeButton type="button" class="icon" (click)="close()" aria-label="Close assistant">×</button></header>
         <div class="conversation" aria-live="polite">
