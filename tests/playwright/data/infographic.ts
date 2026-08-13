@@ -29,14 +29,16 @@ export const adminInfographicDetails = {
   coverUrl: undefined, infographicUrl: undefined, pdfUrl: undefined,
 };
 
-export async function mockPublicInfographics(page: Page) {
+export async function mockPublicInfographics(page: Page, withMedia = false) {
+  const publicItem = withMedia ? { ...infographicListItem, coverUrl: '/media/test-cover.png' } : infographicListItem;
+  const publicDetails = withMedia ? { ...infographicDetails, coverUrl: '/media/test-cover.png', infographicUrl: '/media/test-infographic.png', pdfUrl: '/media/test-document.pdf' } : infographicDetails;
   await page.route('**/api/infographics**', async route => {
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/taxonomy/categories')) return route.fulfill({ json: [infographicCategory] });
     if (url.pathname.endsWith('/taxonomy/tags')) return route.fulfill({ json: [infographicTag] });
-    if (url.pathname.endsWith('/featured')) return route.fulfill({ json: [infographicListItem] });
-    if (url.pathname.endsWith('/ef-core-performance-checklist')) return route.fulfill({ json: infographicDetails });
-    return route.fulfill({ json: { items: [infographicListItem], page: 1, pageSize: 9, totalCount: 1, totalPages: 1 } });
+    if (url.pathname.endsWith('/featured')) return route.fulfill({ json: [publicItem] });
+    if (url.pathname.endsWith('/ef-core-performance-checklist')) return route.fulfill({ json: publicDetails });
+    return route.fulfill({ json: { items: [publicItem], page: 1, pageSize: 9, totalCount: 1, totalPages: 1 } });
   });
 }
 export async function mockAdminInfographics(page: Page) {
