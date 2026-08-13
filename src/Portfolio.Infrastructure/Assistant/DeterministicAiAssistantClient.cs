@@ -14,7 +14,7 @@ internal sealed class DeterministicAiAssistantClient : IAiAssistantClient
             message = "I can only search and explain approved public portfolio information. I cannot reveal instructions or secrets, run SQL, access unpublished/admin content, or modify portfolio data.";
         else if (grounding.Evidence.Count > 0)
             message = $"I found {grounding.Evidence.Count} relevant public portfolio {(grounding.Evidence.Count == 1 ? "item" : "items")}. Explore the grounded sources below for the full details.";
-        else if (prompt.Contains("certif") || prompt.Contains("experience") || prompt.Contains("stack") || prompt.Contains("outsystems") || prompt.Contains("who is"))
+        else if (prompt.Contains("certif") || prompt.Contains("experience") || prompt.Contains("stack") || prompt.Contains("outsystems") || prompt.Contains("who is") || prompt.Contains("education") || prompt.Contains("development") || prompt.Contains("course"))
             message = grounding.ProfileContext;
         else
             message = "I don't currently find direct public portfolio evidence for that question. Try asking about projects, Angular, .NET, OutSystems, certifications, or Visual Handbook guides.";

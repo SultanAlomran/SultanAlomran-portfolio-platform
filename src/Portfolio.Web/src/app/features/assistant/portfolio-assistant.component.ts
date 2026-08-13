@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, ElementRef, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -46,7 +46,8 @@ export class PortfolioAssistantComponent {
   readonly starters = ["Show me Sultan's strongest .NET projects", 'Find Angular projects', 'What does Sultan know about OutSystems?', 'Show Visual Handbook guides about performance', "Tell me about Sultan's certifications"];
   openAssistant() { this.open.set(true); setTimeout(() => this.closeButton()?.nativeElement.focus()); }
   close() { this.open.set(false); }
-  clear() { this.messages.set([]); this.error.set(''); }
+  clear() { this.messages.set([]); this.error.set(''); this.lastQuestion = ''; }
+  @HostListener('document:keydown.escape') onEscape() { if (this.open()) this.close(); }
   ask(question: string) { this.draft = question; this.send(); }
   send() {
     const message = this.draft.trim() || this.lastQuestion; if (!message || this.sending()) return;

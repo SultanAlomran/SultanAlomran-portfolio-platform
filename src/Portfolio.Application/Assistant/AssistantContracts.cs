@@ -20,4 +20,12 @@ public sealed class AiAssistantOptions
 public interface IAiAssistantClient { Task<AssistantMessageResponse> CompleteAsync(AssistantGrounding grounding, CancellationToken token); }
 public sealed record AssistantGrounding(string Message, IReadOnlyList<AssistantHistoryMessage> History, IReadOnlyList<AssistantSource> Evidence, string ProfileContext);
 public interface IPortfolioAssistantService { Task<AssistantMessageResponse> SendAsync(AssistantMessageRequest request, CancellationToken token); }
+public interface IAssistantTools
+{
+    Task<IReadOnlyList<AssistantSource>> SearchProjectsAsync(string? technology, CancellationToken token);
+    Task<AssistantSource?> GetProjectDetailsAsync(string slug, CancellationToken token);
+    Task<IReadOnlyList<AssistantSource>> SearchInfographicsAsync(string? search, CancellationToken token);
+    Task<AssistantSource?> GetInfographicDetailsAsync(string slug, CancellationToken token);
+}
 public sealed class AssistantUnavailableException : Exception;
+public sealed class AssistantProviderException(string message) : Exception(message);

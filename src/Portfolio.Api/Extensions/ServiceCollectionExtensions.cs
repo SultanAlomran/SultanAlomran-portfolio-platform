@@ -1,9 +1,9 @@
+using System.Threading.RateLimiting;
 using Microsoft.Extensions.Options;
 using Portfolio.Api.Common;
 using Portfolio.Api.Configuration;
 using Portfolio.Application;
 using Portfolio.Application.Assistant;
-using System.Threading.RateLimiting;
 using Portfolio.Infrastructure;
 
 namespace Portfolio.Api.Extensions;

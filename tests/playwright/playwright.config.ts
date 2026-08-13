@@ -19,6 +19,8 @@ const testMatch = mode === 'visual'
     ? feature === 'all' ? '**/recording/**/*.spec.ts' : `**/recording/${feature}/**/*.spec.ts`
     : feature === 'projects'
       ? ['**/projects/**/*.spec.ts']
+      : feature === 'assistant'
+        ? ['**/assistant/**/*.spec.ts']
       : feature === 'quality'
         ? ['**/quality/**/*.spec.ts']
       : feature === 'preview'

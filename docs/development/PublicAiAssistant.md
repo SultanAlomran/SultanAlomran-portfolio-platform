@@ -16,11 +16,11 @@ The first provider is `DeterministicAiAssistantClient`, a credential-free provid
 
 **Static Web data:** profile proof points, experience, skills, certifications, professional development, and technical-series marketing copy. A deliberately bounded server-side public profile statement mirrors the approved home-page facts; static content was not migrated into SQL.
 
-**Not yet implemented:** a public education contract, persistent conversations, semantic/vector search, assistant analytics, and a real hosted model provider.
+**Not yet implemented:** a standalone public education API (approved professional-development facts are available through the bounded assistant profile capability), persistent conversations, semantic/vector search, assistant analytics, and a real hosted model provider.
 
 ## Approved tool catalog and safety
 
-The initial orchestrator can perform bounded public project search (technology-aware) and published Infographic search, with at most five projected results from either source. It returns internal navigation actions only (`/projects/{slug}` and `/visual-handbook/{slug}`). Project and Infographic details remain available through their existing public endpoints and can be added as explicit tools without changing the response contract.
+The orchestrator provides bounded public project search (technology-aware), dedicated published Project detail retrieval, published Infographic search, and dedicated published Infographic detail retrieval. Searches return at most five projected results; detail text, steps, tags, and technologies are separately bounded. It returns internal navigation actions only (`/projects/{slug}` and `/visual-handbook/{slug}`).
 
 There is no generic query executor, DbContext tool, raw SQL, reflection-based filtering, or write tool. The model cannot directly access the database. Draft/archive/admin records are excluded by the existing public services. Database/tool content and user input are untrusted reference data; they cannot add tools, override policy, reveal instructions, or expand authorization.
 
@@ -44,6 +44,6 @@ Run the existing API and Web workflows. Development uses the deterministic provi
 
 ## Testing and known limitations
 
-Normal tests must substitute/script `IAiAssistantClient`; they must never call a paid API. Relevant security cases include requests for secrets/system prompts, SQL, unpublished/admin records, and mutation—all are refused and no capable backend tool exists. Existing Test Analytics remains unchanged; future Playwright coverage should use deterministic responses and feature label `public-ai-assistant`.
+Unit tests substitute scripted `IAiAssistantClient` and tool implementations; they never call a paid API. Security cases cover secrets/system prompts, SQL, unpublished/admin records, and mutation—all are refused and no capable backend tool exists. Playwright coverage uses deterministic route responses for launcher, starters, grounded source rendering, clearing, errors, keyboard opening, 375/430 mobile sheets, and an optional recorded journey. Existing Test Analytics remains unchanged and the Playwright feature selector is `assistant`.
 
-The deterministic provider produces grounded discovery/profile answers rather than broad generative explanations. Detail tools, provider timeout enforcement, optional recording journey, and a production hosted provider are follow-ups. Vector storage, Redis, permanent chat history, writes, and autonomous/MCP infrastructure are intentionally not included.
+The deterministic provider produces grounded discovery/profile answers rather than broad generative explanations. A production hosted provider remains a follow-up requiring explicit approval. Vector storage, Redis, permanent chat history, writes, and autonomous/MCP infrastructure are intentionally not included.
