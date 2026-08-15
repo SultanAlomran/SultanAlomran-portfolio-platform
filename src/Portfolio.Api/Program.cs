@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
+using Portfolio.Api.Features.Assistant;
 using Portfolio.Api.Features.Infographics;
 using Portfolio.Api.Features.Media;
 using Portfolio.Api.Features.Projects;
@@ -76,6 +77,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 }
 app.UseConfiguredCors();
+app.UseRateLimiter();
 app.UseStaticFiles(new StaticFileOptions { FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(mediaRoot), RequestPath = "/media", ServeUnknownFileTypes = false });
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Preview"))
 {
@@ -99,6 +101,7 @@ app.MapProjectEndpoints();
 app.MapInfographicEndpoints();
 app.MapMediaEndpoints();
 app.MapTestAnalyticsEndpoints();
+app.MapAssistantEndpoints();
 app.Run();
 
 public partial class Program;

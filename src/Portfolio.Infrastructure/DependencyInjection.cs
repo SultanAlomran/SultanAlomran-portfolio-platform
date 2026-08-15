@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Portfolio.Application.Assistant;
 using Portfolio.Application.Common.Abstractions;
 using Portfolio.Application.Infographics;
 using Portfolio.Application.Media;
 using Portfolio.Application.Projects;
 using Portfolio.Application.TestAnalytics;
+using Portfolio.Infrastructure.Assistant;
 using Portfolio.Infrastructure.Infographics;
 using Portfolio.Infrastructure.Media;
 using Portfolio.Infrastructure.Persistence;
@@ -24,6 +26,7 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
         services.AddScoped<IPortfolioDbContext>(provider => provider.GetRequiredService<PortfolioDbContext>());
         services.AddScoped<IProjectsService, ProjectsService>();
+        services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
         services.AddScoped<IInfographicsService, InfographicsService>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();

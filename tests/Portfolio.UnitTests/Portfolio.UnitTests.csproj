@@ -5,6 +5,7 @@
     <PackageReference Include="xunit" />
     <PackageReference Include="xunit.runner.visualstudio"><PrivateAssets>all</PrivateAssets><IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets></PackageReference>
     <ProjectReference Include="../../src/Portfolio.Shared/Portfolio.Shared.csproj" />
-      <ProjectReference Include="../../src/Portfolio.Domain/Portfolio.Domain.csproj" />
+    <ProjectReference Include="../../src/Portfolio.Domain/Portfolio.Domain.csproj" />
+    <ProjectReference Include="../../src/Portfolio.Application/Portfolio.Application.csproj" />
   </ItemGroup>
 </Project>

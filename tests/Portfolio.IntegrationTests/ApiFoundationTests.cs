@@ -35,6 +35,8 @@ public sealed class ApiFoundationTests(WebApplicationFactory<Program> factory) :
         using var openApi = await JsonDocument.ParseAsync(openApiStream, cancellationToken: CancellationToken.None);
         Assert.True(openApi.RootElement.TryGetProperty("openapi", out _));
         Assert.True(openApi.RootElement.GetProperty("paths").TryGetProperty("/api", out _));
+        Assert.True(openApi.RootElement.GetProperty("paths").TryGetProperty("/api/assistant/messages", out var assistantPath));
+        Assert.True(assistantPath.TryGetProperty("post", out _));
 
         using var scalarResponse = await client.GetAsync("/scalar/", CancellationToken.None);
         Assert.Equal(HttpStatusCode.OK, scalarResponse.StatusCode);
