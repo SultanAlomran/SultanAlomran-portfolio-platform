@@ -47,3 +47,45 @@ Run the existing API and Web workflows. Development uses the deterministic provi
 Unit tests substitute scripted `IAiAssistantClient` and tool implementations; they never call a paid API. Security cases cover secrets/system prompts, SQL, unpublished/admin records, and mutationâ€”all are refused and no capable backend tool exists. Playwright coverage uses deterministic route responses for launcher, starters, grounded source rendering, clearing, errors, keyboard opening, 375/430 mobile sheets, and an optional recorded journey. Existing Test Analytics remains unchanged and the Playwright feature selector is `assistant`.
 
 The deterministic provider produces grounded discovery/profile answers rather than broad generative explanations. A production hosted provider remains a follow-up requiring explicit approval. Vector storage, Redis, permanent chat history, writes, and autonomous/MCP infrastructure are intentionally not included.
+
+## Version 2: hosted reasoning with controlled tools
+
+V2 reuses the V1 endpoint, application orchestrator, `IAiAssistantClient` boundary, deterministic provider, and published project/infographic services. It adds an optional OpenAI Responses API implementation in Infrastructure. The default remains disabled in shared configuration; Development, CI, Playwright, and PR Preview continue to select `Deterministic` and never make paid calls. Production activation is a separate owner decision.
+
+### Provider and configuration
+
+The selected hosted provider is OpenAI, model `gpt-5.6-luna`, called server-side over the Responses API. No vendor type crosses into Application. The implementation uses the .NET platform `HttpClient` and `System.Text.Json`; no vendor SDK package is required. It sends `store: false`. Configure through environment variables or user secrets only:
+
+- `AiAssistant__Enabled=true`
+- `AiAssistant__Provider=OpenAI`
+- `AiAssistant__Model=gpt-5.6-luna`
+- `AiAssistant__RealProviderEnabled=true`
+- `AI_ASSISTANT_API_KEY=<secret>`
+
+Additional typed bounds are `MaxUserMessageLength`, `MaxHistoryMessages`, `MaxToolRounds`, `MaxOutputTokens`, `MaxOutputCharacters`, `RequestTimeoutSeconds`, `Temperature`, `RateLimitPermitCount`, and `RateLimitWindowSeconds`. A configured OpenAI provider never silently falls back to deterministic behavior. Missing/invalid credentials, timeouts, provider limits/5xx, malformed responses, invalid tools, and tool failures return a generic unavailable response.
+
+OpenAI API use is token-priced (input, cached input, and output). Current pricing must be confirmed before activation. By default, API content is not used to train OpenAI models unless the organization opts in; default abuse-monitoring retention may apply. Owners must review the current OpenAI data controls, region, retention, budget, and legal requirements before Production activation. Only bounded approved public portfolio projections are sent—never credentials, connection strings, admin data, DbContext objects, storage paths, private CV fields, or test analytics.
+
+### Structured tool calling
+
+The orchestrator supplies a finite catalog and validates every requested function before executing it. The catalog is: `search_projects`, `get_project_details`, `search_infographics`, `get_infographic_details`, `search_technologies`, `get_portfolio_profile`, `get_experience`, `get_certifications`, `get_education_and_professional_development`, `get_contact_options`, `compare_projects`, and `find_related_content`.
+
+Searches return at most five public records per call. Detail tools return bounded public projections including case-study or guide data and safe public routes. Existing public service filters exclude Draft records. There is no SQL, arbitrary LINQ, DbContext, write, admin, shell, code-execution, or filesystem tool. Duplicate identical calls and unsupported calls fail closed; rounds are limited to 1–5.
+
+### Context, language, grounding, and security
+
+The client returns only the configured last messages (eight by default); nothing is persisted to SQL. Tool results are bounded and may provide lightweight selected-entity context through public slugs, without retaining full database payloads. The provider is instructed to clarify material ambiguity, answer Arabic prompts naturally in Arabic, and keep technical identifiers as appropriate. The UI applies RTL per Arabic message, keeps code LTR, renders grounded sources/actions, and shows at most three follow-ups.
+
+Retrieved project and guide text is explicitly untrusted data. Backend capability boundaries—not prompt wording—make connection strings, private/admin/Draft records, arbitrary SQL, writes, system-prompt disclosure, and unsafe URL schemes inaccessible. Sources are restricted to public routes. Actions are allow-listed and external URLs are limited to exact approved HTTPS GitHub/LinkedIn destinations.
+
+### Reliability, observability, and evaluation
+
+Caller cancellation and the configured linked timeout cover provider and tool work. Requests log provider/model, duration, tool count/names/rounds, success/failure category, and reported token usage without logging full prompts or answers. The existing fixed-window IP limiter remains 10 requests per minute by default and is configuration-driven.
+
+The deterministic evaluation dataset contains 60 cases across project/guide retrieval, profile, certifications, education, recruiter questions, explanations, ambiguity, Arabic, multi-turn, unsupported claims, prompt injection, private/admin requests, empty results, and tool failures. Normal CI and Playwright never call OpenAI. Generative manual evaluation should assess factual accuracy, relevance, clarification quality, latency, and grounding; it must not rely on exact-string matching alone.
+
+### Preview, Production, and future V3
+
+Azure PR Preview requires no new resource. Leave the assistant deterministic/disabled for zero AI cost. To test the hosted provider manually later, add `AI_ASSISTANT_API_KEY` and the explicit `AiAssistant__...` switches to the protected Preview environment; never expose the value or enable it for automated traffic. No Production deployment or credential activation is part of V2.
+
+True token streaming is deferred: adding a second streaming transport through the current minimal endpoint and Angular client materially expands failure/cancellation/tool-loop semantics. V2 prioritizes correct grounded tool use. Embeddings and vector databases are also intentionally deferred to V3, and should be considered only if evaluation demonstrates a measurable retrieval gap that structured metadata cannot solve.

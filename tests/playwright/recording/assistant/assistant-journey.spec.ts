@@ -2,7 +2,7 @@ import { test, expect } from '../../fixtures/diagnostics';
 import { captureEvidence } from '../../helpers/evidence';
 import { e2eEnvironment } from '../../config/environment';
 
-test('@record records the Public AI Assistant discovery journey', async ({ page }, testInfo) => {
+test('@record @feature:public-ai-assistant-v2 records the Public AI Assistant V2 journey', async ({ page }, testInfo) => {
   const responses = [
     { message: 'These public projects demonstrate .NET delivery.', sources: [{ type: 'Project', title: 'Request & Approval Management System', route: '/projects/request-approval-management-system', summary: 'Enterprise workflow.' }], actions: [] },
     { message: 'This published guide covers EF Core performance.', sources: [{ type: 'Infographic', title: 'EF Core Performance Checklist', route: '/visual-handbook/ef-core-performance-checklist', summary: 'Performance guidance.' }], actions: [] },
