@@ -1,6 +1,5 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -10,7 +9,7 @@ interface AssistantResponse { message: string; sources: AssistantSource[]; actio
 interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: AssistantSource[] }
 
 @Component({
-  selector: 'app-portfolio-assistant', imports: [FormsModule, RouterLink],
+  selector: 'app-portfolio-assistant', imports: [RouterLink],
   template: `
     <button class="launcher" type="button" (click)="openAssistant()" aria-label="Open Portfolio Assistant" [attr.aria-expanded]="open()">✦ <span>Ask Portfolio</span></button>
     @if (open()) {
@@ -32,7 +31,7 @@ interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: A
           @if (sending()) { <div class="thinking" role="status">✦ Searching public portfolio content…</div> }
           @if (error()) { <div class="error" role="alert">{{ error() }} <button type="button" (click)="send()">Retry</button></div> }
         </div>
-        <form (ngSubmit)="send()"><label for="assistant-message">Ask the portfolio</label><div><textarea id="assistant-message" name="message" [(ngModel)]="draft" maxlength="1000" rows="2" placeholder="Ask about Sultan's projects…" (keydown.control.enter)="send()"></textarea><button type="submit" [disabled]="sending() || !draft.trim()" aria-label="Send message">➤</button></div><button class="clear" type="button" (click)="clear()" [disabled]="!messages().length">Clear conversation</button></form>
+        <form (submit)="$event.preventDefault(); send()"><label for="assistant-message">Ask the portfolio</label><div><textarea id="assistant-message" name="message" [value]="draft" (input)="draft = $any($event.target).value" maxlength="1000" rows="2" placeholder="Ask about Sultan's projects…" (keydown.control.enter)="send()"></textarea><button type="submit" [disabled]="sending() || !draft.trim()" aria-label="Send message">➤</button></div><button class="clear" type="button" (click)="clear()" [disabled]="!messages().length">Clear conversation</button></form>
       </section>
     }`,
   styleUrl: './portfolio-assistant.component.css', changeDetection: ChangeDetectionStrategy.OnPush
