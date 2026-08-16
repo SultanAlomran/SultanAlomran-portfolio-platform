@@ -20,12 +20,13 @@ internal static class ServiceCollectionExtensions
         services.AddHealthChecks();
         services.AddOpenApi();
         services.AddOptions<AiAssistantOptions>().Bind(configuration.GetSection(AiAssistantOptions.SectionName));
+        var assistantRateLimit = configuration.GetSection(AiAssistantOptions.SectionName).Get<AiAssistantOptions>() ?? new();
         services.AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.AddPolicy("assistant", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
-                { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+                { PermitLimit = Math.Clamp(assistantRateLimit.RateLimitPermitCount, 1, 100), Window = TimeSpan.FromSeconds(Math.Clamp(assistantRateLimit.RateLimitWindowSeconds, 1, 3_600)), QueueLimit = 0 }));
         });
         services.AddOptions<CorsOptions>()
             .Bind(configuration.GetSection(CorsOptions.SectionName))

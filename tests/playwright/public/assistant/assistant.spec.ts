@@ -4,7 +4,8 @@ import { e2eEnvironment } from '../../config/environment';
 const groundedResponse = {
   message: 'I found a relevant public project.',
   sources: [{ type: 'Project', title: 'Request & Approval Management System', route: '/projects/request-approval-management-system', summary: 'Enterprise workflow.' }],
-  actions: [{ type: 'Navigate', label: 'View Project', route: '/projects/request-approval-management-system' }],
+  actions: [{ type: 'OpenProject', label: 'View Project', route: '/projects/request-approval-management-system' }],
+  suggestedFollowUps: ['How was this project tested?'], language: 'en',
 };
 
 test.describe('Public Portfolio Assistant', () => {
@@ -24,6 +25,7 @@ test.describe('Public Portfolio Assistant', () => {
     await dialog.getByRole('button', { name: 'Find Angular projects' }).click();
     await expect(dialog.getByText(groundedResponse.message)).toBeVisible();
     await expect(dialog.getByRole('link', { name: /Request & Approval Management System/ })).toHaveAttribute('href', '/projects/request-approval-management-system');
+    await expect(dialog.getByRole('button', { name: 'How was this project tested?' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Clear conversation' }).click();
     await expect(dialog.getByText('Explore Sultan\'s work')).toBeVisible();
   });

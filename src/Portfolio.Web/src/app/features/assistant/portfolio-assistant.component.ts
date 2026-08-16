@@ -5,8 +5,8 @@ import { finalize } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 interface AssistantSource { type: string; title: string; route: string; summary?: string }
-interface AssistantResponse { message: string; sources: AssistantSource[]; actions: { type: string; label: string; route: string }[] }
-interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: AssistantSource[] }
+interface AssistantResponse { message: string; sources: AssistantSource[]; actions: { type: string; label: string; route: string }[]; suggestedFollowUps?: string[]; language?: 'ar' | 'en' }
+interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: AssistantSource[]; actions?: { type: string; label: string; route: string }[]; suggestedFollowUps?: string[]; language?: 'ar' | 'en' }
 
 @Component({
   selector: 'app-portfolio-assistant', imports: [RouterLink],
@@ -24,8 +24,10 @@ interface ChatMessage { role: 'user' | 'assistant'; content: string; sources?: A
             </div>
           }
           @for (item of messages(); track $index) {
-            <article class="message" [class.user]="item.role === 'user'"><span class="label">{{ item.role === 'user' ? 'You' : 'Portfolio Assistant' }}</span><p>{{ item.content }}</p>
-              @if (item.sources?.length) { <div class="sources"><b>Related public content</b>@for (source of item.sources; track source.route) { <a [routerLink]="source.route" (click)="close()"><small>{{ source.type }}</small><strong>{{ source.title }}</strong><span>{{ source.summary }}</span></a> }</div> }
+            <article class="message" [class.user]="item.role === 'user'" [attr.dir]="item.language === 'ar' ? 'rtl' : 'ltr'"><span class="label">{{ item.role === 'user' ? 'You' : 'Portfolio Assistant' }}</span><p>{{ item.content }}</p>
+              @if (item.sources?.length) { <div class="sources"><b>Sources</b>@for (source of item.sources; track source.route) { <a [routerLink]="source.route" (click)="close()"><small>{{ source.type }}</small><strong>{{ source.title }}</strong><span>{{ source.summary }}</span></a> }</div> }
+              @if (item.actions?.length) { <div class="assistant-actions">@for (action of item.actions; track action.type + action.route) { <a [href]="action.route" [attr.target]="action.route.startsWith('https://') ? '_blank' : null" [attr.rel]="action.route.startsWith('https://') ? 'noopener noreferrer' : null">{{ action.label }}</a> }</div> }
+              @if (item.suggestedFollowUps?.length) { <div class="follow-ups" aria-label="Suggested follow-up questions">@for (question of item.suggestedFollowUps; track question) { <button type="button" (click)="ask(question)">{{ question }}</button> }</div> }
             </article>
           }
           @if (sending()) { <div class="thinking" role="status">✦ Searching public portfolio content…</div> }
@@ -54,7 +56,7 @@ export class PortfolioAssistantComponent {
     if (this.draft.trim()) this.messages.update(items => [...items, { role: 'user', content: message }]);
     this.lastQuestion = message; this.draft = ''; this.error.set(''); this.sending.set(true);
     this.http.post<AssistantResponse>(`${environment.apiUrl}/assistant/messages`, { message, conversationContext: history }).pipe(finalize(() => this.sending.set(false))).subscribe({
-      next: response => this.messages.update(items => [...items, { role: 'assistant', content: response.message, sources: response.sources }]),
+      next: response => this.messages.update(items => [...items, { role: 'assistant', content: response.message, sources: response.sources, actions: response.actions, suggestedFollowUps: response.suggestedFollowUps?.slice(0, 3), language: response.language }]),
       error: () => this.error.set('The assistant could not respond. Please try again shortly.')
     });
   }

@@ -22,19 +22,26 @@ public static class DependencyInjection
     {
         var connectionString = configuration.GetConnectionString("PortfolioDatabase")
             ?? throw new InvalidOperationException("Connection string 'PortfolioDatabase' is required.");
-        services.AddDbContext<PortfolioDbContext>(options =>
-            options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
+        services.AddDbContext<PortfolioDbContext>(options => options.UseSqlServer(connectionString,
+            sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
         services.AddScoped<IPortfolioDbContext>(provider => provider.GetRequiredService<PortfolioDbContext>());
         services.AddScoped<IProjectsService, ProjectsService>();
-        services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
         services.AddScoped<IInfographicsService, InfographicsService>();
+        services.AddSingleton(new HttpClient { BaseAddress = new Uri("https://api.openai.com/"), Timeout = Timeout.InfiniteTimeSpan });
+        services.AddScoped<OpenAiAssistantClient>();
+        services.AddSingleton<DeterministicAiAssistantClient>();
+        services.AddScoped<IAiAssistantClient>(provider =>
+        {
+            var configured = configuration[$"{AiAssistantOptions.SectionName}:Provider"] ?? "Deterministic";
+            return configured.Equals("OpenAI", StringComparison.OrdinalIgnoreCase)
+                ? provider.GetRequiredService<OpenAiAssistantClient>()
+                : provider.GetRequiredService<DeterministicAiAssistantClient>();
+        });
         services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddScoped<ITestAnalyticsService, TestAnalyticsService>();
         services.AddScoped<ITestTelemetryImporter, TestAnalyticsService>();
-        services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>(
-            "portfolio-database",
-            tags: ["ready"]);
+        services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>("portfolio-database", tags: ["ready"]);
         return services;
     }
 }

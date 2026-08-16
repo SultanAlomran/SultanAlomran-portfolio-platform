@@ -8,4 +8,5 @@
     <ProjectReference Include="../../src/Portfolio.Domain/Portfolio.Domain.csproj" />
     <ProjectReference Include="../../src/Portfolio.Application/Portfolio.Application.csproj" />
   </ItemGroup>
+  <ItemGroup><None Include="Assistant\assistant-v2-evaluations.json" CopyToOutputDirectory="PreserveNewest" /></ItemGroup>
 </Project>
