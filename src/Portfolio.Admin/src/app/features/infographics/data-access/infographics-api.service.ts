@@ -19,5 +19,5 @@ export class InfographicsApiService{
   publish(id:string){return this.http.post<AdminInfographicDetails>(`${this.base}/${id}/publish`,{})}
   archive(id:string){return this.http.post<AdminInfographicDetails>(`${this.base}/${id}/archive`,{})}
   delete(id:string){return this.http.delete<void>(`${this.base}/${id}`)}
-  private publicUrl(url:string){return url.startsWith('/')?`${new URL(environment.apiUrl).origin}${url}`:url}
+  private publicUrl(url:string){return url.startsWith('/')?`${new URL(environment.apiUrl,globalThis.location.origin).origin}${url}`:url}
 }

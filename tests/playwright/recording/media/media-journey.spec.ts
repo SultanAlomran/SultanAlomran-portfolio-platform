@@ -6,7 +6,7 @@ import { captureEvidence } from '../../helpers/evidence';
 
 test('@record Media to Infographic journey', async ({ page }, testInfo) => {
   await mockMediaApi(page);
-  await mockAdminInfographics(page);
+  await mockAdminInfographics(page, mediaItems);
   await mockPublicInfographics(page, true);
   await page.goto(`${e2eEnvironment.adminUrl}/media`);
   await expect(page.getByText(mediaItems[0].originalFileName)).toBeVisible();
@@ -29,6 +29,6 @@ test('@record Media to Infographic journey', async ({ page }, testInfo) => {
 
   await page.goto(`${e2eEnvironment.webUrl}/visual-handbook`);
   await page.getByRole('link', { name: 'Open visual guide' }).click();
-  await expect(page.getByRole('link', { name: /PDF|Download/i })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Download PDF', exact: true })).toHaveAttribute('href', `${e2eEnvironment.webUrl}/media/test-document.pdf`);
   await captureEvidence(page, testInfo, 'Public Visual Handbook with Media');
 });

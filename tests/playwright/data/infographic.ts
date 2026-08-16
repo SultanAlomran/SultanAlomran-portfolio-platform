@@ -1,5 +1,7 @@
 import type { Page } from '@playwright/test';
 
+interface MediaFixture { id:string; originalFileName:string; url:string; contentType:string; size:number }
+
 export const infographicIds = {
   category: '11111111-aaaa-4111-8111-111111111111',
   tag: '22222222-bbbb-4222-8222-222222222222',
@@ -41,12 +43,13 @@ export async function mockPublicInfographics(page: Page, withMedia = false) {
     return route.fulfill({ json: { items: [publicItem], page: 1, pageSize: 9, totalCount: 1, totalPages: 1 } });
   });
 }
-export async function mockAdminInfographics(page: Page) {
+export async function mockAdminInfographics(page: Page, media: readonly MediaFixture[] = []) {
+  const mediaResponse = media.map(item => ({ id: item.id, fileName: item.originalFileName, originalFileName: item.originalFileName, url: item.url, mimeType: item.contentType, fileSize: item.size, altText: null, storageProvider: 'local' }));
   await page.route('**/api/admin/infographics**', async route => {
     const request = route.request(); const url = new URL(request.url());
     if (url.pathname.endsWith('/taxonomy/categories')) return route.fulfill({ json: [infographicCategory] });
     if (url.pathname.endsWith('/taxonomy/tags')) return route.fulfill({ json: [infographicTag] });
-    if (url.pathname.endsWith('/media')) return route.fulfill({ json: [] });
+    if (url.pathname.endsWith('/media')) return route.fulfill({ json: mediaResponse });
     if (request.method() === 'POST' && url.pathname.endsWith('/publish')) return route.fulfill({ json: adminInfographicDetails });
     if (request.method() === 'POST' && url.pathname.endsWith('/save-draft')) return route.fulfill({ json: { ...adminInfographicDetails, status: 0 } });
     if (request.method() === 'POST' && url.pathname === '/api/admin/infographics') return route.fulfill({ status: 201, json: { ...adminInfographicDetails, status: 0 } });

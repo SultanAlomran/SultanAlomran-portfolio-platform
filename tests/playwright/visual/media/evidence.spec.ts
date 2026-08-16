@@ -1,12 +1,12 @@
 import { expect, test } from '../../fixtures/diagnostics';
 import { e2eEnvironment } from '../../config/environment';
-import { mockMediaApi } from '../../data/media';
+import { mediaItems, mockMediaApi } from '../../data/media';
 import { completeInfographicBasics, mockAdminInfographics } from '../../data/infographic';
 import { captureEvidence } from '../../helpers/evidence';
 
 test('@visual captures Media Library evidence', async ({ page }, testInfo) => {
   await mockMediaApi(page);
-  await mockAdminInfographics(page);
+  await mockAdminInfographics(page, mediaItems);
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto(`${e2eEnvironment.adminUrl}/media`);
   await expect(page.getByRole('heading', { name: 'Media Library' })).toBeVisible();

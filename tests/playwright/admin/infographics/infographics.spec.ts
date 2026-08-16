@@ -5,7 +5,7 @@ import { mediaItems, mockMediaApi } from '../../data/media';
 
 test.describe('Admin Infographics', () => {
   test.beforeEach(async ({ page }) => {
-    await mockAdminInfographics(page);
+    await mockAdminInfographics(page, mediaItems);
     await mockMediaApi(page);
   });
 
