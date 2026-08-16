@@ -12,5 +12,5 @@ export class InfographicsApiService{
   categories(){return this.http.get<Category[]>(`${this.base}/taxonomy/categories`)}
   tags(){return this.http.get<Tag[]>(`${this.base}/taxonomy/tags`)}
   private listItem(item:InfographicListItem):InfographicListItem{return{...item,coverUrl:this.publicUrl(item.coverUrl)}}
-  private publicUrl(url?:string){return url?.startsWith('/')?`${new URL(environment.apiUrl).origin}${url}`:url}
+  private publicUrl(url?:string){return url?.startsWith('/')?`${new URL(environment.apiUrl,globalThis.location.origin).origin}${url}`:url}
 }
