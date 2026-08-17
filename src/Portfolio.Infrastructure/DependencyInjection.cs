@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddScoped<ITestAnalyticsService, TestAnalyticsService>();
         services.AddScoped<ITestTelemetryImporter, TestAnalyticsService>();
+        services.AddScoped<ITestArtifactContentService, TestArtifactContentService>();
         services.AddHealthChecks().AddDbContextCheck<PortfolioDbContext>(
             "portfolio-database",
             tags: ["ready"]);

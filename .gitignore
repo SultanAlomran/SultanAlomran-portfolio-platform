@@ -440,3 +440,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Local Test Analytics artifact extraction cache
+.test-artifact-cache/

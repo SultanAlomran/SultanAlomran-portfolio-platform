@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Portfolio.Application.TestAnalytics;
 using Portfolio.Domain.Enums;
@@ -52,7 +53,85 @@ public sealed class TestAnalyticsApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/api/admin/test-analytics/runs/{Guid.NewGuid()}")).StatusCode);
     }
 
+    [Fact]
+    public async Task Known_artifact_content_supports_preview_download_and_video_ranges()
+    {
+        var future = DateTime.UtcNow.AddDays(1);
+        var request = Request("artifact-content") with
+        {
+            Artifacts =
+            [
+                Artifact("screenshot", TestArtifactType.Screenshot, "image/png", "README.md", future),
+                Artifact("recording", TestArtifactType.Video, "video/webm", "README.md", future),
+                Artifact("trace", TestArtifactType.Trace, "application/zip", "README.md", future),
+                Artifact("report", TestArtifactType.HtmlReport, "text/html", "docs/development", future)
+            ]
+        };
+        using var imported = await client.PostAsJsonAsync("/api/admin/test-analytics/import", request);
+        var result = await imported.Content.ReadFromJsonAsync<TestTelemetryImportResult>();
+        var details = await client.GetFromJsonAsync<TestRunDetailsDto>($"/api/admin/test-analytics/runs/{result!.TestRunId}");
+        var screenshot = details!.Artifacts.Single(x => x.Name == "screenshot");
+        var video = details.Artifacts.Single(x => x.Name == "recording");
+        var trace = details.Artifacts.Single(x => x.Name == "trace");
+        var report = details.Artifacts.Single(x => x.Name == "report");
+
+        using var screenshotResponse = await client.GetAsync($"/api/admin/test-analytics/artifacts/{screenshot.Id}/content");
+        Assert.Equal(HttpStatusCode.OK, screenshotResponse.StatusCode);
+        Assert.Equal("image/png", screenshotResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Null(screenshotResponse.Content.Headers.ContentDisposition);
+
+        using var rangeRequest = new HttpRequestMessage(HttpMethod.Get, $"/api/admin/test-analytics/artifacts/{video.Id}/content");
+        rangeRequest.Headers.Range = new RangeHeaderValue(0, 9);
+        using var rangeResponse = await client.SendAsync(rangeRequest);
+        Assert.Equal(HttpStatusCode.PartialContent, rangeResponse.StatusCode);
+        Assert.Equal("video/webm", rangeResponse.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(10, (await rangeResponse.Content.ReadAsByteArrayAsync()).Length);
+
+        using var download = await client.GetAsync($"/api/admin/test-analytics/artifacts/{trace.Id}/content?download=true");
+        Assert.Equal(HttpStatusCode.OK, download.StatusCode);
+        Assert.Equal("attachment", download.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("trace", download.Content.Headers.ContentDisposition?.FileNameStar);
+
+        using var reportDownload = await client.GetAsync($"/api/admin/test-analytics/artifacts/{report.Id}/content?download=true");
+        Assert.Equal(HttpStatusCode.OK, reportDownload.StatusCode);
+        Assert.Equal("application/zip", reportDownload.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("attachment", reportDownload.Content.Headers.ContentDisposition?.DispositionType);
+        var reportBytes = await reportDownload.Content.ReadAsByteArrayAsync();
+        Assert.True(reportBytes.Length > 2);
+        Assert.Equal([0x50, 0x4B], reportBytes[..2]);
+    }
+
+    [Fact]
+    public async Task Artifact_content_rejects_unknown_unsupported_traversal_urls_and_expired_files()
+    {
+        var future = DateTime.UtcNow.AddDays(1);
+        var request = Request("artifact-content-invalid") with
+        {
+            Artifacts =
+            [
+                Artifact("unsupported", TestArtifactType.Other, "application/x-executable", "README.md", future),
+                Artifact("traversal", TestArtifactType.Screenshot, "image/png", "../README.md", future),
+                Artifact("external-url", TestArtifactType.Screenshot, "image/png", "https://example.com/file.png", future),
+                Artifact("expired", TestArtifactType.Screenshot, "image/png", "README.md", DateTime.UtcNow.AddMinutes(-1))
+            ]
+        };
+        using var imported = await client.PostAsJsonAsync("/api/admin/test-analytics/import", request);
+        var result = await imported.Content.ReadFromJsonAsync<TestTelemetryImportResult>();
+        var details = await client.GetFromJsonAsync<TestRunDetailsDto>($"/api/admin/test-analytics/runs/{result!.TestRunId}");
+        Guid Id(string name) => details!.Artifacts.Single(x => x.Name == name).Id;
+
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync($"/api/admin/test-analytics/artifacts/{Guid.NewGuid()}/content")).StatusCode);
+        Assert.Equal(HttpStatusCode.UnsupportedMediaType, (await client.GetAsync($"/api/admin/test-analytics/artifacts/{Id("unsupported")}/content")).StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.GetAsync($"/api/admin/test-analytics/artifacts/{Id("traversal")}/content")).StatusCode);
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, (await client.GetAsync($"/api/admin/test-analytics/artifacts/{Id("external-url")}/content")).StatusCode);
+        Assert.Equal(HttpStatusCode.Gone, (await client.GetAsync($"/api/admin/test-analytics/artifacts/{Id("expired")}/content")).StatusCode);
+    }
+
     public async Task DisposeAsync() { client.Dispose(); await factory.DeleteDatabaseAsync(); await factory.DisposeAsync(); }
+
+    private static TestArtifactImportItem Artifact(string name, TestArtifactType type, string mimeType, string path, DateTime expires) =>
+        new(null, type, TestArtifactProvider.External, name, name, mimeType, "https://example.com/not-used", path, 1024,
+            DateTime.UtcNow, expires, TestArtifactAvailabilityStatus.Available, "chromium", "quality");
 
     private static TestTelemetryImportRequest Request(string providerRunId) => new(
         TestTelemetryProvider.GitHubActions, providerRunId, "Playwright E2E", 9001, "feature/quality", "abcdef123456",

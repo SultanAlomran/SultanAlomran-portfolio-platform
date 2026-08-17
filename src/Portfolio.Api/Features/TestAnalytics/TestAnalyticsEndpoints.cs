@@ -26,6 +26,28 @@ internal static class TestAnalyticsEndpoints
             Results.Ok(await service.GetTrendsAsync(query, token)));
         group.MapGet("/runs/{id:guid}/artifacts", async (Guid id, ITestAnalyticsService service, CancellationToken token) =>
             Results.Ok(await service.GetArtifactsAsync(id, token)));
+        group.MapGet("/artifacts/{artifactId:guid}/content", async (Guid artifactId, bool? download,
+            ITestArtifactContentService content, CancellationToken token) =>
+        {
+            var shouldDownload = download ?? false;
+            var result = await content.ResolveAsync(artifactId, shouldDownload, token);
+            return result.Status switch
+            {
+                TestArtifactContentStatus.Available => Results.File(result.PhysicalPath!, result.ContentType,
+                    shouldDownload ? result.DownloadName : null, enableRangeProcessing: result.EnableRangeProcessing),
+                TestArtifactContentStatus.NotFound => Results.NotFound(new { message = result.Message }),
+                TestArtifactContentStatus.Gone => Results.Json(new { message = result.Message }, statusCode: StatusCodes.Status410Gone),
+                TestArtifactContentStatus.Unsupported => Results.Json(new { message = result.Message }, statusCode: StatusCodes.Status415UnsupportedMediaType),
+                _ => Results.Json(new { message = result.Message }, statusCode: StatusCodes.Status503ServiceUnavailable)
+            };
+        }).WithName("GetTestArtifactContent")
+          .WithSummary("Preview or download a known Quality Dashboard artifact")
+          .WithDescription("Resolves only artifact identifiers stored by Test Analytics. Preview MIME types are restricted; provider credentials remain server-side.")
+          .Produces(StatusCodes.Status200OK)
+          .Produces(StatusCodes.Status404NotFound)
+          .Produces(StatusCodes.Status410Gone)
+          .Produces(StatusCodes.Status415UnsupportedMediaType)
+          .Produces(StatusCodes.Status503ServiceUnavailable);
 
         // Authentication is deferred platform-wide. Never expose ingestion in non-development environments.
         if (endpoints.ServiceProvider.GetRequiredService<IHostEnvironment>().IsDevelopment())
