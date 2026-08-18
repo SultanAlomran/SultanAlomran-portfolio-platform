@@ -1,5 +1,5 @@
-using Portfolio.Api.Configuration;
 using System.Security.Claims;
+using Portfolio.Api.Configuration;
 using Portfolio.Application.Authentication;
 
 namespace Portfolio.Api.Features.Authentication;

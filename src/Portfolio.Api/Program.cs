@@ -1,19 +1,19 @@
+using System.Text.Json;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Portfolio.Api.Configuration;
-using Portfolio.Api.Features.Authentication;
-using Portfolio.Application.Authentication;
-using Portfolio.Infrastructure.Persistence;
-using System.Text.Json;
-using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Assistant;
+using Portfolio.Api.Features.Authentication;
 using Portfolio.Api.Features.Infographics;
 using Portfolio.Api.Features.Media;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
+using Portfolio.Application.Authentication;
 using Portfolio.Application.TestAnalytics;
+using Portfolio.Infrastructure.Persistence;
 using Portfolio.Infrastructure.Persistence.Seed;
 using Scalar.AspNetCore;
 
