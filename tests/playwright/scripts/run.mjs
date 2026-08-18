@@ -14,6 +14,7 @@ const browser = valueAfter('--browser') ?? 'chromium';
 const cliArgs = ['test', '--config', 'tests/playwright/playwright.config.ts'];
 
 if (suite === 'admin') cliArgs.push('tests/playwright/admin');
+if (suite === 'auth') cliArgs.push('tests/playwright/admin/auth');
 if (suite === 'public') cliArgs.push('tests/playwright/public');
 if (suite === 'responsive') cliArgs.push('tests/playwright/responsive');
 if (args.includes('--headed')) cliArgs.push('--headed');
@@ -28,7 +29,7 @@ const child = spawn(process.execPath, [playwrightCli, ...cliArgs], {
     ...process.env,
     E2E_MODE: mode,
     E2E_BROWSER: browser,
-    E2E_FEATURE: ['smoke', 'projects', 'quality', 'preview'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
+    E2E_FEATURE: ['smoke', 'projects', 'quality', 'preview', 'auth'].includes(suite) ? suite : process.env.E2E_FEATURE ?? 'all',
     PWDEBUG: args.includes('--debug') ? '1' : process.env.PWDEBUG,
   },
 });

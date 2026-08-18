@@ -1,13 +1,19 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Portfolio.Api.Configuration;
 using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Assistant;
+using Portfolio.Api.Features.Authentication;
 using Portfolio.Api.Features.Infographics;
 using Portfolio.Api.Features.Media;
 using Portfolio.Api.Features.Projects;
 using Portfolio.Api.Features.TestAnalytics;
 using Portfolio.Api.Middleware;
+using Portfolio.Application.Authentication;
 using Portfolio.Application.TestAnalytics;
+using Portfolio.Infrastructure.Persistence;
 using Portfolio.Infrastructure.Persistence.Seed;
 using Scalar.AspNetCore;
 
@@ -15,6 +21,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddJsonConsole();
 builder.Services.AddApiFoundation(builder.Configuration);
+builder.Services.AddAdminAuthentication(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
 var mediaRoot = Path.GetFullPath(builder.Configuration["Media:LocalPath"] ?? Path.Combine(AppContext.BaseDirectory, "media"));
@@ -70,6 +77,20 @@ if (telemetryArgument >= 0)
     Console.WriteLine("Preview test telemetry import: {0} Run: {1}. Imported: {2}.", result.Message, result.TestRunId, result.Imported);
     return;
 }
+if (args.Contains("--bootstrap-admin", StringComparer.OrdinalIgnoreCase))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
+    await db.Database.MigrateAsync();
+    var options = scope.ServiceProvider.GetRequiredService<IOptions<AdminBootstrapOptions>>().Value;
+    var bootstrap = scope.ServiceProvider.GetRequiredService<IAdminBootstrapService>();
+    var result = await bootstrap.BootstrapAsync(new AdminBootstrapRequest(
+        options.Email, options.UserName, options.FullName, options.Password,
+        options.GoogleSubject, options.GoogleEmail), CancellationToken.None);
+    Console.WriteLine(
+        "Admin bootstrap complete. User: {0}; created: {1}; role assigned: {2}; Google linked: {3}.",
+        result.UserId, result.UserCreated, result.RoleAssigned, result.GoogleLinked);
+}
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
 if (!app.Environment.IsDevelopment())
@@ -78,6 +99,9 @@ if (!app.Environment.IsDevelopment())
 }
 app.UseConfiguredCors();
 app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseAntiforgery();
 app.UseStaticFiles(new StaticFileOptions { FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(mediaRoot), RequestPath = "/media", ServeUnknownFileTypes = false });
 if (app.Environment.IsDevelopment() || app.Environment.IsEnvironment("Preview"))
 {
@@ -97,6 +121,7 @@ app.MapGet("/", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" 
     .ExcludeFromDescription();
 app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "ready" }))
     .WithName("ApiVerification");
+app.MapAuthenticationEndpoints();
 app.MapProjectEndpoints();
 app.MapInfographicEndpoints();
 app.MapMediaEndpoints();

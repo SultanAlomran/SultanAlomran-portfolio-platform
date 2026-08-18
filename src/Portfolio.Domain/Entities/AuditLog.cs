@@ -17,4 +17,16 @@ public sealed class AuditLog : Entity
     public DateTime CreatedAt { get; private set; } = DateTime.UtcNow;
     public User? User { get; private set; }
 
+    public static AuditLog Create(string action, string entityType, Guid? userId = null, Guid? entityId = null)
+    {
+        if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException("Action is required.", nameof(action));
+        if (string.IsNullOrWhiteSpace(entityType)) throw new ArgumentException("Entity type is required.", nameof(entityType));
+        return new AuditLog
+        {
+            UserId = userId,
+            EntityId = entityId,
+            Action = action.Trim(),
+            EntityType = entityType.Trim()
+        };
+    }
 }

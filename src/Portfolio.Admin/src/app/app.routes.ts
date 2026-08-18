@@ -1,12 +1,21 @@
 import { Routes } from '@angular/router';
 import { AdminLayoutComponent } from './layout/admin-layout/admin-layout.component';
+import { adminGuard, anonymousOnlyGuard } from './features/auth/auth.guard';
 
 const placeholder = () => import('./shared/pages/admin-placeholder-page/admin-placeholder-page.component');
 
 export const routes: Routes = [
   {
+    path: 'login',
+    title: 'Sign in | Portfolio Admin',
+    canActivate: [anonymousOnlyGuard],
+    loadComponent: () => import('./features/auth/login.component'),
+  },
+  {
     path: '',
     component: AdminLayoutComponent,
+    canActivate: [adminGuard],
+    canActivateChild: [adminGuard],
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
       { path: 'dashboard', title: 'Dashboard | Portfolio Admin', loadComponent: () => import('./features/dashboard/dashboard.component') },

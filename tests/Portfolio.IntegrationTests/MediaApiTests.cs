@@ -19,6 +19,7 @@ public sealed class MediaApiTests : IAsyncLifetime
     {
         await factory.InitializeDatabaseAsync();
         client = factory.CreateClient();
+        await AuthenticationTestHelper.AuthenticateAsync(client);
     }
 
     [Fact]
@@ -100,6 +101,7 @@ internal sealed class MediaApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync();
+        await AuthenticationTestHelper.SeedAdministratorAsync(scope.ServiceProvider);
     }
 
     public async Task<Guid> CreateReferencedMediaAsync()

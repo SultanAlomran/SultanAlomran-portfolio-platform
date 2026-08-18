@@ -11,7 +11,12 @@ public sealed class TestAnalyticsApiTests : IAsyncLifetime
     private readonly ProjectsApiFactory factory = new();
     private HttpClient client = null!;
 
-    public async Task InitializeAsync() { await factory.InitializeDatabaseAsync(); client = factory.CreateClient(); }
+    public async Task InitializeAsync()
+    {
+        await factory.InitializeDatabaseAsync();
+        client = factory.CreateClient();
+        await AuthenticationTestHelper.AuthenticateAsync(client);
+    }
 
     [Fact]
     public async Task Import_is_idempotent_and_dashboard_aggregates_real_results()

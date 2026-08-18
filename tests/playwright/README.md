@@ -22,7 +22,7 @@ npx playwright install chromium
 npm run e2e:smoke
 ```
 
-Playwright starts API (`5100`), Web (`4200`), and Admin (`4300`), waits for readiness, and stops the processes it owns. Existing servers are reused locally. Supply `ConnectionStrings__PortfolioDatabase` or the normal API user-secret, and apply migrations before tests that need Projects data. CI creates and migrates an isolated SQL Server database.
+Playwright starts API (`5100`) with the explicit idempotent test-Admin bootstrap, plus Web (`4200`) and Admin (`4300`), waits for readiness, and stops the processes it owns. Existing servers are reused locally, so an older API already listening on `5100` must be restarted after auth changes. Supply `ConnectionStrings__PortfolioDatabase` or the normal API user-secret. CI creates and migrates an isolated SQL Server database. Deterministic E2E credentials are test-only defaults; remote runs supply `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD` from a protected environment.
 
 Useful commands:
 
@@ -30,6 +30,7 @@ Useful commands:
 npm run e2e
 npm run e2e:admin
 npm run e2e:web
+npm run e2e:auth
 npm run e2e:responsive
 npm run e2e:quality
 npm run e2e:visual
@@ -57,7 +58,7 @@ Future vertical slices should add:
 4. an `@visual` evidence scenario where design review benefits;
 5. an `@record` journey only for acceptance or demonstration.
 
-Tests must use an isolated database before creating or deleting data. Authentication is deferred; do not add a production bypass. The current wizard coverage performs client-side validation and navigation without saving developer records. Add API-assisted setup/cleanup when authenticated, isolated E2E data support is approved.
+Tests must use an isolated database before creating or deleting data. The diagnostics fixture authenticates once per Playwright worker through the real CSRF/login endpoints and copies only in-memory test cookies into each browser context; no reusable storage-state file or production bypass exists. Auth tests clear those cookies to exercise anonymous, invalid, local, Google-test-provider, Remember Me, responsive, visual, and logout behavior. The current content wizard coverage continues to avoid saving developer records unless its feature owns deterministic cleanup.
 
 ## Visual snapshots and artifacts
 

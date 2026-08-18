@@ -21,6 +21,7 @@ public sealed class ProjectsApiTests : IAsyncLifetime
     {
         await factory.InitializeDatabaseAsync();
         client = factory.CreateClient();
+        await AuthenticationTestHelper.AuthenticateAsync(client);
     }
 
     [Fact]
@@ -129,6 +130,7 @@ internal sealed class ProjectsApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync();
+        await AuthenticationTestHelper.SeedAdministratorAsync(scope.ServiceProvider);
         var technology = Technology.Create("Angular", "Frontend", "angular");
         var media = MediaFile.Create("project.png", "project.png", "/media/project.png", "image/png", 1024, "local", "Project preview");
         db.Technologies.Add(technology); db.MediaFiles.Add(media);

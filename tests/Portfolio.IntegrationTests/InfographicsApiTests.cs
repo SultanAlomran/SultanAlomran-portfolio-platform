@@ -21,6 +21,7 @@ public sealed class InfographicsApiTests : IAsyncLifetime
     {
         await factory.InitializeDatabaseAsync();
         client = factory.CreateClient();
+        await AuthenticationTestHelper.AuthenticateAsync(client);
     }
 
     [Fact]
@@ -123,6 +124,7 @@ internal sealed class InfographicsApiFactory : WebApplicationFactory<Program>
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
         await db.Database.MigrateAsync();
+        await AuthenticationTestHelper.SeedAdministratorAsync(scope.ServiceProvider);
         var category = Category.Create(".NET", "dotnet", "Modern .NET engineering.", 0);
         var tag = Tag.Create("EF Core", "ef-core");
         var image = MediaFile.Create("guide.png", "guide.png", "/media/guide.png", "image/png", 1024, "local", "Guide preview");

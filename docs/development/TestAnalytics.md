@@ -36,7 +36,7 @@ For local development, start the API in Development, download or generate `telem
 .\scripts\import-test-telemetry.ps1
 ```
 
-The import API is deliberately mapped only in Development while authentication is deferred. A future hosted API can expose a protected ingestion endpoint for GitHub Actions; credentials must remain server-side and must never be sent to Portfolio.Admin.
+The import API remains mapped only in Development and now requires the same authenticated Administrator policy and antiforgery protection as every Admin mutation. Preview telemetry import continues to use the explicit server-side CLI path; credentials remain server-side and are never sent to Portfolio.Admin.
 
 ## Routes
 
@@ -69,10 +69,10 @@ Configure the GitHub provider through server configuration/user secrets, never A
 - `TestArtifacts:GitHub:Repository`
 - `TestArtifacts:GitHub:Token` (Actions read access only)
 
-No token is committed. The browser sees only the Portfolio.Api artifact-ID URL. Azure Preview will return “GitHub artifact preview is not configured on this server” until a server-side secret and the platform's deferred Admin authentication are configured.
+No token is committed. The authenticated browser sees only the Portfolio.Api artifact-ID URL. Azure Preview returns “GitHub artifact preview is not configured on this server” until a server-side provider credential is configured; authentication alone never exposes provider secrets.
 
 ## Known limits
 
 - Existing GitHub history is not fabricated or automatically backfilled. Import begins with real telemetry files that are available.
 - GitHub artifacts are ZIP containers, so the first remote preview downloads and extracts the selected entry into the bounded server cache; subsequent video range requests use that cached file.
-- Platform authentication and Azure Blob archival remain future slices. Do not enable a GitHub token on a publicly reachable Admin/API deployment until the existing Admin authentication slice is implemented.
+- Azure Blob archival remains a future slice. Do not enable a GitHub token unless the deployment uses the current Admin authorization policy, restricted server-side secret storage, and an approved retention/access model.

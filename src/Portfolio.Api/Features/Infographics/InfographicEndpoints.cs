@@ -23,6 +23,7 @@ internal static class InfographicEndpoints
             Results.Ok(await service.GetTagsAsync(token)));
 
         var admin = endpoints.MapGroup("/api/admin/infographics").WithTags("Admin Infographics");
+        admin.RequireAuthorization(Portfolio.Application.Authentication.AdminAuthorization.Policy).AddEndpointFilter<Portfolio.Api.Features.Authentication.AntiforgeryEndpointFilter>();
         admin.MapGet("/", async ([AsParameters] InfographicQuery query, IInfographicsService service, CancellationToken token) =>
             Results.Ok(await service.GetAdminAsync(query, token)));
         admin.MapGet("/{id:guid}", async (Guid id, IInfographicsService service, CancellationToken token) =>

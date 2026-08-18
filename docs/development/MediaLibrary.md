@@ -27,7 +27,7 @@ The Admin screen provides summary metrics, search/type/usage filters, responsive
 
 ## Security, testing, and deferred work
 
-Uploads are untrusted. Filename metadata is sanitized with `Path.GetFileName`; only generated keys reach storage. Server validation is authoritative and internal filesystem paths are never returned. Admin authentication remains an existing platform limitation and is not simulated here.
+Uploads are untrusted. Filename metadata is sanitized with `Path.GetFileName`; only generated keys reach storage. Server validation is authoritative and internal filesystem paths are never returned. Media list/upload/delete APIs require the real Administrator policy; Angular guards are UX only, while API authorization and antiforgery are the security boundary.
 
 Focused integration and Playwright coverage exercises image/PDF upload, signature validation, filters, previews, picker selection, reference conflicts, orphan deletion, Infographic selection, and public rendering. Visual and full-recording specifications live under the existing `visual/media` and `recording/media` conventions, so normalized telemetry remains compatible with `feature=media` and Full Recording mode without changing Test Analytics.
 

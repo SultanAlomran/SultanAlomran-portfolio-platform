@@ -2327,6 +2327,47 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                     b.ToTable("UserBookmarks", (string)null);
                 });
 
+            modelBuilder.Entity("Portfolio.Domain.Entities.UserExternalLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWSEQUENTIALID()");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ProviderEmail")
+                        .HasMaxLength(320)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(320)");
+
+                    b.Property<string>("ProviderSubject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .IsUnicode(true)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "ProviderSubject")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("UserExternalLogins", (string)null);
+                });
+
             modelBuilder.Entity("Portfolio.Domain.Entities.UserHelpfulVote", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2869,6 +2910,17 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Portfolio.Domain.Entities.UserExternalLogin", b =>
+                {
+                    b.HasOne("Portfolio.Domain.Entities.User", "User")
+                        .WithMany("ExternalLogins")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Portfolio.Domain.Entities.UserHelpfulVote", b =>
                 {
                     b.HasOne("Portfolio.Domain.Entities.User", "User")
@@ -3008,6 +3060,8 @@ namespace Portfolio.Infrastructure.Persistence.Migrations
                     b.Navigation("AuditLogs");
 
                     b.Navigation("EmailVerificationTokens");
+
+                    b.Navigation("ExternalLogins");
 
                     b.Navigation("Notifications");
 
