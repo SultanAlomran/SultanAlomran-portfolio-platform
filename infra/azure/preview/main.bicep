@@ -57,6 +57,8 @@ resource api 'Microsoft.App/containerApps@2024-03-01' = {
           { name: 'ConnectionStrings__PortfolioDatabase', secretRef: 'database' }
           { name: 'Cors__AllowedOrigins__0', value: 'https://${webName}.${environment.properties.defaultDomain}' }
           { name: 'Cors__AllowedOrigins__1', value: 'https://${adminName}.${environment.properties.defaultDomain}' }
+          { name: 'Authentication__AdminBaseUrl', value: 'https://${adminName}.${environment.properties.defaultDomain}' }
+          { name: 'Authentication__Cookie__SameSite', value: 'None' }
         ]
         resources: { cpu: json('0.25'), memory: '0.5Gi' }
       }]

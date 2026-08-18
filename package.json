@@ -9,6 +9,7 @@
     "e2e": "node tests/playwright/scripts/run.mjs",
     "e2e:smoke": "node tests/playwright/scripts/run.mjs --suite smoke",
     "e2e:admin": "node tests/playwright/scripts/run.mjs --suite admin",
+    "e2e:auth": "node tests/playwright/scripts/run.mjs --suite auth",
     "e2e:web": "node tests/playwright/scripts/run.mjs --suite public",
     "e2e:quality": "node tests/playwright/scripts/run.mjs --suite quality",
     "e2e:responsive": "node tests/playwright/scripts/run.mjs --suite responsive",

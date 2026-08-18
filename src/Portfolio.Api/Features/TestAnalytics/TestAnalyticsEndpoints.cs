@@ -8,6 +8,7 @@ internal static class TestAnalyticsEndpoints
     internal static IEndpointRouteBuilder MapTestAnalyticsEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup("/api/admin/test-analytics").WithTags("Admin Test Analytics");
+        group.RequireAuthorization(Portfolio.Application.Authentication.AdminAuthorization.Policy).AddEndpointFilter<Portfolio.Api.Features.Authentication.AntiforgeryEndpointFilter>();
         group.MapGet("/overview", async ([AsParameters] TestAnalyticsQuery query, ITestAnalyticsService service, CancellationToken token) =>
             Results.Ok(await service.GetOverviewAsync(query, token)));
         group.MapGet("/runs", async ([AsParameters] TestAnalyticsQuery query, ITestAnalyticsService service, CancellationToken token) =>

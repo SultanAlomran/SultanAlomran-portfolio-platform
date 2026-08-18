@@ -12,7 +12,7 @@ public sealed class ModelMetadataTests
         .Options).Model;
 
     [Fact]
-    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(48, Model.GetEntityTypes().Count());
+    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(49, Model.GetEntityTypes().Count());
 
     [Fact]
     public void Arabic_capable_fields_are_unicode_and_bounded()
@@ -34,6 +34,16 @@ public sealed class ModelMetadataTests
     {
         Assert.Contains(Model.FindEntityType(typeof(RefreshToken))!.GetIndexes(), x => x.IsUnique && x.Properties.Single().Name == nameof(RefreshToken.TokenHash));
         Assert.Contains(Model.FindEntityType(typeof(Project))!.GetIndexes(), x => x.IsUnique && x.GetFilter() == "[IsDeleted] = 0");
+    }
+
+    [Fact]
+    public void External_login_has_unique_provider_identity_and_user_provider_pair()
+    {
+        var externalLogin = Model.FindEntityType(typeof(UserExternalLogin))!;
+        Assert.Contains(externalLogin.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(UserExternalLogin.Provider), nameof(UserExternalLogin.ProviderSubject)]));
+        Assert.Contains(externalLogin.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(UserExternalLogin.UserId), nameof(UserExternalLogin.Provider)]));
     }
 
     [Fact]

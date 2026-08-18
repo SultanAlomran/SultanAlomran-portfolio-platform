@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
+import { AuthApiService } from '../../features/auth/auth-api.service';
 
 @Component({
   selector: 'app-admin-header',
@@ -15,8 +16,23 @@ export class AdminHeaderComponent {
   readonly toggleMobileSidebar = output<void>();
   readonly profileOpen = signal(false);
   readonly themeService = inject(ThemeService);
+  readonly auth = inject(AuthApiService);
+  readonly loggingOut = signal(false);
+  private readonly router = inject(Router);
 
   toggleProfile(): void {
     this.profileOpen.update((open) => !open);
+  }
+
+  logout(): void {
+    if (this.loggingOut()) return;
+    this.loggingOut.set(true);
+    this.auth.logout().subscribe({
+      next: () => void this.router.navigateByUrl('/login'),
+      error: () => {
+        this.auth.session.clear();
+        void this.router.navigateByUrl('/login');
+      },
+    }).add(() => this.loggingOut.set(false));
   }
 }

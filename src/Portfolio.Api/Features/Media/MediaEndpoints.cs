@@ -8,6 +8,7 @@ internal static class MediaEndpoints
     internal static IEndpointRouteBuilder MapMediaEndpoints(this IEndpointRouteBuilder endpoints)
     {
         var media = endpoints.MapGroup("/api/admin/media").WithTags("Admin Media");
+        media.RequireAuthorization(Portfolio.Application.Authentication.AdminAuthorization.Policy).AddEndpointFilter<Portfolio.Api.Features.Authentication.AntiforgeryEndpointFilter>();
         media.MapGet("/", async ([AsParameters] MediaQuery query, IMediaService service, CancellationToken token) => Results.Ok(await service.ListAsync(query, token)));
         media.MapGet("/{id:guid}", async (Guid id, IMediaService service, CancellationToken token) => (await service.GetAsync(id, token)) is { } item ? Results.Ok(item) : Results.NotFound());
         media.MapPost("/", async ([FromForm] IFormFile file, IMediaService service, CancellationToken token) =>

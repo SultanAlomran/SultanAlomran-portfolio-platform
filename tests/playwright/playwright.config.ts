@@ -19,6 +19,8 @@ const testMatch = mode === 'visual'
     ? feature === 'all' ? '**/recording/**/*.spec.ts' : `**/recording/${feature}/**/*.spec.ts`
     : feature === 'projects'
       ? ['**/projects/**/*.spec.ts']
+      : feature === 'auth'
+        ? ['**/auth/**/*.spec.ts']
       : feature === 'assistant'
         ? ['**/assistant/**/*.spec.ts']
       : feature === 'quality'
@@ -38,7 +40,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: feature === 'preview' ? 1 : browser === 'chromium' ? (process.env.CI ? 2 : undefined) : 1,
+  workers: feature === 'preview' || feature === 'auth' ? 1 : browser === 'chromium' ? (process.env.CI ? 2 : undefined) : 1,
   timeout: 45_000,
   expect: { timeout: 7_500 },
   reporter: process.env.CI
@@ -57,13 +59,25 @@ export default defineConfig({
   projects: [browserProjects[browser] ?? browserProjects.chromium],
   webServer: manageServers ? [
     {
-      command: 'dotnet run --project src/Portfolio.Api/Portfolio.Api.csproj --launch-profile http',
+      command: 'dotnet run --project src/Portfolio.Api/Portfolio.Api.csproj --launch-profile http -- --bootstrap-admin',
       cwd: repositoryRoot,
       url: process.env.API_HEALTH_URL ?? 'http://localhost:5100/health',
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
       stdout: 'pipe',
       stderr: 'pipe',
+      env: {
+        ...process.env,
+        AdminBootstrap__Email: process.env.E2E_ADMIN_EMAIL ?? 'admin.e2e@portfolio.test',
+        AdminBootstrap__UserName: 'admin.e2e',
+        AdminBootstrap__FullName: 'Portfolio Test Administrator',
+        AdminBootstrap__Password: process.env.E2E_ADMIN_PASSWORD ?? 'E2E-only-password!2026',
+        AdminBootstrap__GoogleSubject: 'google-e2e-linked-subject',
+        AdminBootstrap__GoogleEmail: process.env.E2E_ADMIN_EMAIL ?? 'admin.e2e@portfolio.test',
+        Authentication__Google__Enabled: 'true',
+        Authentication__Google__TestMode: 'true',
+        Authentication__Google__TestSubject: 'google-e2e-linked-subject',
+      },
     },
     {
       command: 'npm --prefix src/Portfolio.Web run start:tunnel',

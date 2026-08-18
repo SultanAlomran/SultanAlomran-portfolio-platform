@@ -13,7 +13,7 @@ test.describe('Azure PR preview smoke', () => {
   test('loads Admin and reaches the PR-scoped API', async ({ page }) => {
     await page.goto(`${e2eEnvironment.adminUrl}/projects`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
     await expect(page.getByRole('heading', { name: 'Projects', exact: true })).toBeVisible();
-    const status = await page.evaluate(async apiUrl => (await fetch(`${apiUrl}/api/admin/projects`)).status, e2eEnvironment.apiUrl);
+    const status = (await page.request.get(`${e2eEnvironment.apiUrl}/api/admin/projects`)).status();
     expect(status).toBe(200);
   });
 

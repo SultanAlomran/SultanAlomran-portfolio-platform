@@ -1,10 +1,43 @@
-import { expect, test as base, type Page } from '@playwright/test';
+import { expect, request as playwrightRequest, test as base, type APIRequestContext, type Page } from '@playwright/test';
+import { e2eEnvironment } from '../config/environment';
 
 type Diagnostics = {
   allowResponse: (matcher: RegExp, statuses?: number[]) => void;
 };
 
-export const test = base.extend<{ diagnostics: Diagnostics }>({
+type StorageState = Awaited<ReturnType<APIRequestContext['storageState']>>;
+let adminCookiesPromise: Promise<StorageState['cookies']> | undefined;
+
+function authenticatedAdminCookies(): Promise<StorageState['cookies']> {
+  adminCookiesPromise ??= (async () => {
+    const api = await playwrightRequest.newContext({ baseURL: e2eEnvironment.apiUrl });
+    try {
+      const csrfResponse = await api.get('/api/auth/csrf');
+      if (!csrfResponse.ok()) throw new Error(`CSRF bootstrap failed with HTTP ${csrfResponse.status()}.`);
+      const csrf = await csrfResponse.json() as { token: string; headerName: string };
+      const login = await api.post('/api/auth/login', {
+        data: {
+          email: process.env.E2E_ADMIN_EMAIL ?? 'admin.e2e@portfolio.test',
+          password: process.env.E2E_ADMIN_PASSWORD ?? 'E2E-only-password!2026',
+          rememberMe: false,
+        },
+        headers: { [csrf.headerName]: csrf.token },
+      });
+      if (!login.ok()) throw new Error(`Admin test login failed with HTTP ${login.status()}: ${await login.text()}`);
+      return (await api.storageState()).cookies;
+    } finally {
+      await api.dispose();
+    }
+  })();
+  return adminCookiesPromise;
+}
+
+export const test = base.extend<{ diagnostics: Diagnostics; adminSession: void }>({
+  adminSession: [async ({ context }, use) => {
+    await context.addCookies(await authenticatedAdminCookies());
+    await use();
+  }, { auto: true }],
+
   diagnostics: async ({ page }, use, testInfo) => {
     const problems: string[] = [];
     const allowed: Array<{ matcher: RegExp; statuses: number[] }> = [];

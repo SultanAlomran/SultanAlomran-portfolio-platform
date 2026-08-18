@@ -1,12 +1,16 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Portfolio.Application.Authentication;
 using Portfolio.Application.Assistant;
 using Portfolio.Application.Common.Abstractions;
 using Portfolio.Application.Infographics;
 using Portfolio.Application.Media;
 using Portfolio.Application.Projects;
 using Portfolio.Application.TestAnalytics;
+using Portfolio.Domain.Entities;
+using Portfolio.Infrastructure.Authentication;
 using Portfolio.Infrastructure.Assistant;
 using Portfolio.Infrastructure.Infographics;
 using Portfolio.Infrastructure.Media;
@@ -26,6 +30,9 @@ public static class DependencyInjection
             options.UseSqlServer(connectionString, sql => sql.MigrationsAssembly(typeof(PortfolioDbContext).Assembly.FullName)));
         services.AddScoped<IPortfolioDbContext>(provider => provider.GetRequiredService<PortfolioDbContext>());
         services.AddScoped<IProjectsService, ProjectsService>();
+        services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddScoped<IAdminAuthenticationService, AdminAuthenticationService>();
+        services.AddScoped<IAdminBootstrapService, AdminBootstrapService>();
         services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
         services.AddScoped<IInfographicsService, InfographicsService>();
         services.AddScoped<IMediaService, MediaService>();

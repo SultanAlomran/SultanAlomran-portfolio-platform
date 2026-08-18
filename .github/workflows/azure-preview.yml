@@ -29,6 +29,7 @@ jobs:
       LOCATION: ${{ vars.AZURE_LOCATION }}
       SUFFIX: ${{ vars.AZURE_RESOURCE_SUFFIX }}
       SQL_PASSWORD: ${{ secrets.AZURE_SQL_ADMIN_PASSWORD }}
+      PREVIEW_ADMIN_PASSWORD: ${{ secrets.AZURE_PREVIEW_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -110,6 +111,12 @@ jobs:
           dotnet tool restore
           dotnet ef database update --project src/Portfolio.Infrastructure --startup-project src/Portfolio.Api
           dotnet run --project src/Portfolio.Api --configuration Release --no-build --no-launch-profile -- --seed-preview-projects
+          export AdminBootstrap__Email='${{ vars.AZURE_PREVIEW_ADMIN_EMAIL }}'
+          export AdminBootstrap__UserName='preview.admin'
+          export AdminBootstrap__FullName='Preview Administrator'
+          export AdminBootstrap__Password="$PREVIEW_ADMIN_PASSWORD"
+          export Authentication__AdminBaseUrl='${{ steps.provision.outputs.adminUrl }}'
+          dotnet run --project src/Portfolio.Api --configuration Release --no-build --no-launch-profile -- --bootstrap-admin
       - name: Smoke check and publish URLs
         id: urls
         shell: bash
@@ -133,6 +140,8 @@ jobs:
           API_BASE_URL: ${{ steps.provision.outputs.apiUrl }}
           WEB_BASE_URL: ${{ steps.provision.outputs.webUrl }}
           ADMIN_BASE_URL: ${{ steps.provision.outputs.adminUrl }}
+          E2E_ADMIN_EMAIL: ${{ vars.AZURE_PREVIEW_ADMIN_EMAIL }}
+          E2E_ADMIN_PASSWORD: ${{ secrets.AZURE_PREVIEW_ADMIN_PASSWORD }}
       - name: Build normalized preview telemetry
         if: always() && steps.preview_playwright.outcome != 'skipped'
         run: node tests/playwright/scripts/build-telemetry.mjs --mode standard --feature preview --browser chromium
@@ -193,7 +202,7 @@ jobs:
           script: |
             const marker = '<!-- portfolio-azure-preview -->';
             const issue_number = Number(process.env.PR_NUMBER);
-            const body = `${marker}\n## Azure Preview Environment\n\n| Service | URL |\n|---|---|\n| Public Web | ${process.env.WEB_URL} |\n| Admin (authentication not implemented) | ${process.env.ADMIN_URL} |\n| API | ${process.env.API_URL} |\n| API Health | ${process.env.API_URL}/health/ready |\n| Scalar | ${process.env.API_URL}/scalar/v1 |\n| OpenAPI | ${process.env.API_URL}/openapi/v1.json |\n\n**Commit:** \`${context.sha.slice(0, 7)}\`  \n**Environment:** PR #${issue_number}  \n**Status:** Ready`;
+            const body = `${marker}\n## Azure Preview Environment\n\n| Service | URL |\n|---|---|\n| Public Web | ${process.env.WEB_URL} |\n| Admin (authentication required) | ${process.env.ADMIN_URL} |\n| API | ${process.env.API_URL} |\n| API Health | ${process.env.API_URL}/health/ready |\n| Scalar | ${process.env.API_URL}/scalar/v1 |\n| OpenAPI | ${process.env.API_URL}/openapi/v1.json |\n\n**Commit:** \`${context.sha.slice(0, 7)}\`  \n**Environment:** PR #${issue_number}  \n**Status:** Ready`;
             const comments = await github.paginate(github.rest.issues.listComments, {owner: context.repo.owner, repo: context.repo.repo, issue_number});
             const previous = comments.find(c => c.user.type === 'Bot' && c.body?.includes(marker));
             if (previous) await github.rest.issues.updateComment({owner: context.repo.owner, repo: context.repo.repo, comment_id: previous.id, body});

@@ -19,6 +19,7 @@ internal static class ProjectEndpoints
             Results.Ok(await service.GetTechnologiesAsync(token))).WithTags("Projects");
 
         var admin = endpoints.MapGroup("/api/admin/projects").WithTags("Admin Projects");
+        admin.RequireAuthorization(Portfolio.Application.Authentication.AdminAuthorization.Policy).AddEndpointFilter<Portfolio.Api.Features.Authentication.AntiforgeryEndpointFilter>();
         admin.MapGet("/", async ([AsParameters] ProjectQuery query, IProjectsService service, CancellationToken token) =>
             Results.Ok(await service.GetAdminProjectsAsync(query, token)));
         admin.MapGet("/{id:guid}", async (Guid id, IProjectsService service, CancellationToken token) =>
@@ -52,7 +53,7 @@ internal static class ProjectEndpoints
             Results.Ok(await service.SetFeaturedAsync(id, false, token)));
 
         endpoints.MapGet("/api/admin/technologies", async (IProjectsService service, CancellationToken token) =>
-            Results.Ok(await service.GetTechnologiesAsync(token))).WithTags("Admin Projects");
+            Results.Ok(await service.GetTechnologiesAsync(token))).WithTags("Admin Projects").RequireAuthorization(Portfolio.Application.Authentication.AdminAuthorization.Policy);
         return endpoints;
     }
 }
