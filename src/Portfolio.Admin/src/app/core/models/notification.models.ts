@@ -17,7 +17,8 @@ export interface ToastItem {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  supportingText?: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'google-welcome';
   actionLabel?: string;
   action?: () => void;
   durationMs?: number;

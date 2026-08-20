@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AuthSessionService } from '../auth/auth-session.service';
+import { ToastService } from '../../core/services/toast.service';
 import { AdminAlertComponent } from '../../shared/components/admin-alert/admin-alert.component';
 import { AdminConfirmationDialogComponent } from '../../shared/components/admin-confirmation-dialog/admin-confirmation-dialog.component';
 import { AdminEmptyStateComponent } from '../../shared/components/admin-empty-state/admin-empty-state.component';
@@ -32,7 +34,12 @@ import { AdminUploadProgressComponent } from '../../shared/components/admin-uplo
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class DashboardComponent {
+export default class DashboardComponent implements OnInit {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly authSession = inject(AuthSessionService);
+  private readonly toastService = inject(ToastService);
+
   readonly dialogOpen = signal(false);
   readonly readiness = [
     { label: 'Navigation', value: '12 destinations', icon: 'ki-route' },
@@ -40,4 +47,18 @@ export default class DashboardComponent {
     { label: 'Theme layer', value: 'Light and dark', icon: 'ki-moon' },
     { label: 'Global states', value: 'Reusable patterns', icon: 'ki-element-11' },
   ] as const;
+
+  ngOnInit(): void {
+    const loginSuccess = this.route.snapshot.queryParamMap.get('loginSuccess');
+    if (loginSuccess === 'google') {
+      const name = this.authSession.user()?.fullName || 'Admin';
+      this.toastService.notifyGoogleWelcome(name);
+
+      void this.router.navigate([], {
+        queryParams: { loginSuccess: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+  }
 }

@@ -189,8 +189,12 @@ internal sealed class ContactApiFactory : WebApplicationFactory<Program>
 {
     private readonly string connectionString = CreateConnectionString();
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder) =>
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
         builder.UseSetting("ConnectionStrings:PortfolioDatabase", connectionString);
+        builder.UseSetting("Notifications:Email:Provider", "Deterministic");
+        builder.UseSetting("Notifications:WhatsApp:Provider", "Deterministic");
+    }
 
     public async Task InitializeDatabaseAsync()
     {

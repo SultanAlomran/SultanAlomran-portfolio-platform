@@ -89,6 +89,7 @@ internal static class AuthenticationEndpoints
         HttpContext context,
         IAdminAuthenticationService authenticationService,
         IOptions<AdminAuthenticationOptions> options,
+        IOptions<AdminBootstrapOptions> bootstrapOptions,
         CancellationToken cancellationToken)
     {
         var auth = options.Value;
@@ -98,12 +99,24 @@ internal static class AuthenticationEndpoints
 
         if (auth.Google.TestMode)
         {
-            var attempt = await authenticationService.AuthenticateExternalAsync("Google", auth.Google.TestSubject, cancellationToken);
+            var approvedEmail = !string.IsNullOrWhiteSpace(bootstrapOptions.Value.GoogleEmail)
+                ? bootstrapOptions.Value.GoogleEmail
+                : bootstrapOptions.Value.Email;
+            var testEmail = !string.IsNullOrWhiteSpace(approvedEmail) ? approvedEmail : "admin.e2e@portfolio.test";
+
+            var attempt = await authenticationService.AuthenticateOrLinkApprovedExternalAsync(
+                "Google",
+                auth.Google.TestSubject,
+                testEmail,
+                true,
+                approvedEmail,
+                cancellationToken);
+
             if (!attempt.Succeeded)
                 return Results.Redirect(AdminUrl(auth, $"/login?error=not-authorized&returnUrl={Uri.EscapeDataString(safeReturnUrl)}"));
             var user = attempt.User!;
             await context.SignInAsync(AdminAuthenticationSchemes.ApplicationCookie, AdminClaimsPrincipalFactory.Create(user, "Google"), Properties(false, auth.Cookie));
-            return Results.Redirect(AdminUrl(auth, safeReturnUrl));
+            return Results.Redirect(AdminUrl(auth, AppendLoginSuccess(safeReturnUrl, "google")));
         }
 
         var callback = $"/api/auth/google/callback?returnUrl={Uri.EscapeDataString(safeReturnUrl)}";
@@ -115,6 +128,7 @@ internal static class AuthenticationEndpoints
         HttpContext context,
         IAdminAuthenticationService authenticationService,
         IOptions<AdminAuthenticationOptions> options,
+        IOptions<AdminBootstrapOptions> bootstrapOptions,
         CancellationToken cancellationToken)
     {
         var auth = options.Value;
@@ -128,14 +142,38 @@ internal static class AuthenticationEndpoints
         if (string.IsNullOrWhiteSpace(subject))
             return Results.Redirect(AdminUrl(auth, $"/login?error=google&returnUrl={Uri.EscapeDataString(safeReturnUrl)}"));
 
-        var attempt = await authenticationService.AuthenticateExternalAsync("Google", subject, cancellationToken);
+        var email = external.Principal.FindFirstValue(ClaimTypes.Email)
+            ?? external.Principal.FindFirstValue("email");
+
+        var googleVerifiedClaim = external.Principal.FindFirstValue("google:email_verified")
+            ?? external.Principal.FindFirstValue("email_verified");
+        var isEmailVerified = bool.TryParse(googleVerifiedClaim, out var verified) ? verified : !string.IsNullOrWhiteSpace(email);
+
+        var approvedEmail = !string.IsNullOrWhiteSpace(bootstrapOptions.Value.GoogleEmail)
+            ? bootstrapOptions.Value.GoogleEmail
+            : bootstrapOptions.Value.Email;
+
+        var attempt = await authenticationService.AuthenticateOrLinkApprovedExternalAsync(
+            "Google",
+            subject,
+            email,
+            isEmailVerified,
+            approvedEmail,
+            cancellationToken);
+
         await context.SignOutAsync(AdminAuthenticationSchemes.ExternalCookie);
         if (!attempt.Succeeded)
             return Results.Redirect(AdminUrl(auth, $"/login?error=not-authorized&returnUrl={Uri.EscapeDataString(safeReturnUrl)}"));
 
         var user = attempt.User!;
         await context.SignInAsync(AdminAuthenticationSchemes.ApplicationCookie, AdminClaimsPrincipalFactory.Create(user, "Google"), Properties(false, auth.Cookie));
-        return Results.Redirect(AdminUrl(auth, safeReturnUrl));
+        return Results.Redirect(AdminUrl(auth, AppendLoginSuccess(safeReturnUrl, "google")));
+    }
+
+    private static string AppendLoginSuccess(string safeReturnUrl, string provider)
+    {
+        var separator = safeReturnUrl.Contains('?') ? "&" : "?";
+        return $"{safeReturnUrl}{separator}loginSuccess={Uri.EscapeDataString(provider.ToLowerInvariant())}";
     }
 
     private static AuthenticationProperties Properties(bool rememberMe, AdminAuthenticationOptions.CookieOptions options)
