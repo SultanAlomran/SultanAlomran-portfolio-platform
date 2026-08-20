@@ -66,6 +66,29 @@ public sealed class DomainBehaviorTests
         Assert.Equal(replacement, token.ReplacedByTokenId); Assert.NotNull(token.RevokedAt);
     }
 
+    [Fact]
+    public void Contact_message_lifecycle_and_validation_behave_correctly()
+    {
+        Assert.Throws<ArgumentException>(() => ContactMessage.Create("", "test@example.com", "Subject", "Message"));
+        Assert.Throws<ArgumentException>(() => ContactMessage.Create("Name", "", "Subject", "Message"));
+
+        var msg = ContactMessage.Create("Ahmed Alomran", "Ahmed@Example.com ", "Senior .NET Opportunity", "Hello Sultan, let's connect.");
+        Assert.Equal("Ahmed Alomran", msg.Name);
+        Assert.Equal("ahmed@example.com", msg.Email);
+        Assert.Equal(ContactStatus.New, msg.Status);
+        Assert.Null(msg.UpdatedAt);
+
+        msg.MarkAsRead();
+        Assert.Equal(ContactStatus.Read, msg.Status);
+        Assert.NotNull(msg.UpdatedAt);
+
+        msg.MarkAsUnread();
+        Assert.Equal(ContactStatus.New, msg.Status);
+
+        msg.Archive();
+        Assert.Equal(ContactStatus.Archived, msg.Status);
+    }
+
     private static T Create<T>() where T : class =>
         (T)(Activator.CreateInstance(typeof(T), BindingFlags.Instance | BindingFlags.NonPublic, null, null, null)
             ?? throw new InvalidOperationException());

@@ -7,10 +7,11 @@ import { MetronicInitService } from '../../core/services/metronic-init.service';
 import { AdminFooterComponent } from '../admin-footer/admin-footer.component';
 import { AdminHeaderComponent } from '../admin-header/admin-header.component';
 import { AdminSidebarComponent } from '../admin-sidebar/admin-sidebar.component';
+import { ToastContainerComponent } from '../../core/components/toast-container/toast-container.component';
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [RouterOutlet, AdminSidebarComponent, AdminHeaderComponent, AdminFooterComponent],
+  imports: [RouterOutlet, AdminSidebarComponent, AdminHeaderComponent, AdminFooterComponent, ToastContainerComponent],
   templateUrl: './admin-layout.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

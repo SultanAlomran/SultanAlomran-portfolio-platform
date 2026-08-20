@@ -19,9 +19,12 @@
       <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon size-11" [attr.aria-label]="themeService.theme() === 'light' ? 'Use dark theme' : 'Use light theme'" (click)="themeService.toggle()">
         <i class="ki-filled text-lg" [class.ki-moon]="themeService.theme() === 'light'" [class.ki-sun]="themeService.theme() === 'dark'" aria-hidden="true"></i>
       </button>
-      <button type="button" class="kt-btn kt-btn-ghost kt-btn-icon relative size-11" aria-label="Notifications">
-        <i class="ki-filled ki-notification text-lg" aria-hidden="true"></i><span class="absolute end-2 top-2 size-2 rounded-full bg-primary" aria-hidden="true"></span>
-      </button>
+      <a routerLink="/messages" class="kt-btn kt-btn-ghost kt-btn-icon relative size-11" aria-label="Messages">
+        <i class="ki-filled ki-notification text-lg" aria-hidden="true"></i>
+        @if (signalr.unreadCount() > 0) {
+          <span class="absolute end-2 top-2 size-2 rounded-full bg-primary" aria-hidden="true"></span>
+        }
+      </a>
       <div class="relative">
         <button type="button" class="flex min-h-11 items-center gap-2 rounded-xl px-2 text-start hover:bg-accent" aria-haspopup="menu" [attr.aria-expanded]="profileOpen()" (click)="toggleProfile()">
           <span class="grid size-9 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">{{ auth.session.initials() }}</span>

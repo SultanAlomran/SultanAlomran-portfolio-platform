@@ -23,6 +23,8 @@ const testMatch = mode === 'visual'
         ? ['**/auth/**/*.spec.ts']
       : feature === 'assistant'
         ? ['**/assistant/**/*.spec.ts']
+      : feature === 'contact'
+        ? ['**/contact/**/*.spec.ts', '**/messages/**/*.spec.ts', '**/settings/**/*.spec.ts']
       : feature === 'quality'
         ? ['**/quality/**/*.spec.ts']
       : feature === 'preview'

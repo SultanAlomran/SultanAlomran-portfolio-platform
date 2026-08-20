@@ -30,7 +30,10 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationGroup[] = [
   },
   {
     label: 'Communication',
-    items: [{ label: 'Messages', path: '/messages', icon: 'ki-message-text-2' }],
+    items: [
+      { label: 'Messages', path: '/messages', icon: 'ki-message-text-2' },
+      { label: 'Message Analytics', path: '/analytics/messages', icon: 'ki-chart-line-up' },
+    ],
   },
   {
     label: 'Insights',
@@ -44,6 +47,7 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationGroup[] = [
     items: [
       { label: 'Users', path: '/users', icon: 'ki-profile-user' },
       { label: 'Settings', path: '/settings', icon: 'ki-setting-2' },
+      { label: 'Notification Settings', path: '/settings/notifications', icon: 'ki-notification-status' },
       { label: 'Audit Logs', path: '/audit-logs', icon: 'ki-document' },
     ],
   },
