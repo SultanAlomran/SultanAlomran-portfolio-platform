@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, input, output, signal } fro
 import { Router, RouterLink } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
 import { AuthApiService } from '../../features/auth/auth-api.service';
+import { NotificationsSignalRService } from '../../core/services/notifications-signalr.service';
 
 @Component({
   selector: 'app-admin-header',
@@ -17,6 +18,7 @@ export class AdminHeaderComponent {
   readonly profileOpen = signal(false);
   readonly themeService = inject(ThemeService);
   readonly auth = inject(AuthApiService);
+  readonly signalr = inject(NotificationsSignalRService);
   readonly loggingOut = signal(false);
   private readonly router = inject(Router);
 

@@ -7,6 +7,8 @@
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <!-- Overrides Microsoft.Data.SqlClient's vulnerable 9.0.0 transitive cryptography dependency. -->
     <PackageReference Include="System.Security.Cryptography.Xml" />
+    <PackageReference Include="Azure.Communication.Email" />
+    <PackageReference Include="Microsoft.Extensions.Http" />
     <ProjectReference Include="../Portfolio.Application/Portfolio.Application.csproj" />
     <ProjectReference Include="../Portfolio.Domain/Portfolio.Domain.csproj" />
     <ProjectReference Include="../Portfolio.Shared/Portfolio.Shared.csproj" />
