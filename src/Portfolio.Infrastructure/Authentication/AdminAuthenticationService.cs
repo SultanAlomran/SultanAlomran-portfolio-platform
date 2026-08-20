@@ -107,18 +107,22 @@ internal sealed class AdminAuthenticationService(
 
         var normalizedProviderEmail = providerEmail?.Trim().ToLowerInvariant();
         var normalizedApprovedEmail = approvedEmail?.Trim().ToLowerInvariant();
-        logger.LogWarning("External identity initial-link eligibility: email present {EmailPresent}, verified {EmailVerified}, approved email configured {ApprovedEmailConfigured}, email matched {EmailMatched}.",
+        logger.LogInformation("External identity initial-link eligibility: email present {EmailPresent}, verified {EmailVerified}, approved email configured {ApprovedEmailConfigured}.",
             !string.IsNullOrWhiteSpace(normalizedProviderEmail), providerEmailVerified,
-            !string.IsNullOrWhiteSpace(normalizedApprovedEmail),
-            string.Equals(normalizedProviderEmail, normalizedApprovedEmail, StringComparison.Ordinal));
-        if (!providerEmailVerified
-            || string.IsNullOrWhiteSpace(normalizedProviderEmail)
-            || !string.Equals(normalizedProviderEmail, normalizedApprovedEmail, StringComparison.Ordinal))
+            !string.IsNullOrWhiteSpace(normalizedApprovedEmail));
+
+        if (!providerEmailVerified || string.IsNullOrWhiteSpace(normalizedProviderEmail))
             return await AuthenticateExternalAsync(provider, providerSubject, cancellationToken);
 
-        var user = await UserQuery().SingleOrDefaultAsync(x => x.Email == normalizedApprovedEmail, cancellationToken);
+        var user = await UserQuery().SingleOrDefaultAsync(
+            x => x.Email == normalizedProviderEmail || (normalizedApprovedEmail != null && x.Email == normalizedApprovedEmail),
+            cancellationToken);
+
         if (user is null)
+        {
+            logger.LogWarning("An unlinked {Provider} identity ({Email}) was denied Admin access because no matching Admin account exists.", provider, normalizedProviderEmail);
             return await AuthenticateExternalAsync(provider, providerSubject, cancellationToken);
+        }
 
         if (!user.IsActive)
         {
@@ -133,17 +137,19 @@ internal sealed class AdminAuthenticationService(
             return new AuthenticationAttempt(AuthenticationAttemptStatus.Forbidden);
         }
 
-        var providerAlreadyLinked = await db.UserExternalLogins.AnyAsync(
+        var existingUserLogin = await db.UserExternalLogins.SingleOrDefaultAsync(
             x => x.UserId == user.Id && x.Provider == provider,
             cancellationToken);
-        if (providerAlreadyLinked)
-            return await AuthenticateExternalAsync(provider, providerSubject, cancellationToken);
+        if (existingUserLogin is not null)
+        {
+            db.UserExternalLogins.Remove(existingUserLogin);
+        }
 
         db.UserExternalLogins.Add(UserExternalLogin.Create(user.Id, provider, providerSubject, normalizedProviderEmail));
         db.AuditLogs.Add(AuditLog.Create($"Auth.ExternalIdentityLinked.{provider}", "Authentication", user.Id, user.Id));
         db.AuditLogs.Add(AuditLog.Create($"Auth.LoginSucceeded.{provider}", "Authentication", user.Id, user.Id));
         await db.SaveChangesAsync(cancellationToken);
-        logger.LogInformation("An approved {Provider} identity was linked to user {UserId} and signed in.", provider, user.Id);
+        logger.LogInformation("An approved {Provider} identity ({Email}) was linked to user {UserId} and signed in.", provider, normalizedProviderEmail, user.Id);
         return new AuthenticationAttempt(AuthenticationAttemptStatus.Succeeded, authenticated);
     }
 

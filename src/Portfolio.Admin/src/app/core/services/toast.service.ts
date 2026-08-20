@@ -44,4 +44,16 @@ export class ToastService {
       durationMs: 8000,
     });
   }
+
+  notifyGoogleWelcome(displayName: string): void {
+    const name = displayName?.trim() ? displayName.trim() : 'Admin';
+    this.show({
+      id: 'google-welcome-toast',
+      title: name,
+      message: 'You’ve successfully signed in with Google.',
+      supportingText: 'Your Admin workspace is ready.',
+      type: 'google-welcome',
+      durationMs: 7000,
+    });
+  }
 }

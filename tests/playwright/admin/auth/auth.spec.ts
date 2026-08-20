@@ -48,6 +48,20 @@ test.describe('Admin authentication', () => {
     await page.getByRole('button', { name: 'Continue with Google' }).click();
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+
+    // Verify premium Google welcome toast appears with dynamic display name
+    await expect(page.getByText(/Welcome back, .* 👋/)).toBeVisible();
+    await expect(page.getByText('You’ve successfully signed in with Google.')).toBeVisible();
+    await expect(page.getByText('Your Admin workspace is ready.')).toBeVisible();
+
+    // Verify manual dismiss button works
+    await page.getByRole('button', { name: 'Dismiss welcome notification' }).click();
+    await expect(page.getByText('You’ve successfully signed in with Google.')).not.toBeVisible();
+
+    // Verify refresh does not show the toast again
+    await page.reload();
+    await expect(page.getByText('You’ve successfully signed in with Google.')).not.toBeVisible();
+
     const current = await page.request.get(`${e2eEnvironment.apiUrl}/api/auth/me`);
     expect(current.ok()).toBeTruthy();
     expect((await current.json()).provider).toBe('Google');
