@@ -6,6 +6,10 @@ export const infographicIds = {
   category: '11111111-aaaa-4111-8111-111111111111',
   tag: '22222222-bbbb-4222-8222-222222222222',
   item: '33333333-cccc-4333-8333-333333333333',
+  previous: '88888888-bbbb-4888-8888-888888888888',
+  next: '99999999-cccc-4999-8999-999999999999',
+  related: 'aaaaaaaa-dddd-4aaa-8aaa-aaaaaaaaaaaa',
+  series: 'bbbbbbbb-eeee-4bbb-8bbb-bbbbbbbbbbbb',
 } as const;
 export const infographicCategory = { id: infographicIds.category, name: '.NET', slug: 'dotnet', description: '.NET engineering guides.' };
 export const infographicTag = { id: infographicIds.tag, name: 'EF Core', slug: 'ef-core' };
@@ -13,6 +17,18 @@ export const infographicListItem = {
   id: infographicIds.item, title: 'EF Core Performance Checklist', slug: 'ef-core-performance-checklist',
   shortDescription: 'Practical query-shaping guidance for projection, tracking, pagination, indexes, and avoiding N+1 access.',
   difficultyLevel: 2, isFeatured: true, publishedAt: '2026-08-09T12:00:00Z', category: infographicCategory, tags: [infographicTag],
+};
+export const previousInfographic = {
+  ...infographicListItem, id: infographicIds.previous, title: 'Query Fundamentals', slug: 'query-fundamentals',
+  isFeatured: false, publishedAt: '2026-08-07T12:00:00Z',
+};
+export const nextInfographic = {
+  ...infographicListItem, id: infographicIds.next, title: 'Advanced Query Plans', slug: 'advanced-query-plans',
+  isFeatured: false, publishedAt: '2026-08-11T12:00:00Z',
+};
+export const relatedInfographic = {
+  ...infographicListItem, id: infographicIds.related, title: 'SQL Server Indexing Guide', slug: 'sql-server-indexing-guide',
+  isFeatured: false, publishedAt: '2026-08-10T12:00:00Z',
 };
 export const infographicDetails = {
   ...infographicListItem,
@@ -23,7 +39,10 @@ export const infographicDetails = {
   ],
   resources: [{ id: '66666666-ffff-4666-8666-666666666666', title: 'EF Core documentation', url: 'https://learn.microsoft.com/ef/core/', resourceType: 'Documentation', displayOrder: 0 }],
   codeExamples: [{ id: '77777777-aaaa-4777-8777-777777777777', title: 'Projected read query', language: 'csharp', code: 'return await query.AsNoTracking().Select(x => new ItemDto(x.Id)).ToListAsync();', displayOrder: 0 }],
-  series: [], related: [],
+  series: [{ id: infographicIds.series, name: 'EF Core Performance Path', slug: 'ef-core-performance-path', position: 2 }],
+  previous: previousInfographic,
+  next: nextInfographic,
+  related: [relatedInfographic],
 };
 export const adminInfographicDetails = {
   ...infographicDetails, categoryId: infographicIds.category, status: 1, createdAt: '2026-08-09T11:00:00Z', updatedAt: '2026-08-09T12:00:00Z',
@@ -34,11 +53,16 @@ export const adminInfographicDetails = {
 export async function mockPublicInfographics(page: Page, withMedia = false) {
   const publicItem = withMedia ? { ...infographicListItem, coverUrl: '/media/test-cover.png' } : infographicListItem;
   const publicDetails = withMedia ? { ...infographicDetails, coverUrl: '/media/test-cover.png', infographicUrl: '/media/test-infographic.png', pdfUrl: '/media/test-document.pdf' } : infographicDetails;
+  const resolvable = [publicItem, previousInfographic, nextInfographic, relatedInfographic];
   await page.route('**/api/infographics**', async route => {
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/taxonomy/categories')) return route.fulfill({ json: [infographicCategory] });
     if (url.pathname.endsWith('/taxonomy/tags')) return route.fulfill({ json: [infographicTag] });
     if (url.pathname.endsWith('/featured')) return route.fulfill({ json: [publicItem] });
+    if (url.pathname.endsWith('/by-ids')) {
+      const ids = url.searchParams.getAll('ids');
+      return route.fulfill({ json: ids.flatMap(id => resolvable.filter(item => item.id === id)) });
+    }
     if (url.pathname.endsWith('/ef-core-performance-checklist')) return route.fulfill({ json: publicDetails });
     return route.fulfill({ json: { items: [publicItem], page: 1, pageSize: 9, totalCount: 1, totalPages: 1 } });
   });

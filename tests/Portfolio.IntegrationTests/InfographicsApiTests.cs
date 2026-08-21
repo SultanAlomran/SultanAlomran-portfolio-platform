@@ -90,6 +90,53 @@ public sealed class InfographicsApiTests : IAsyncLifetime
         var publicList = await client.GetFromJsonAsync<InfographicPagedResult<InfographicListItemDto>>("/api/infographics?pageSize=20");
         Assert.Equal(7, publicList!.TotalCount);
     }
+    [Fact]
+    public async Task Public_discovery_uses_published_metadata_and_deterministic_series_order()
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
+
+        Infographic Guide(string title, string slug, bool published)
+        {
+            var guide = Infographic.Create(title, slug, $"{title} summary.", factory.CategoryId, DifficultyLevel.Intermediate);
+            guide.UpdateContent(title, slug, $"{title} summary.", $"{title} details.", factory.CategoryId,
+                DifficultyLevel.Intermediate, false, null, null, null);
+            guide.InfographicTags.Add(InfographicTag.Create(factory.TagId));
+            if (published) guide.Publish();
+            return guide;
+        }
+
+        var previous = Guide("Previous Guide", "previous-guide", true);
+        var current = Guide("Current Guide", "current-guide", true);
+        var next = Guide("Next Guide", "next-guide", true);
+        var draft = Guide("Draft Guide", "draft-guide", false);
+        var series = Series.Create("Performance Path", "performance-path", displayOrder: 1);
+        db.Infographics.AddRange(previous, current, next, draft);
+        db.Series.Add(series);
+        await db.SaveChangesAsync();
+        db.SeriesItems.AddRange(
+            SeriesItem.Create(series.Id, previous.Id, 1),
+            SeriesItem.Create(series.Id, current.Id, 2),
+            SeriesItem.Create(series.Id, next.Id, 3),
+            SeriesItem.Create(series.Id, draft.Id, 4));
+        await db.SaveChangesAsync();
+
+        var details = await client.GetFromJsonAsync<InfographicDetailsDto>("/api/infographics/current-guide");
+        Assert.NotNull(details);
+        Assert.Equal(previous.Id, details.Previous?.Id);
+        Assert.Equal(next.Id, details.Next?.Id);
+        Assert.DoesNotContain(details.Related, item => item.Id == current.Id || item.Id == draft.Id);
+        Assert.Contains(details.Related, item => item.Id == previous.Id);
+        Assert.Contains(details.Related, item => item.Id == next.Id);
+        Assert.Equal(HttpStatusCode.NotFound, (await client.GetAsync("/api/infographics/draft-guide")).StatusCode);
+
+        var resolved = await client.GetFromJsonAsync<IReadOnlyList<InfographicListItemDto>>(
+            $"/api/infographics/by-ids?ids={next.Id}&ids={draft.Id}&ids={current.Id}&ids={Guid.NewGuid()}");
+        Assert.Equal([next.Id, current.Id], resolved!.Select(item => item.Id).ToArray());
+
+        var tooMany = string.Join("&", Enumerable.Range(0, 51).Select(_ => $"ids={Guid.NewGuid()}"));
+        Assert.Equal(HttpStatusCode.BadRequest, (await client.GetAsync($"/api/infographics/by-ids?{tooMany}")).StatusCode);
+    }
 
     public async Task DisposeAsync()
     {

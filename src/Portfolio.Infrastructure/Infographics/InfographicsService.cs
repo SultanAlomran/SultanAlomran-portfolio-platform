@@ -28,6 +28,18 @@ internal sealed partial class InfographicsService(PortfolioDbContext db) : IInfo
             .OrderByDescending(x => x.PublishedAt).ThenBy(x => x.Id)
             .Take(Math.Clamp(count, 1, 12)).Select(PublicListProjection).ToListAsync(token);
 
+    public async Task<IReadOnlyList<InfographicListItemDto>> GetPublicByIdsAsync(
+        IReadOnlyCollection<Guid> ids, CancellationToken token)
+    {
+        var orderedIds = ids.Where(id => id != Guid.Empty).Distinct().Take(50).ToArray();
+        if (orderedIds.Length == 0) return [];
+        var items = await db.Infographics.AsNoTracking()
+            .Where(x => x.Status == ContentStatus.Published && orderedIds.Contains(x.Id))
+            .Select(PublicListProjection).ToListAsync(token);
+        var positions = orderedIds.Select((id, index) => (id, index)).ToDictionary(x => x.id, x => x.index);
+        return items.OrderBy(x => positions[x.Id]).ToList();
+    }
+
     public async Task<InfographicDetailsDto?> GetPublicBySlugAsync(string slug, CancellationToken token)
     {
         var item = await db.Infographics.AsNoTracking()
@@ -46,18 +58,39 @@ internal sealed partial class InfographicsService(PortfolioDbContext db) : IInfo
                     .Select(r => new InfographicResourceDto(r.Id, r.Title, r.Url, r.ResourceType, r.DisplayOrder)).ToList(),
                 x.CodeExamples.OrderBy(c => c.DisplayOrder)
                     .Select(c => new InfographicCodeExampleDto(c.Id, c.Title, c.Language, c.Code, c.FilePath, c.DisplayOrder)).ToList(),
-                x.SeriesItems.OrderBy(s => s.Position)
+                x.SeriesItems.OrderBy(s => s.Series.DisplayOrder).ThenBy(s => s.Series.Name)
                     .Select(s => new InfographicSeriesDto(s.Series.Id, s.Series.Name, s.Series.Slug, s.Position)).ToList(),
-                new List<InfographicListItemDto>()))
+                null, null, new List<InfographicListItemDto>()))
             .SingleOrDefaultAsync(token);
         if (item is null) return null;
 
+        var tagIds = item.Tags.Select(tag => tag.Id).ToArray();
+        var seriesIds = item.Series.Select(series => series.Id).ToArray();
         var related = await db.Infographics.AsNoTracking()
             .Where(x => x.Status == ContentStatus.Published && x.Id != item.Id &&
-                (x.CategoryId == item.Category.Id || x.InfographicTags.Any(t => item.Tags.Select(tag => tag.Id).Contains(t.TagId))))
-            .OrderByDescending(x => x.CategoryId == item.Category.Id).ThenByDescending(x => x.PublishedAt)
+                (x.CategoryId == item.Category.Id || x.InfographicTags.Any(t => tagIds.Contains(t.TagId)) ||
+                 x.SeriesItems.Any(s => seriesIds.Contains(s.SeriesId))))
+            .OrderByDescending(x => x.SeriesItems.Any(s => seriesIds.Contains(s.SeriesId)))
+            .ThenByDescending(x => x.CategoryId == item.Category.Id)
+            .ThenByDescending(x => x.InfographicTags.Count(t => tagIds.Contains(t.TagId)))
+            .ThenByDescending(x => x.PublishedAt).ThenBy(x => x.Id)
             .Take(3).Select(PublicListProjection).ToListAsync(token);
-        return item with { Related = related };
+
+        InfographicListItemDto? previous = null;
+        InfographicListItemDto? next = null;
+        var primarySeries = item.Series.FirstOrDefault();
+        if (primarySeries is not null)
+        {
+            previous = await db.SeriesItems.AsNoTracking()
+                .Where(x => x.SeriesId == primarySeries.Id && x.Position < primarySeries.Position &&
+                    x.Infographic.Status == ContentStatus.Published)
+                .OrderByDescending(x => x.Position).Select(SeriesListProjection).FirstOrDefaultAsync(token);
+            next = await db.SeriesItems.AsNoTracking()
+                .Where(x => x.SeriesId == primarySeries.Id && x.Position > primarySeries.Position &&
+                    x.Infographic.Status == ContentStatus.Published)
+                .OrderBy(x => x.Position).Select(SeriesListProjection).FirstOrDefaultAsync(token);
+        }
+        return item with { Previous = previous, Next = next, Related = related };
     }
 
     public async Task<InfographicPagedResult<AdminInfographicListItemDto>> GetAdminAsync(InfographicQuery request, CancellationToken token)
@@ -276,6 +309,15 @@ internal sealed partial class InfographicsService(PortfolioDbContext db) : IInfo
             x.CoverMediaFile == null ? null : x.CoverMediaFile.FilePath,
             new(x.Category.Id, x.Category.Name, x.Category.Slug, x.Category.Description),
             x.InfographicTags.OrderBy(t => t.Tag.Name).Select(t => new InfographicTagDto(t.Tag.Id, t.Tag.Name, t.Tag.Slug)).ToList());
+
+    private static readonly Expression<Func<SeriesItem, InfographicListItemDto>> SeriesListProjection = x =>
+        new(x.Infographic.Id, x.Infographic.Title, x.Infographic.Slug, x.Infographic.ShortDescription,
+            x.Infographic.DifficultyLevel, x.Infographic.IsFeatured, x.Infographic.PublishedAt,
+            x.Infographic.CoverMediaFile == null ? null : x.Infographic.CoverMediaFile.FilePath,
+            new(x.Infographic.Category.Id, x.Infographic.Category.Name, x.Infographic.Category.Slug,
+                x.Infographic.Category.Description),
+            x.Infographic.InfographicTags.OrderBy(t => t.Tag.Name)
+                .Select(t => new InfographicTagDto(t.Tag.Id, t.Tag.Name, t.Tag.Slug)).ToList());
 
     private static readonly Expression<Func<Infographic, AdminInfographicListItemDto>> AdminListProjection = x =>
         new(x.Id, x.Title, x.Slug, x.ShortDescription, x.DifficultyLevel, x.Status, x.IsFeatured,

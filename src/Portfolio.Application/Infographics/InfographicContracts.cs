@@ -32,7 +32,8 @@ public sealed record InfographicDetailsDto(Guid Id, string Title, string Slug, s
     string? CoverUrl, string? InfographicUrl, string? PdfUrl, InfographicCategoryDto Category,
     IReadOnlyList<InfographicTagDto> Tags, IReadOnlyList<InfographicStepDto> Steps,
     IReadOnlyList<InfographicResourceDto> Resources, IReadOnlyList<InfographicCodeExampleDto> CodeExamples,
-    IReadOnlyList<InfographicSeriesDto> Series, IReadOnlyList<InfographicListItemDto> Related);
+    IReadOnlyList<InfographicSeriesDto> Series, InfographicListItemDto? Previous,
+    InfographicListItemDto? Next, IReadOnlyList<InfographicListItemDto> Related);
 
 public sealed record AdminInfographicDetailsDto(Guid Id, string Title, string Slug, string ShortDescription,
     string? Description, Guid CategoryId, DifficultyLevel DifficultyLevel, ContentStatus Status,

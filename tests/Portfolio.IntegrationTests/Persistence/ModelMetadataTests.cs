@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Portfolio.Domain.Entities;
 using Portfolio.Infrastructure.Persistence;
@@ -46,6 +47,24 @@ public sealed class ModelMetadataTests
             .SequenceEqual([nameof(UserExternalLogin.UserId), nameof(UserExternalLogin.Provider)]));
     }
 
+    [Fact]
+    public void Existing_authenticated_engagement_has_unique_identity_content_constraints()
+    {
+        foreach (var type in new[] { typeof(UserBookmark), typeof(UserHelpfulVote), typeof(UserRating) })
+        {
+            var entity = Model.FindEntityType(type)!;
+            Assert.Contains(entity.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+                .SequenceEqual(["UserId", "EntityType", "EntityId"]));
+        }
+
+        using var context = new PortfolioDbContext(new DbContextOptionsBuilder<PortfolioDbContext>()
+            .UseSqlServer("Server=(local);Database=metadata;Trusted_Connection=True;TrustServerCertificate=True")
+            .Options);
+        var designTimeModel = context.GetService<IDesignTimeModel>().Model;
+        Assert.Contains(designTimeModel.FindEntityType(typeof(UserRating))!.GetCheckConstraints(),
+            constraint => constraint.Name == "CK_UserRatings_Rating" &&
+                constraint.Sql == "[Rating] BETWEEN 1 AND 5");
+    }
     [Fact]
     public void Project_model_supports_featured_case_studies()
     {

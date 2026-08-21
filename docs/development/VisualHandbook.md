@@ -52,9 +52,24 @@ dotnet run --project src/Portfolio.Api -- --seed-development-infographics
 
 It creates a focused set of published and draft engineering guides across .NET, Angular, SQL/Data, Architecture, APIs/Integration, and OutSystems. It does not create engagement metrics or binary media.
 
+## Browser-local engagement and privacy
+
+Issue #38 adds a privacy-first continuation experience without creating a public identity:
+
+- bookmarks are stored under `portfolio.visualHandbook.bookmarks.v1` and are bounded to 50 minimal guide references;
+- recently viewed history is stored under `portfolio.visualHandbook.recentlyViewed.v1` and is bounded to 12 entries;
+- furthest reading progress is stored under `portfolio.visualHandbook.readingProgress.v1` and is bounded to 20 entries;
+- storage contains only guide ID, slug, title, timestamps, and progress percentage—never content bodies, credentials, or sensitive data;
+- malformed, unavailable, or quota-limited storage falls back safely without blocking public content;
+- no browser/device fingerprint, IP identity, advertising tracker, public account, or SQL synchronization is introduced.
+
+The Saved filter resolves only current published guides through a bounded read-only `GET /api/infographics/by-ids` request. The API does not persist the visitor's saved list. Related Guides are derived deterministically from real Series, category, and tag metadata. Previous/Next links are emitted only for published neighbors in an existing ordered Series. Share actions use the browser Share/Clipboard APIs and a plain LinkedIn URL; download actions continue to reference existing media metadata.
+
+The existing `UserHelpfulVote`, `UserRating`, and `UserBookmark` tables remain unchanged. They require a real `Users.Id`, and their unique identity/content indexes and rating check constraint remain authoritative. The only browser identity currently implemented is the private Administrator cookie; analytics `Session` rows are not public authentication. Helpful/Not Helpful, structured negative reasons, and rating writes therefore remain blocked pending an approved public identity, consent, retention, and abuse/deduplication design. Administrator authentication is deliberately not reused for public engagement. No EF migration is required by this slice.
+
 ## Current boundaries
 
-- Authentication/authorization is still deferred under the platform-wide policy; Admin mutation routes must be protected before production exposure.
+- Private Administrator authentication protects Admin mutations; no public visitor authentication or account system exists.
 - Media can be selected from existing metadata, but upload and storage-provider administration remain Issue #49.
 - Existing Series associations are readable; complete Series Admin, ordering, and Reading Paths remain Issue #39.
 - Missing optional images/PDFs use deliberate fallback states and never render broken actions.

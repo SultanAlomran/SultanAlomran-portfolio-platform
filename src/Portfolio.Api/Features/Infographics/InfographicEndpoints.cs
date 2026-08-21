@@ -12,6 +12,10 @@ internal static class InfographicEndpoints
             Results.Ok(await service.GetPublicAsync(query, token)));
         publicGroup.MapGet("/featured", async (int? count, IInfographicsService service, CancellationToken token) =>
             Results.Ok(await service.GetFeaturedAsync(count ?? 3, token)));
+        publicGroup.MapGet("/by-ids", async ([FromQuery] Guid[] ids, IInfographicsService service, CancellationToken token) =>
+            ids.Length > 50
+                ? Results.BadRequest(new { error = "A maximum of 50 infographic IDs can be resolved at once." })
+                : Results.Ok(await service.GetPublicByIdsAsync(ids, token)));
         publicGroup.MapGet("/{slug}", async (string slug, IInfographicsService service, CancellationToken token) =>
         {
             var item = await service.GetPublicBySlugAsync(slug, token);

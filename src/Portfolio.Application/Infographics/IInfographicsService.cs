@@ -4,6 +4,7 @@ public interface IInfographicsService
 {
     Task<InfographicPagedResult<InfographicListItemDto>> GetPublicAsync(InfographicQuery query, CancellationToken token);
     Task<InfographicDetailsDto?> GetPublicBySlugAsync(string slug, CancellationToken token);
+    Task<IReadOnlyList<InfographicListItemDto>> GetPublicByIdsAsync(IReadOnlyCollection<Guid> ids, CancellationToken token);
     Task<IReadOnlyList<InfographicListItemDto>> GetFeaturedAsync(int count, CancellationToken token);
     Task<InfographicPagedResult<AdminInfographicListItemDto>> GetAdminAsync(InfographicQuery query, CancellationToken token);
     Task<AdminInfographicDetailsDto?> GetAdminByIdAsync(Guid id, CancellationToken token);
