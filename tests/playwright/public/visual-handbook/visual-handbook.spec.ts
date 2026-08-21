@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/diagnostics';
 import { e2eEnvironment } from '../../config/environment';
-import { mockPublicInfographics } from '../../data/infographic';
+import { infographicDetails, mockPublicInfographics, nextInfographic } from '../../data/infographic';
 
 const storageKeys = {
   bookmarks: 'portfolio.visualHandbook.bookmarks.v1',
@@ -80,6 +80,39 @@ test.describe('Public Visual Handbook', () => {
     const copied = await page.evaluate(() => localStorage.getItem('e2e.copiedLink'));
     expect(copied).toContain('/visual-handbook/ef-core-performance-checklist');
     await expect(page.getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute('href', /linkedin\.com\/sharing/);
+  });
+
+  test('cancels superseded guide loads and safely opens cross-origin media', async ({ page }) => {
+    await page.unroute('**/api/infographics**');
+    await mockPublicInfographics(page);
+    await page.route('**/api/infographics/ef-core-performance-checklist', route => route.fulfill({
+      json: {
+        ...infographicDetails, infographicUrl: undefined, coverUrl: undefined,
+        pdfUrl: 'https://media.example.test/test-document.pdf',
+      },
+    }));
+    await page.route('**/api/infographics/advanced-query-plans', async route => {
+      await new Promise(resolve => setTimeout(resolve, 400));
+      await route.fulfill({
+        json: { ...infographicDetails, ...nextInfographic, previous: undefined, next: undefined },
+      });
+    });
+
+    await page.goto(`${e2eEnvironment.webUrl}/visual-handbook/ef-core-performance-checklist`);
+    const pdfAction = page.getByRole('link', { name: 'Open PDF (opens in a new tab)' });
+    await expect(pdfAction).toHaveAttribute('target', '_blank');
+    await expect(pdfAction).not.toHaveAttribute('download');
+    const panelAction = page.getByRole('link', { name: 'Open file (opens in a new tab)' });
+    await expect(panelAction).toHaveAttribute('target', '_blank');
+    await expect(panelAction).not.toHaveAttribute('download');
+
+    await page.getByRole('link', { name: /Next.*Advanced Query Plans/ }).click();
+    await expect(page).toHaveURL(/advanced-query-plans/);
+    await page.goBack();
+    await expect(page).toHaveURL(/ef-core-performance-checklist/);
+    await expect(page.getByRole('heading', { level: 1, name: 'EF Core Performance Checklist' })).toBeVisible();
+    await page.waitForTimeout(600);
+    await expect(page.getByRole('heading', { level: 1, name: 'EF Core Performance Checklist' })).toBeVisible();
   });
 
   test('remains touch-friendly without overflow at representative widths', async ({ page }) => {

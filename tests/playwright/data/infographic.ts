@@ -64,6 +64,8 @@ export async function mockPublicInfographics(page: Page, withMedia = false) {
       return route.fulfill({ json: ids.flatMap(id => resolvable.filter(item => item.id === id)) });
     }
     if (url.pathname.endsWith('/ef-core-performance-checklist')) return route.fulfill({ json: publicDetails });
+    if (url.pathname.endsWith('/query-fundamentals')) return route.fulfill({ json: { ...publicDetails, ...previousInfographic, previous: undefined, next: publicItem } });
+    if (url.pathname.endsWith('/advanced-query-plans')) return route.fulfill({ json: { ...publicDetails, ...nextInfographic, previous: publicItem, next: undefined } });
     return route.fulfill({ json: { items: [publicItem], page: 1, pageSize: 9, totalCount: 1, totalPages: 1 } });
   });
 }

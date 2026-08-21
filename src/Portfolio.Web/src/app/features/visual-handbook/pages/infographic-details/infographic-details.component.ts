@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { auditTime, finalize, fromEvent } from 'rxjs';
+import { auditTime, finalize, fromEvent, Subscription } from 'rxjs';
 import GuideActionsComponent from '../../components/guide-actions/guide-actions.component';
 import InfographicCardComponent from '../../components/infographic-card/infographic-card.component';
 import ReadingProgressComponent from '../../components/reading-progress/reading-progress.component';
@@ -36,8 +36,8 @@ import { LocalEngagementService } from '../../data-access/local-engagement.servi
                 <p class="mt-5 max-w-3xl text-lg leading-8 text-slate-300">{{ guide.shortDescription }}</p>
                 <div class="mt-6 flex flex-wrap gap-2">@for (tag of guide.tags; track tag.id) { <span class="rounded-full border border-white/15 px-3 py-1 text-sm text-slate-300">{{ tag.name }}</span> }</div>
                 <div class="mt-8 flex flex-wrap gap-3">
-                  @if (guide.infographicUrl) { <button class="min-h-11 rounded-xl bg-violet-600 px-5 font-bold text-white" (click)="imageOpen.set(true)">View Full Size</button><a [href]="guide.infographicUrl" download class="min-h-11 rounded-xl border border-white/20 px-5 py-3 font-bold">Download Image</a> }
-                  @if (guide.pdfUrl) { <a [href]="guide.pdfUrl" download class="min-h-11 rounded-xl border border-white/20 px-5 py-3 font-bold">Download PDF</a> }
+                  @if (guide.infographicUrl) { <button class="min-h-11 rounded-xl bg-violet-600 px-5 font-bold text-white" (click)="imageOpen.set(true)">View Full Size</button><a [href]="guide.infographicUrl" [attr.download]="isCrossOrigin(guide.infographicUrl) ? null : ''" [attr.target]="isCrossOrigin(guide.infographicUrl) ? '_blank' : null" [attr.rel]="isCrossOrigin(guide.infographicUrl) ? 'noopener' : null" class="min-h-11 rounded-xl border border-white/20 px-5 py-3 font-bold">{{ isCrossOrigin(guide.infographicUrl) ? 'Open Image' : 'Download Image' }}@if (isCrossOrigin(guide.infographicUrl)) { <span class="sr-only"> (opens in a new tab)</span> }</a> }
+                  @if (guide.pdfUrl) { <a [href]="guide.pdfUrl" [attr.download]="isCrossOrigin(guide.pdfUrl) ? null : ''" [attr.target]="isCrossOrigin(guide.pdfUrl) ? '_blank' : null" [attr.rel]="isCrossOrigin(guide.pdfUrl) ? 'noopener' : null" class="min-h-11 rounded-xl border border-white/20 px-5 py-3 font-bold">{{ isCrossOrigin(guide.pdfUrl) ? 'Open PDF' : 'Download PDF' }}@if (isCrossOrigin(guide.pdfUrl)) { <span class="sr-only"> (opens in a new tab)</span> }</a> }
                 </div>
               </div>
               <div class="aspect-[16/10] overflow-hidden rounded-[24px] border border-white/10 bg-gradient-to-br from-violet-700 to-indigo-950 shadow-2xl">@if (guide.coverUrl) { <img [src]="guide.coverUrl" [alt]="guide.title" class="size-full object-cover"> } @else { <div class="grid size-full place-items-center p-8 text-center"><span class="text-5xl font-black text-white/80">{{ guide.category.name }}</span></div> }</div>
@@ -81,6 +81,7 @@ export default class InfographicDetailsComponent {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly local = inject(LocalEngagementService);
+  private guideRequest?: Subscription;
   readonly item = signal<InfographicDetails | null>(null);
   readonly loading = signal(true);
   readonly notFound = signal(false);
@@ -103,11 +104,12 @@ export default class InfographicDetailsComponent {
   }
 
   private load(slug: string): void {
+    this.guideRequest?.unsubscribe();
     this.loading.set(true);
     this.notFound.set(false);
     this.error.set(null);
     this.readingPercent.set(0);
-    this.api.get(slug).pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.guideRequest = this.api.get(slug).pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: guide => {
         this.item.set(guide);
         this.local.recordViewed(guide);
@@ -125,6 +127,14 @@ export default class InfographicDetailsComponent {
         else this.error.set('Check your connection and try again.');
       },
     });
+  }
+
+  isCrossOrigin(url: string): boolean {
+    try {
+      return new URL(url, this.document.baseURI).origin !== new URL(this.document.baseURI).origin;
+    } catch {
+      return true;
+    }
   }
 
   private captureProgress(): void {

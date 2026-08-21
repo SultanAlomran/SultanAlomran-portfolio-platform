@@ -23,7 +23,7 @@ import BookmarkButtonComponent from '../bookmark-button/bookmark-button.componen
           }
           <a class="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-800 hover:border-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" [href]="linkedInUrl()" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a>
           @if (downloadUrl(); as url) {
-            <a class="inline-flex min-h-11 items-center rounded-xl bg-violet-700 px-4 font-bold text-white hover:bg-violet-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" [href]="url" download>Download</a>
+            <a class="inline-flex min-h-11 items-center rounded-xl bg-violet-700 px-4 font-bold text-white hover:bg-violet-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" [href]="url" [attr.download]="downloadIsCrossOrigin() ? null : ''" [attr.target]="downloadIsCrossOrigin() ? '_blank' : null" [attr.rel]="downloadIsCrossOrigin() ? 'noopener' : null">{{ downloadIsCrossOrigin() ? 'Open file' : 'Download' }}@if (downloadIsCrossOrigin()) { <span class="sr-only"> (opens in a new tab)</span> }</a>
           }
         </div>
       </div>
@@ -41,6 +41,7 @@ export default class GuideActionsComponent {
   readonly linkedInUrl = computed(() =>
     `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(this.canonicalUrl())}`);
   readonly downloadUrl = computed(() => this.guide().pdfUrl ?? this.guide().infographicUrl);
+  readonly downloadIsCrossOrigin = computed(() => this.isCrossOrigin(this.downloadUrl()));
 
   async copyLink(): Promise<void> {
     try {
@@ -75,6 +76,15 @@ export default class GuideActionsComponent {
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       this.status.set('Sharing was unavailable. You can copy the link instead.');
+    }
+  }
+
+  private isCrossOrigin(url?: string): boolean {
+    if (!url) return false;
+    try {
+      return new URL(url, this.document.baseURI).origin !== new URL(this.document.baseURI).origin;
+    } catch {
+      return true;
     }
   }
 }
