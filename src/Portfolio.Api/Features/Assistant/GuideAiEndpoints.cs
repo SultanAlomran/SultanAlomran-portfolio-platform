@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Portfolio.Application.Assistant;
 
 namespace Portfolio.Api.Features.Assistant;
