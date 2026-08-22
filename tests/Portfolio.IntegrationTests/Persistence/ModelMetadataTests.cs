@@ -13,7 +13,7 @@ public sealed class ModelMetadataTests
         .Options).Model;
 
     [Fact]
-    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(49, Model.GetEntityTypes().Count());
+    public void Complete_model_has_configuration_for_every_entity() => Assert.Equal(50, Model.GetEntityTypes().Count());
 
     [Fact]
     public void Arabic_capable_fields_are_unicode_and_bounded()
@@ -77,6 +77,18 @@ public sealed class ModelMetadataTests
         var helpfulChecks = designTimeModel.FindEntityType(typeof(UserHelpfulVote))!.GetCheckConstraints();
         Assert.Contains(helpfulChecks, constraint => constraint.Name == "CK_UserHelpfulVotes_Actor");
         Assert.Contains(helpfulChecks, constraint => constraint.Name == "CK_UserHelpfulVotes_NegativeReason");
+    }
+
+    [Fact]
+    public void InfographicView_has_appropriate_indexes_and_constraints()
+    {
+        var view = Model.FindEntityType(typeof(InfographicView))!;
+        Assert.Equal(64, view.FindProperty(nameof(InfographicView.VisitorKeyHash))!.GetMaxLength());
+        Assert.False(view.FindProperty(nameof(InfographicView.VisitorKeyHash))!.IsUnicode());
+        Assert.Contains(view.GetIndexes(), index => index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(InfographicView.InfographicId), nameof(InfographicView.CreatedAt)]));
+        Assert.Contains(view.GetIndexes(), index => index.Properties.Select(x => x.Name)
+            .SequenceEqual([nameof(InfographicView.VisitorKeyHash), nameof(InfographicView.InfographicId), nameof(InfographicView.CreatedAt)]));
     }
     [Fact]
     public void Project_model_supports_featured_case_studies()

@@ -21,6 +21,7 @@ public sealed class PortfolioDbContext(DbContextOptions<PortfolioDbContext> opti
     public DbSet<InfographicResource> InfographicResources => Set<InfographicResource>();
     public DbSet<InfographicStep> InfographicSteps => Set<InfographicStep>();
     public DbSet<InfographicTag> InfographicTags => Set<InfographicTag>();
+    public DbSet<InfographicView> InfographicViews => Set<InfographicView>();
     public DbSet<MediaCollection> MediaCollections => Set<MediaCollection>();
     public DbSet<MediaCollectionItem> MediaCollectionItems => Set<MediaCollectionItem>();
     public DbSet<MediaFile> MediaFiles => Set<MediaFile>();

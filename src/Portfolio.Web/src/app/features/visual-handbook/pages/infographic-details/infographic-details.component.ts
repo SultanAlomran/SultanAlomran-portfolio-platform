@@ -114,6 +114,7 @@ export default class InfographicDetailsComponent {
     this.guideRequest = this.api.get(slug).pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef)).subscribe({
       next: guide => {
         this.item.set(guide);
+        this.api.recordView(guide.slug).subscribe({ next: () => {}, error: () => {} });
         this.local.recordViewed(guide);
         this.previousProgress.set(this.local.progressFor(guide.id));
         const canonicalUrl = new URL(`/visual-handbook/${guide.slug}`, this.document.baseURI).href;

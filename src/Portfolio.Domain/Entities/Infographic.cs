@@ -39,6 +39,7 @@ public sealed class Infographic : SoftDeletableEntity
     public ICollection<InfographicResource> Resources { get; private set; } = new HashSet<InfographicResource>();
     public ICollection<InfographicCodeExample> CodeExamples { get; private set; } = new HashSet<InfographicCodeExample>();
     public ICollection<SeriesItem> SeriesItems { get; private set; } = new HashSet<SeriesItem>();
+    public ICollection<InfographicView> Views { get; private set; } = new HashSet<InfographicView>();
     public void UpdateContent(string title, string slug, string shortDescription, string? description,
         Guid categoryId, DifficultyLevel difficultyLevel, bool isFeatured, Guid? coverMediaFileId,
         Guid? infographicMediaFileId, Guid? pdfMediaFileId)

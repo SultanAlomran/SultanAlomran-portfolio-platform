@@ -13,6 +13,7 @@ export class InfographicsApiService{
   engagement(slug:string){return this.http.get<InfographicEngagement>(`${this.base}/${encodeURIComponent(slug)}/engagement`,{withCredentials:true})}
   setHelpful(id:string,isHelpful:boolean,reason:NegativeFeedbackReason|null){return this.http.put<InfographicEngagement>(`${this.base}/${encodeURIComponent(id)}/helpful-vote`,{isHelpful,reason},{withCredentials:true})}
   setRating(id:string,rating:1|2|3|4|5){return this.http.put<InfographicEngagement>(`${this.base}/${encodeURIComponent(id)}/rating`,{rating},{withCredentials:true})}
+  recordView(slug:string){return this.http.post<{recorded:boolean}>(`${this.base}/${encodeURIComponent(slug)}/view`,{},{withCredentials:true})}
   categories(){return this.http.get<Category[]>(`${this.base}/taxonomy/categories`)}
   tags(){return this.http.get<Tag[]>(`${this.base}/taxonomy/tags`)}
   private listItem(item:InfographicListItem):InfographicListItem{return{...item,coverUrl:this.publicUrl(item.coverUrl)}}

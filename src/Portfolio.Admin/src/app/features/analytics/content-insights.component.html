@@ -1,0 +1,753 @@
+<!-- Standard Metronic Page Header -->
+<app-admin-page-header
+  title="Content Insights & Intelligence"
+  description="Privacy-conscious engagement analytics, deterministic content health scoring, structured feedback diagnostics, and audience telemetry."
+  [breadcrumbs]="[{ label: 'Insights' }, { label: 'Content Insights' }]"
+>
+  <div adminPageActions class="flex items-center gap-2">
+    <button
+      type="button"
+      (click)="refresh()"
+      [disabled]="loading() || tableLoading()"
+      class="kt-btn kt-btn-outline inline-flex items-center gap-2 text-xs font-semibold"
+    >
+      <i class="ki-filled ki-arrows-circle text-sm" [class.animate-spin]="loading() || tableLoading()" aria-hidden="true"></i>
+      <span>Refresh</span>
+    </button>
+    <a
+      routerLink="/infographics"
+      class="kt-btn kt-btn-primary inline-flex items-center gap-2 text-xs font-semibold"
+    >
+      <i class="ki-filled ki-book-open text-sm" aria-hidden="true"></i>
+      <span>Manage Infographics</span>
+    </a>
+  </div>
+</app-admin-page-header>
+
+<!-- Filter Toolbar -->
+<section class="mb-6 rounded-[20px] border border-border bg-background p-4 shadow-sm" aria-label="Content insights filters">
+  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-[180px_220px_minmax(240px,1fr)_auto]">
+    <!-- Time Period Filter -->
+    <label class="text-xs font-medium text-muted-foreground">
+      Time Period
+      <select
+        id="date-range-filter"
+        [ngModel]="selectedDateRange()"
+        (ngModelChange)="selectedDateRange.set($event); onFilterChange()"
+        class="kt-select mt-1.5"
+      >
+        <option value="7d">Last 7 Days</option>
+        <option value="30d">Last 30 Days</option>
+        <option value="90d">Last 90 Days</option>
+        <option value="all">All Time</option>
+      </select>
+    </label>
+
+    <!-- Category Filter -->
+    <label class="text-xs font-medium text-muted-foreground">
+      Category
+      <select
+        id="category-filter"
+        [ngModel]="selectedCategoryId()"
+        (ngModelChange)="selectedCategoryId.set($event); onFilterChange()"
+        class="kt-select mt-1.5"
+      >
+        <option value="">All Categories</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+        }
+      </select>
+    </label>
+
+    <!-- Search Query Filter -->
+    <label class="relative text-xs font-medium text-muted-foreground">
+      Search Guide
+      <div class="relative mt-1.5">
+        <i class="ki-filled ki-magnifier absolute start-3 top-3 text-sm text-muted-foreground" aria-hidden="true"></i>
+        <input
+          id="search-guide-input"
+          type="text"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="searchQuery.set($event); onFilterChange()"
+          placeholder="Search guide title or slug..."
+          class="kt-input ps-10"
+        />
+      </div>
+    </label>
+
+    <!-- Reset Button -->
+    <div class="flex items-end">
+      <button
+        type="button"
+        (click)="resetFilters()"
+        class="kt-btn kt-btn-outline w-full inline-flex items-center justify-center gap-1.5"
+      >
+        <i class="ki-filled ki-cross-circle text-sm" aria-hidden="true"></i>
+        <span>Reset</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Error Banner -->
+@if (errorMessage(); as err) {
+  <div class="mb-6 flex items-center justify-between rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-medium text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300" role="alert">
+    <div class="flex items-center gap-2.5">
+      <i class="ki-filled ki-information-2 text-base text-red-600 dark:text-red-400" aria-hidden="true"></i>
+      <span>{{ err }}</span>
+    </div>
+    <button type="button" (click)="errorMessage.set(null)" class="text-red-500 hover:text-red-800 dark:hover:text-red-200">
+      <i class="ki-filled ki-cross text-base" aria-hidden="true"></i>
+    </button>
+  </div>
+}
+
+<!-- Loading State -->
+@if (loading()) {
+  <section class="rounded-[20px] border border-border bg-background p-6 shadow-sm">
+    <app-admin-loading-skeleton [rows]="8" />
+  </section>
+} @else if (summary(); as data) {
+  <!-- KPI Metrics Grid -->
+  <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6" aria-label="Key performance indicators">
+    <!-- Total Views -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Views</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
+          <i class="ki-filled ki-eye text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-foreground">{{ data.totalViews | number }}</strong>
+      <span class="mt-1 block text-xs text-muted-foreground">Lifetime guide loads</span>
+    </article>
+
+    <!-- Deduplicated Views -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Unique Visitors</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+          <i class="ki-filled ki-people text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-foreground">{{ data.deduplicatedViews | number }}</strong>
+      <span class="mt-1 block text-xs text-muted-foreground">30-min deduplicated sessions</span>
+    </article>
+
+    <!-- Helpful % -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Helpful %</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          <i class="ki-filled ki-like text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+        {{ data.helpfulPercentage !== null ? data.helpfulPercentage + '%' : 'N/A' }}
+      </strong>
+      <span class="mt-1 block text-xs text-muted-foreground">{{ data.helpfulCount }} helpful · {{ data.notHelpfulCount }} unhelpful</span>
+    </article>
+
+    <!-- Average Rating -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Average Rating</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <i class="ki-filled ki-star text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-amber-600 dark:text-amber-400">
+        {{ data.averageRating !== null ? data.averageRating + ' / 5.0' : 'N/A' }}
+      </strong>
+      <span class="mt-1 block text-xs text-muted-foreground">From {{ data.totalRatings | number }} ratings</span>
+    </article>
+
+    <!-- Total Ratings -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Total Ratings</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          <i class="ki-filled ki-medal-star text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-foreground">{{ data.totalRatings | number }}</strong>
+      <span class="mt-1 block text-xs text-muted-foreground">1 to 5 star scores</span>
+    </article>
+
+    <!-- Engagement Rate -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm transition hover:shadow-md">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Engagement Rate</span>
+        <div class="grid size-9 place-items-center rounded-xl bg-primary/10 text-primary">
+          <i class="ki-filled ki-chart-line-up text-lg" aria-hidden="true"></i>
+        </div>
+      </div>
+      <strong class="mt-3 block text-2xl font-bold tracking-tight text-primary">
+        {{ data.engagementRate }}%
+      </strong>
+      <span class="mt-1 block text-xs text-muted-foreground">Engaged / unique visitors</span>
+    </article>
+  </section>
+
+  <!-- Content Needs Attention Panel -->
+  @if (data.needsAttention.length > 0) {
+    <section class="mt-6 rounded-[20px] border border-amber-300/80 bg-amber-50/40 p-5 shadow-sm dark:border-amber-900/50 dark:bg-amber-950/20" aria-label="Guides requiring attention">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="grid size-10 place-items-center rounded-xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
+            <i class="ki-filled ki-information-2 text-xl" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h2 class="font-bold text-foreground sm:text-base">Content Requiring Attention ({{ data.needsAttention.length }})</h2>
+            <p class="text-xs text-muted-foreground">Guides with low helpfulness, sub-par rating scores, or negative feedback concentration.</p>
+          </div>
+        </div>
+        <span class="rounded-full bg-amber-200/80 px-3 py-1 text-xs font-bold text-amber-900 dark:bg-amber-900/70 dark:text-amber-200">
+          Review Priority
+        </span>
+      </div>
+
+      <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        @for (item of data.needsAttention; track item.infographicId) {
+          <div class="flex flex-col justify-between rounded-xl border border-border bg-background p-4 shadow-2xs">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <span class="text-[10px] font-bold uppercase tracking-wider text-primary">{{ item.categoryName }}</span>
+                  <h3 class="truncate text-sm font-bold text-foreground hover:text-primary transition" [title]="item.title">
+                    {{ item.title }}
+                  </h3>
+                </div>
+                <app-admin-status-badge [status]="badgeStatus(item.healthStatus)">
+                  {{ item.healthStatus }}
+                </app-admin-status-badge>
+              </div>
+
+              <!-- Mini metrics row -->
+              <div class="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-muted/40 p-2 text-center text-xs">
+                <div>
+                  <span class="text-[10px] text-muted-foreground block">Views</span>
+                  <strong class="font-bold">{{ item.totalViews }}</strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-muted-foreground block">Helpful</span>
+                  <strong class="font-bold" [class.text-emerald-600]="item.helpfulPercentage !== null && item.helpfulPercentage >= 70" [class.text-amber-600]="item.helpfulPercentage !== null && item.helpfulPercentage < 70">
+                    {{ item.helpfulPercentage !== null ? item.helpfulPercentage + '%' : 'N/A' }}
+                  </strong>
+                </div>
+                <div>
+                  <span class="text-[10px] text-muted-foreground block">Rating</span>
+                  <strong class="font-bold" [class.text-amber-600]="item.averageRating !== null">
+                    {{ item.averageRating !== null ? item.averageRating : 'N/A' }}
+                  </strong>
+                </div>
+              </div>
+
+              <!-- Diagnostic flags -->
+              <ul class="mt-3 space-y-1.5 text-xs text-amber-700 dark:text-amber-300">
+                @for (flag of item.flags; track flag) {
+                  <li class="flex items-center gap-1.5 truncate">
+                    <i class="ki-filled ki-cross-circle text-xs shrink-0" aria-hidden="true"></i>
+                    <span class="truncate">{{ flag }}</span>
+                  </li>
+                }
+              </ul>
+            </div>
+
+            <!-- Card actions -->
+            <div class="mt-4 flex items-center justify-end gap-2 border-t border-border pt-3">
+              <button
+                type="button"
+                (click)="inspectGuide(item.infographicId)"
+                class="kt-btn kt-btn-xs kt-btn-outline inline-flex items-center gap-1"
+              >
+                <i class="ki-filled ki-eye text-xs" aria-hidden="true"></i>
+                <span>Inspect</span>
+              </button>
+              <a
+                [routerLink]="['/infographics', item.infographicId, 'edit']"
+                class="kt-btn kt-btn-xs kt-btn-outline inline-flex items-center gap-1"
+              >
+                <i class="ki-filled ki-notepad-edit text-xs" aria-hidden="true"></i>
+                <span>Edit</span>
+              </a>
+            </div>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Activity Trend + Rating & Feedback Intelligence Grid -->
+  <section class="mt-6 grid gap-6 xl:grid-cols-12">
+    <!-- Left: Activity Trend Chart (8 cols) -->
+    <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm xl:col-span-8">
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+        <div>
+          <h2 class="font-bold text-foreground sm:text-base">Engagement & Activity Trend</h2>
+          <p class="text-xs text-muted-foreground">Historical distribution of views, helpful/unhelpful votes, and ratings</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-xs bg-primary"></span>Views</span>
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-xs bg-emerald-500"></span>Helpful</span>
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-xs bg-rose-500"></span>Unhelpful</span>
+          <span class="inline-flex items-center gap-1.5"><span class="size-2.5 rounded-xs bg-amber-400"></span>Ratings</span>
+        </div>
+      </div>
+
+      <!-- Trend Multi-Bar Visual Chart -->
+      <div class="mt-6 flex h-48 items-end gap-1.5 overflow-x-auto border-b border-border px-1 pb-2" role="img" aria-label="Activity trend chart">
+        @for (day of data.trend; track day.date) {
+          <div
+            class="group relative flex min-w-6 flex-1 flex-col items-center justify-end gap-1"
+            [title]="day.date + ': ' + day.views + ' views, ' + day.helpfulVotes + ' helpful, ' + day.notHelpfulVotes + ' unhelpful, ' + day.ratings + ' ratings'"
+          >
+            <!-- Bars Stack -->
+            <div class="flex w-full items-end justify-center gap-0.5">
+              <span
+                class="w-1.5 rounded-t bg-primary transition-all duration-200"
+                [style.height.px]="getBarHeight(day.views, getTrendMax(data.trend))"
+              ></span>
+              <span
+                class="w-1.5 rounded-t bg-emerald-500 transition-all duration-200"
+                [style.height.px]="getBarHeight(day.helpfulVotes, getTrendMax(data.trend))"
+              ></span>
+              <span
+                class="w-1.5 rounded-t bg-rose-500 transition-all duration-200"
+                [style.height.px]="getBarHeight(day.notHelpfulVotes, getTrendMax(data.trend))"
+              ></span>
+              <span
+                class="w-1.5 rounded-t bg-amber-400 transition-all duration-200"
+                [style.height.px]="getBarHeight(day.ratings, getTrendMax(data.trend))"
+              ></span>
+            </div>
+
+            <!-- Date Label -->
+            <span class="text-[9px] font-mono text-muted-foreground truncate w-full text-center">
+              {{ day.date.slice(5) }}
+            </span>
+
+            <!-- Tooltip Popover -->
+            <div class="pointer-events-none absolute -top-14 left-1/2 -translate-x-1/2 opacity-0 transition-opacity group-hover:opacity-100 z-20 whitespace-nowrap rounded-lg bg-slate-900 px-2.5 py-1.5 text-[10px] font-semibold text-white shadow-xl">
+              <p class="font-bold text-slate-300">{{ day.date }}</p>
+              <p>Views: {{ day.views }} · Helpful: {{ day.helpfulVotes }} · Unhelpful: {{ day.notHelpfulVotes }} · Ratings: {{ day.ratings }}</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+        <span>From: {{ data.trend[0]?.date }}</span>
+        <span>To: {{ data.trend[data.trend.length - 1]?.date }}</span>
+      </div>
+    </article>
+
+    <!-- Right: Rating Spread & Negative Feedback Reasons (4 cols) -->
+    <div class="space-y-6 xl:col-span-4">
+      <!-- 1-5 Star Rating Distribution Card -->
+      <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm">
+        <div class="border-b border-border pb-3">
+          <h2 class="font-bold text-foreground text-sm">Rating Distribution</h2>
+          <p class="text-xs text-muted-foreground">1 to 5 Star ratings breakdown</p>
+        </div>
+
+        <div class="mt-4 space-y-2.5">
+          @for (item of data.ratingDistribution; track item.rating) {
+            <div class="flex items-center gap-3 text-xs">
+              <span class="w-8 font-bold text-foreground flex items-center gap-0.5">
+                <span>{{ item.rating }}</span>
+                <i class="ki-filled ki-star text-amber-500 text-xs" aria-hidden="true"></i>
+              </span>
+              <div class="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                <div
+                  class="h-full rounded-full bg-amber-400 transition-all duration-300"
+                  [style.width.%]="getPercentage(item.count, data.totalRatings)"
+                ></div>
+              </div>
+              <span class="w-12 text-end text-[11px] font-mono text-muted-foreground">
+                {{ item.count }} ({{ getPercentage(item.count, data.totalRatings) }}%)
+              </span>
+            </div>
+          }
+        </div>
+      </article>
+
+      <!-- Negative Feedback Reasons Card -->
+      <article class="rounded-[20px] border border-border bg-background p-5 shadow-sm">
+        <div class="border-b border-border pb-3">
+          <h2 class="font-bold text-foreground text-sm">Negative Feedback Reasons</h2>
+          <p class="text-xs text-muted-foreground">Structured feedback points submitted by visitors</p>
+        </div>
+
+        <div class="mt-4 space-y-3">
+          @if (data.negativeFeedbackBreakdown.length === 0 || data.notHelpfulCount === 0) {
+            <p class="py-4 text-center text-xs text-muted-foreground">No negative feedback recorded in this period.</p>
+          } @else {
+            @for (item of data.negativeFeedbackBreakdown; track item.reason) {
+              @if (item.count > 0) {
+                <div class="space-y-1">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="font-semibold text-foreground truncate" [title]="item.reasonLabel">{{ item.reasonLabel }}</span>
+                    <span class="font-mono text-[11px] text-muted-foreground">{{ item.count }} ({{ item.percentage }}%)</span>
+                  </div>
+                  <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div class="h-full rounded-full bg-rose-500" [style.width.%]="item.percentage"></div>
+                  </div>
+                </div>
+              }
+            }
+          }
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Comprehensive Guide Rankings & Performance Table -->
+  <section class="mt-6 rounded-[20px] border border-border bg-background shadow-sm overflow-hidden" aria-label="Infographic performance table">
+    <!-- Header + Filter Tabs -->
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
+      <div>
+        <h2 class="font-bold text-foreground sm:text-base">Infographic Performance & Health</h2>
+        <p class="text-xs text-muted-foreground">Performance metrics, composite health scoring, and guide-level analytics</p>
+      </div>
+
+      <!-- Quick Sorting Tabs -->
+      <div class="flex flex-wrap items-center gap-1 rounded-xl bg-muted/60 p-1">
+        <button
+          type="button"
+          (click)="sortBy.set('views'); sortDirection.set('desc'); activeTab.set('all'); onFilterChange()"
+          class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+          [class.bg-background]="sortBy() === 'views'"
+          [class.text-foreground]="sortBy() === 'views'"
+          [class.shadow-xs]="sortBy() === 'views'"
+          [class.text-muted-foreground]="sortBy() !== 'views'"
+        >
+          All Guides
+        </button>
+        <button
+          type="button"
+          (click)="sortBy.set('views'); sortDirection.set('desc'); activeTab.set('top-viewed'); onFilterChange()"
+          class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+          [class.bg-background]="activeTab() === 'top-viewed'"
+          [class.text-foreground]="activeTab() === 'top-viewed'"
+          [class.shadow-xs]="activeTab() === 'top-viewed'"
+          [class.text-muted-foreground]="activeTab() !== 'top-viewed'"
+        >
+          Most Viewed
+        </button>
+        <button
+          type="button"
+          (click)="sortBy.set('helpful'); sortDirection.set('desc'); activeTab.set('top-helpful'); onFilterChange()"
+          class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+          [class.bg-background]="sortBy() === 'helpful'"
+          [class.text-foreground]="sortBy() === 'helpful'"
+          [class.shadow-xs]="sortBy() === 'helpful'"
+          [class.text-muted-foreground]="sortBy() !== 'helpful'"
+        >
+          Most Helpful
+        </button>
+        <button
+          type="button"
+          (click)="sortBy.set('rating'); sortDirection.set('desc'); activeTab.set('highest-rated'); onFilterChange()"
+          class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+          [class.bg-background]="sortBy() === 'rating'"
+          [class.text-foreground]="sortBy() === 'rating'"
+          [class.shadow-xs]="sortBy() === 'rating'"
+          [class.text-muted-foreground]="sortBy() !== 'rating'"
+        >
+          Highest Rated
+        </button>
+        <button
+          type="button"
+          (click)="sortBy.set('health'); sortDirection.set('asc'); activeTab.set('needs-attention'); onFilterChange()"
+          class="rounded-lg px-3 py-1 text-xs font-semibold transition"
+          [class.bg-background]="activeTab() === 'needs-attention'"
+          [class.text-foreground]="activeTab() === 'needs-attention'"
+          [class.shadow-xs]="activeTab() === 'needs-attention'"
+          [class.text-muted-foreground]="activeTab() !== 'needs-attention'"
+        >
+          Needs Attention
+        </button>
+      </div>
+    </div>
+
+    <!-- Table Content -->
+    @if (tableLoading()) {
+      <div class="p-6">
+        <app-admin-loading-skeleton [rows]="5" />
+      </div>
+    } @else if (pagedGuides().length === 0) {
+      <div class="p-8">
+        <app-admin-empty-state
+          title="No guide telemetry found"
+          description="No infographics match the current filter or search criteria."
+          icon="ki-chart-line-up"
+        />
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[980px] text-sm">
+          <thead class="border-b border-border bg-muted/40 text-xs font-semibold uppercase text-muted-foreground">
+            <tr>
+              <th class="p-4 text-start">Guide Title</th>
+              <th class="p-4 text-start">Category</th>
+              <th class="p-4 text-start cursor-pointer select-none" (click)="changeSort('health')">
+                <span class="inline-flex items-center gap-1">
+                  Health Score
+                  <i class="ki-filled ki-arrow-up-down text-xs" aria-hidden="true"></i>
+                </span>
+              </th>
+              <th class="p-4 text-start cursor-pointer select-none" (click)="changeSort('views')">
+                <span class="inline-flex items-center gap-1">
+                  Views (Total / Dedup)
+                  <i class="ki-filled ki-arrow-up-down text-xs" aria-hidden="true"></i>
+                </span>
+              </th>
+              <th class="p-4 text-start cursor-pointer select-none" (click)="changeSort('helpful')">
+                <span class="inline-flex items-center gap-1">
+                  Helpful %
+                  <i class="ki-filled ki-arrow-up-down text-xs" aria-hidden="true"></i>
+                </span>
+              </th>
+              <th class="p-4 text-start cursor-pointer select-none" (click)="changeSort('rating')">
+                <span class="inline-flex items-center gap-1">
+                  Avg Rating
+                  <i class="ki-filled ki-arrow-up-down text-xs" aria-hidden="true"></i>
+                </span>
+              </th>
+              <th class="p-4 text-start cursor-pointer select-none" (click)="changeSort('engagement')">
+                <span class="inline-flex items-center gap-1">
+                  Engagement
+                  <i class="ki-filled ki-arrow-up-down text-xs" aria-hidden="true"></i>
+                </span>
+              </th>
+              <th class="p-4 text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (guide of pagedGuides(); track guide.id) {
+              <tr class="border-b border-border last:border-0 hover:bg-muted/30 transition">
+                <!-- Title & Slug -->
+                <td class="p-4">
+                  <div class="min-w-0">
+                    <a
+                      [routerLink]="['/infographics', guide.id]"
+                      class="truncate font-semibold text-foreground hover:text-primary transition block max-w-xs"
+                    >
+                      {{ guide.title }}
+                    </a>
+                    <span class="text-xs font-mono text-muted-foreground">/{{ guide.slug }}</span>
+                  </div>
+                </td>
+
+                <!-- Category -->
+                <td class="p-4">
+                  <span class="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                    {{ guide.categoryName }}
+                  </span>
+                </td>
+
+                <!-- Health Score & Status -->
+                <td class="p-4">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold" [class]="getHealthScoreClass(guide.healthScore)">
+                      {{ guide.healthScore !== null ? guide.healthScore + '/100' : '—' }}
+                    </span>
+                    <app-admin-status-badge [status]="badgeStatus(guide.healthStatus)">
+                      {{ guide.healthStatus }}
+                    </app-admin-status-badge>
+                  </div>
+                </td>
+
+                <!-- Views -->
+                <td class="p-4 font-mono font-medium">
+                  <span class="font-bold text-foreground">{{ guide.totalViews }}</span>
+                  <span class="text-muted-foreground text-xs"> / {{ guide.deduplicatedViews }}</span>
+                </td>
+
+                <!-- Helpful % -->
+                <td class="p-4">
+                  <span class="font-bold" [class.text-emerald-600]="guide.helpfulPercentage !== null && guide.helpfulPercentage >= 70" [class.text-amber-600]="guide.helpfulPercentage !== null && guide.helpfulPercentage < 70" [class.text-muted-foreground]="guide.helpfulPercentage === null">
+                    {{ guide.helpfulPercentage !== null ? guide.helpfulPercentage + '%' : 'N/A' }}
+                  </span>
+                  <span class="text-[11px] text-muted-foreground block">
+                    ({{ guide.helpfulCount }} / {{ guide.helpfulCount + guide.notHelpfulCount }})
+                  </span>
+                </td>
+
+                <!-- Avg Rating -->
+                <td class="p-4">
+                  <div class="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                    <i class="ki-filled ki-star text-xs" aria-hidden="true"></i>
+                    <span>{{ guide.averageRating !== null ? guide.averageRating : 'N/A' }}</span>
+                  </div>
+                  <span class="text-[11px] text-muted-foreground block">
+                    ({{ guide.totalRatings }} ratings)
+                  </span>
+                </td>
+
+                <!-- Engagement % -->
+                <td class="p-4">
+                  <span class="font-bold text-primary">{{ guide.engagementRate }}%</span>
+                </td>
+
+                <!-- Actions -->
+                <td class="p-4 text-end">
+                  <div class="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      (click)="inspectGuide(guide.id)"
+                      class="kt-btn kt-btn-sm kt-btn-outline inline-flex items-center gap-1"
+                      aria-label="Inspect guide metrics"
+                    >
+                      <i class="ki-filled ki-eye text-xs" aria-hidden="true"></i>
+                      <span class="hidden sm:inline">Inspect</span>
+                    </button>
+                    <a
+                      [routerLink]="['/infographics', guide.id, 'edit']"
+                      class="kt-btn kt-btn-sm kt-btn-outline inline-flex items-center gap-1"
+                      aria-label="Edit guide"
+                    >
+                      <i class="ki-filled ki-notepad-edit text-xs" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="border-t border-border p-4">
+        <app-admin-pagination
+          [page]="currentPage()"
+          [pageSize]="pageSize()"
+          [totalItems]="totalGuides()"
+          (pageChange)="changePage($event)"
+        />
+      </div>
+    }
+  </section>
+}
+
+<!-- Single Guide Inspection Drill-Down Modal Dialog -->
+@if (selectedGuide(); as guide) {
+  <div
+    id="guide-inspect-modal"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div class="w-full max-w-2xl rounded-2xl border border-border bg-background p-6 shadow-2xl space-y-6">
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-primary">{{ guide.categoryName }}</span>
+            <app-admin-status-badge [status]="badgeStatus(guide.healthStatus)">
+              {{ guide.healthStatus }}
+            </app-admin-status-badge>
+          </div>
+          <h2 class="text-xl font-bold text-foreground mt-1">{{ guide.title }}</h2>
+          <p class="text-xs font-mono text-muted-foreground">/{{ guide.slug }}</p>
+        </div>
+        <button
+          type="button"
+          (click)="closeDrillDown()"
+          class="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground transition"
+          aria-label="Close dialog"
+        >
+          <i class="ki-filled ki-cross text-lg" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <!-- Modal Metric Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+        <div class="rounded-xl bg-muted/50 p-3">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground block">Total Views</span>
+          <strong class="text-lg font-bold text-foreground">{{ guide.totalViews | number }}</strong>
+        </div>
+        <div class="rounded-xl bg-muted/50 p-3">
+          <span class="text-[10px] uppercase font-bold text-muted-foreground block">Dedup Views</span>
+          <strong class="text-lg font-bold text-foreground">{{ guide.deduplicatedViews | number }}</strong>
+        </div>
+        <div class="rounded-xl bg-emerald-500/10 p-3 text-emerald-700 dark:text-emerald-300">
+          <span class="text-[10px] uppercase font-bold block">Helpful %</span>
+          <strong class="text-lg font-bold">
+            {{ guide.helpfulPercentage !== null ? guide.helpfulPercentage + '%' : 'N/A' }}
+          </strong>
+        </div>
+        <div class="rounded-xl bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
+          <span class="text-[10px] uppercase font-bold block">Avg Rating</span>
+          <strong class="text-lg font-bold">
+            {{ guide.averageRating !== null ? guide.averageRating : 'N/A' }}
+          </strong>
+        </div>
+        <div class="rounded-xl bg-primary/10 p-3 text-primary">
+          <span class="text-[10px] uppercase font-bold block">Engagement</span>
+          <strong class="text-lg font-bold">{{ guide.engagementRate }}%</strong>
+        </div>
+      </div>
+
+      <!-- Breakdown Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 1-5 Star Breakdown -->
+        <div class="rounded-xl border border-border bg-background p-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Rating Breakdown</h3>
+          <div class="space-y-2">
+            @for (item of guide.ratingDistribution; track item.rating) {
+              <div class="flex items-center gap-2 text-xs">
+                <span class="w-6 font-bold text-foreground">{{ item.rating }}★</span>
+                <div class="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                  <div
+                    class="h-full rounded-full bg-amber-400"
+                    [style.width.%]="getPercentage(item.count, guide.totalRatings)"
+                  ></div>
+                </div>
+                <span class="w-8 text-end font-mono text-[11px] text-muted-foreground">{{ item.count }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Negative Feedback Reasons with Human Labels -->
+        <div class="rounded-xl border border-border bg-background p-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Negative Feedback Reasons</h3>
+          @if (guide.negativeReasons.length === 0) {
+            <p class="text-xs text-muted-foreground text-center py-6">No negative reasons recorded for this guide.</p>
+          } @else {
+            <div class="space-y-2 max-h-48 overflow-y-auto">
+              @for (r of guide.negativeReasons; track r.reason) {
+                <div class="flex items-center justify-between rounded-lg bg-muted/50 p-2.5 text-xs">
+                  <span class="font-semibold text-foreground">{{ getReasonName(r.reason) }}</span>
+                  <span class="rounded-full bg-rose-100 px-2 py-0.5 font-mono text-[11px] font-bold text-rose-700 dark:bg-rose-950 dark:text-rose-300">
+                    {{ r.count }}
+                  </span>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 border-t border-border pt-4">
+        <button
+          type="button"
+          (click)="closeDrillDown()"
+          class="kt-btn kt-btn-outline"
+        >
+          Close
+        </button>
+        <a
+          [routerLink]="['/infographics', guide.id, 'edit']"
+          class="kt-btn kt-btn-primary inline-flex items-center gap-1.5"
+        >
+          <i class="ki-filled ki-notepad-edit text-sm" aria-hidden="true"></i>
+          <span>Edit Infographic</span>
+        </a>
+      </div>
+    </div>
+  </div>
+}
