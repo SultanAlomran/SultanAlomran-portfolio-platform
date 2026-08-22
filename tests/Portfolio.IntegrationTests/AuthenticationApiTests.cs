@@ -63,7 +63,7 @@ public sealed class AuthenticationApiTests : IAsyncLifetime
     {
         using var response = await client.GetAsync("/api/auth/google?returnUrl=https%3A%2F%2Fevil.example");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("http://localhost:4300/dashboard", response.Headers.Location?.ToString());
+        Assert.Equal("http://localhost:4300/dashboard?loginSuccess=google", response.Headers.Location?.ToString());
         var current = await client.GetFromJsonAsync<CurrentAdmin>("/api/auth/me");
         Assert.Equal("Google", current?.Provider);
     }
@@ -72,7 +72,11 @@ public sealed class AuthenticationApiTests : IAsyncLifetime
     public async Task Unknown_google_identity_is_denied_without_creating_an_admin()
     {
         using var unknownFactory = factory.WithWebHostBuilder(builder =>
-            builder.UseSetting("Authentication:Google:TestSubject", "unknown-google-subject"));
+        {
+            builder.UseSetting("Authentication:Google:TestSubject", "unknown-google-subject");
+            builder.UseSetting("AdminBootstrap:Email", "unknown-admin@portfolio.test");
+            builder.UseSetting("AdminBootstrap:GoogleEmail", "unknown-admin@portfolio.test");
+        });
         using var unknown = unknownFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         using var response = await unknown.GetAsync("/api/auth/google?returnUrl=%2Fprojects");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);

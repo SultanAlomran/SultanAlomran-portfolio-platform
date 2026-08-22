@@ -6,6 +6,19 @@ namespace Portfolio.Domain.Entities;
 public sealed class Series : SoftDeletableEntity
 {
     private Series() { }
+    public static Series Create(string name, string slug, string? description = null, int displayOrder = 0)
+    {
+        if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Series name is required.", nameof(name));
+        if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Series slug is required.", nameof(slug));
+        if (displayOrder < 0) throw new ArgumentOutOfRangeException(nameof(displayOrder));
+        return new Series
+        {
+            Name = name.Trim(),
+            Slug = slug.Trim().ToLowerInvariant(),
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim(),
+            DisplayOrder = displayOrder
+        };
+    }
     public string Name { get; private set; } = "";
     public string Slug { get; private set; } = "";
     public string? Description { get; private set; }

@@ -6,10 +6,44 @@ namespace Portfolio.UnitTests.Domain;
 
 public sealed class DomainBehaviorTests
 {
-    [Fact]
-    public void Rating_rejects_values_outside_one_to_five() =>
-        Assert.Throws<ArgumentOutOfRangeException>(() => new UserRating(Guid.NewGuid(), "Infographic", Guid.NewGuid(), 0));
+    [Theory]
+    [InlineData((byte)1)]
+    [InlineData((byte)5)]
+    public void Rating_accepts_boundary_values(byte rating)
+    {
+        var result = new UserRating(Guid.NewGuid(), "Infographic", Guid.NewGuid(), rating);
+        Assert.Equal(rating, result.Rating);
+    }
 
+    [Theory]
+    [InlineData((byte)0)]
+    [InlineData((byte)6)]
+    public void Rating_rejects_values_outside_one_to_five(byte rating) =>
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new UserRating(Guid.NewGuid(), "Infographic", Guid.NewGuid(), rating));
+
+    [Fact]
+    public void Visitor_rating_can_be_updated_without_creating_another_entity()
+    {
+        var rating = UserRating.ForVisitor(new string('A', 64), "Infographic", Guid.NewGuid(), 3);
+        rating.SetRating(5);
+        Assert.Equal((byte)5, rating.Rating);
+        Assert.NotNull(rating.UpdatedAt);
+        Assert.Null(rating.UserId);
+    }
+
+    [Fact]
+    public void Helpful_vote_clears_negative_reason_when_changed_to_helpful()
+    {
+        var vote = UserHelpfulVote.ForVisitor(new string('B', 64), "Infographic", Guid.NewGuid(), false,
+            NegativeFeedbackReason.NeedsRealWorldExample);
+        Assert.Equal(NegativeFeedbackReason.NeedsRealWorldExample, vote.NegativeFeedbackReason);
+        vote.SetVote(true);
+        Assert.True(vote.IsHelpful);
+        Assert.Null(vote.NegativeFeedbackReason);
+        Assert.Throws<ArgumentException>(() =>
+            vote.SetVote(true, NegativeFeedbackReason.ExplanationUnclear));
+    }
     [Fact]
     public void Publishing_and_archiving_are_explicit_transitions()
     {
@@ -49,6 +83,18 @@ public sealed class DomainBehaviorTests
     [Fact]
     public void Ordered_items_reject_non_positive_positions() =>
         Assert.Throws<ArgumentOutOfRangeException>(() => Create<SeriesItem>().SetPosition(0));
+    [Fact]
+    public void Series_factories_require_valid_deterministic_ordering()
+    {
+        var seriesId = Guid.NewGuid();
+        var infographicId = Guid.NewGuid();
+        var series = Series.Create("Architecture Path", "architecture-path", displayOrder: 2);
+        var item = SeriesItem.Create(seriesId, infographicId, 1);
+
+        Assert.Equal("architecture-path", series.Slug);
+        Assert.Equal(1, item.Position);
+        Assert.Throws<ArgumentOutOfRangeException>(() => SeriesItem.Create(seriesId, infographicId, 0));
+    }
 
     [Fact]
     public void Notification_can_be_marked_read()

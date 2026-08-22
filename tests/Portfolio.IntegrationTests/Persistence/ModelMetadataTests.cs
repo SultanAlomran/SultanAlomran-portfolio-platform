@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Portfolio.Domain.Entities;
 using Portfolio.Infrastructure.Persistence;
@@ -46,6 +47,37 @@ public sealed class ModelMetadataTests
             .SequenceEqual([nameof(UserExternalLogin.UserId), nameof(UserExternalLogin.Provider)]));
     }
 
+    [Fact]
+    public void Engagement_has_authenticated_and_anonymous_identity_constraints()
+    {
+        var bookmark = Model.FindEntityType(typeof(UserBookmark))!;
+        Assert.Contains(bookmark.GetIndexes(), index => index.IsUnique && index.Properties.Select(x => x.Name)
+            .SequenceEqual(["UserId", "EntityType", "EntityId"]));
+
+        foreach (var type in new[] { typeof(UserHelpfulVote), typeof(UserRating) })
+        {
+            var entity = Model.FindEntityType(type)!;
+            Assert.Contains(entity.GetIndexes(), index => index.IsUnique &&
+                index.GetFilter() == "[UserId] IS NOT NULL" &&
+                index.Properties.Select(x => x.Name).SequenceEqual(["UserId", "EntityType", "EntityId"]));
+            Assert.Contains(entity.GetIndexes(), index => index.IsUnique &&
+                index.GetFilter() == "[VisitorKeyHash] IS NOT NULL" &&
+                index.Properties.Select(x => x.Name).SequenceEqual(["VisitorKeyHash", "EntityType", "EntityId"]));
+            Assert.Equal(64, entity.FindProperty("VisitorKeyHash")!.GetMaxLength());
+        }
+
+        using var context = new PortfolioDbContext(new DbContextOptionsBuilder<PortfolioDbContext>()
+            .UseSqlServer("Server=(local);Database=metadata;Trusted_Connection=True;TrustServerCertificate=True")
+            .Options);
+        var designTimeModel = context.GetService<IDesignTimeModel>().Model;
+        var ratingChecks = designTimeModel.FindEntityType(typeof(UserRating))!.GetCheckConstraints();
+        Assert.Contains(ratingChecks, constraint => constraint.Name == "CK_UserRatings_Rating" &&
+            constraint.Sql == "[Rating] BETWEEN 1 AND 5");
+        Assert.Contains(ratingChecks, constraint => constraint.Name == "CK_UserRatings_Actor");
+        var helpfulChecks = designTimeModel.FindEntityType(typeof(UserHelpfulVote))!.GetCheckConstraints();
+        Assert.Contains(helpfulChecks, constraint => constraint.Name == "CK_UserHelpfulVotes_Actor");
+        Assert.Contains(helpfulChecks, constraint => constraint.Name == "CK_UserHelpfulVotes_NegativeReason");
+    }
     [Fact]
     public void Project_model_supports_featured_case_studies()
     {
