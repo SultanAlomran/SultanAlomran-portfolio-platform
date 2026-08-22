@@ -72,7 +72,11 @@ public sealed class AuthenticationApiTests : IAsyncLifetime
     public async Task Unknown_google_identity_is_denied_without_creating_an_admin()
     {
         using var unknownFactory = factory.WithWebHostBuilder(builder =>
-            builder.UseSetting("Authentication:Google:TestSubject", "unknown-google-subject"));
+        {
+            builder.UseSetting("Authentication:Google:TestSubject", "unknown-google-subject");
+            builder.UseSetting("AdminBootstrap:Email", "unknown-admin@portfolio.test");
+            builder.UseSetting("AdminBootstrap:GoogleEmail", "unknown-admin@portfolio.test");
+        });
         using var unknown = unknownFactory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
         using var response = await unknown.GetAsync("/api/auth/google?returnUrl=%2Fprojects");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
