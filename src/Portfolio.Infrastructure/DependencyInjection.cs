@@ -37,6 +37,7 @@ public static class DependencyInjection
         services.AddScoped<IProjectsService, ProjectsService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAdminAuthenticationService, AdminAuthenticationService>();
+        services.AddScoped<IAdminBootstrapService, AdminBootstrapService>();
         services.AddMemoryCache();
         services.AddSingleton<DeterministicAiAssistantClient>();
         services.AddHttpClient<OpenAiAssistantClient>();
