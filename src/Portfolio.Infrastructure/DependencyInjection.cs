@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
         services.AddScoped<IInfographicsService, InfographicsService>();
         services.AddScoped<IInfographicEngagementService, InfographicEngagementService>();
+        services.AddScoped<Portfolio.Application.ContentInsights.IContentInsightsService, Portfolio.Infrastructure.ContentInsights.ContentInsightsService>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddScoped<ITestAnalyticsService, TestAnalyticsService>();

@@ -38,7 +38,7 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationGroup[] = [
   {
     label: 'Insights',
     items: [
-      { label: 'Analytics', path: '/analytics', icon: 'ki-chart-line-up' },
+      { label: 'Content Insights', path: '/analytics', icon: 'ki-chart-line-up' },
       { label: 'Quality', path: '/quality/tests', icon: 'ki-chart-simple-3' },
     ],
   },

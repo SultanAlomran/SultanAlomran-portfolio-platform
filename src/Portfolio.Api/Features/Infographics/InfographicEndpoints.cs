@@ -37,6 +37,14 @@ internal static class InfographicEndpoints
             var visitorKeyHash = AnonymousEngagementIdentity.GetOrCreateHash(context, environment);
             return Results.Ok(await service.SetRatingAsync(id, visitorKeyHash, request, token));
         }).RequireRateLimiting("engagement-write");
+        publicGroup.MapPost("/{slug}/view", async (
+            string slug, HttpContext context, IHostEnvironment environment,
+            Portfolio.Application.ContentInsights.IContentInsightsService service, CancellationToken token) =>
+        {
+            var visitorKeyHash = AnonymousEngagementIdentity.GetOrCreateHash(context, environment);
+            var recorded = await service.RecordViewAsync(slug, visitorKeyHash, token);
+            return Results.Ok(new { recorded });
+        }).RequireRateLimiting("engagement-write");
         publicGroup.MapGet("/{slug}", async (string slug, IInfographicsService service, CancellationToken token) =>
         {
             var item = await service.GetPublicBySlugAsync(slug, token);

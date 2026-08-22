@@ -7,6 +7,7 @@ using Portfolio.Api.Extensions;
 using Portfolio.Api.Features.Assistant;
 using Portfolio.Api.Features.Authentication;
 using Portfolio.Api.Features.Contact;
+using Portfolio.Api.Features.ContentInsights;
 using Portfolio.Api.Features.Infographics;
 using Portfolio.Api.Features.Media;
 using Portfolio.Api.Features.Notifications;
@@ -127,6 +128,7 @@ app.MapGet("/api", () => Results.Ok(new { name = "Portfolio.Api", status = "read
 app.MapAuthenticationEndpoints();
 app.MapProjectEndpoints();
 app.MapInfographicEndpoints();
+app.MapContentInsightsEndpoints();
 app.MapMediaEndpoints();
 app.MapTestAnalyticsEndpoints();
 app.MapAssistantEndpoints();

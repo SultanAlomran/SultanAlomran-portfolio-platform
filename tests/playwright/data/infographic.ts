@@ -149,3 +149,155 @@ export async function addInfographicStep(page: Page) {
   await page.getByLabel('Step title *').fill('Shape the query');
   await page.getByLabel('Explanation').fill('Project the response and keep the query bounded.');
 }
+
+export const contentInsightsSummaryFixture = {
+  totalViews: 1420,
+  deduplicatedViews: 850,
+  helpfulCount: 420,
+  notHelpfulCount: 30,
+  helpfulPercentage: 93.3,
+  totalRatings: 310,
+  averageRating: 4.85,
+  engagementRate: 52.9,
+  ratingDistribution: [
+    { rating: 5, count: 260 },
+    { rating: 4, count: 40 },
+    { rating: 3, count: 8 },
+    { rating: 2, count: 1 },
+    { rating: 1, count: 1 },
+  ],
+  negativeFeedbackBreakdown: [
+    {
+      reason: 1,
+      reasonLabel: 'Needs a real-world example',
+      count: 18,
+      percentage: 60.0,
+      topAffectedGuides: [
+        { id: infographicIds.item, title: 'EF Core Performance Checklist', slug: 'ef-core-performance-checklist', categoryName: '.NET', count: 12 },
+      ],
+    },
+    {
+      reason: 2,
+      reasonLabel: 'Explanation was unclear',
+      count: 7,
+      percentage: 23.3,
+      topAffectedGuides: [],
+    },
+  ],
+  trend: [
+    { date: '2026-08-15', views: 120, helpfulVotes: 35, notHelpfulVotes: 2, ratings: 25 },
+    { date: '2026-08-16', views: 140, helpfulVotes: 40, notHelpfulVotes: 3, ratings: 28 },
+    { date: '2026-08-17', views: 160, helpfulVotes: 50, notHelpfulVotes: 1, ratings: 35 },
+  ],
+  topViewed: [
+    {
+      id: infographicIds.item,
+      title: 'EF Core Performance Checklist',
+      slug: 'ef-core-performance-checklist',
+      categoryName: '.NET',
+      totalViews: 1420,
+      deduplicatedViews: 850,
+      helpfulPercentage: 93.3,
+      helpfulCount: 420,
+      notHelpfulCount: 30,
+      averageRating: 4.85,
+      ratingCount: 310,
+      engagementRate: 52.9,
+      healthScore: 92,
+      healthStatus: 'Excellent',
+    },
+  ],
+  topHelpful: [],
+  highestRated: [],
+  lowestRated: [],
+  mostEngaged: [],
+  needsAttention: [
+    {
+      infographicId: infographicIds.previous,
+      title: 'Query Fundamentals',
+      slug: 'query-fundamentals',
+      categoryName: '.NET',
+      totalViews: 450,
+      deduplicatedViews: 320,
+      helpfulPercentage: 62.5,
+      helpfulCount: 25,
+      notHelpfulCount: 15,
+      averageRating: 3.4,
+      ratingCount: 20,
+      engagementRate: 18.8,
+      primaryReason: 'Low helpfulness ratio (62.5%)',
+      flags: ['Low helpfulness ratio (62.5%)', 'Low average rating (3.4 / 5)'],
+      healthStatus: 'Needs Attention',
+    },
+  ],
+};
+
+export async function mockContentInsightsApi(page: Page) {
+  await page.route('**/api/admin/content-insights**', async route => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/summary')) {
+      return route.fulfill({ json: contentInsightsSummaryFixture });
+    }
+    if (url.pathname.endsWith('/guides')) {
+      return route.fulfill({
+        json: {
+          items: [
+            {
+              id: infographicIds.item,
+              title: 'EF Core Performance Checklist',
+              slug: 'ef-core-performance-checklist',
+              categoryName: '.NET',
+              status: 1,
+              difficultyLevel: 2,
+              publishedAt: '2026-08-09T12:00:00Z',
+              totalViews: 1420,
+              deduplicatedViews: 850,
+              helpfulCount: 420,
+              notHelpfulCount: 30,
+              helpfulPercentage: 93.3,
+              totalRatings: 310,
+              averageRating: 4.85,
+              ratingDistribution: contentInsightsSummaryFixture.ratingDistribution,
+              negativeReasons: [{ reason: 1, count: 18 }],
+              engagementRate: 52.9,
+              healthScore: 92,
+              healthStatus: 'Excellent',
+              trend: contentInsightsSummaryFixture.trend,
+            },
+          ],
+          page: 1,
+          pageSize: 10,
+          totalCount: 1,
+          totalPages: 1,
+        },
+      });
+    }
+    if (url.pathname.includes('/guides/')) {
+      return route.fulfill({
+        json: {
+          id: infographicIds.item,
+          title: 'EF Core Performance Checklist',
+          slug: 'ef-core-performance-checklist',
+          categoryName: '.NET',
+          status: 1,
+          difficultyLevel: 2,
+          publishedAt: '2026-08-09T12:00:00Z',
+          totalViews: 1420,
+          deduplicatedViews: 850,
+          helpfulCount: 420,
+          notHelpfulCount: 30,
+          helpfulPercentage: 93.3,
+          totalRatings: 310,
+          averageRating: 4.85,
+          ratingDistribution: contentInsightsSummaryFixture.ratingDistribution,
+          negativeReasons: [{ reason: 1, count: 18 }],
+          engagementRate: 52.9,
+          healthScore: 92,
+          healthStatus: 'Excellent',
+          trend: contentInsightsSummaryFixture.trend,
+        },
+      });
+    }
+    return route.fulfill({ status: 404 });
+  });
+}
