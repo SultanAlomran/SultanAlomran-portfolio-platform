@@ -45,7 +45,7 @@ internal sealed partial class InfographicsService(PortfolioDbContext db) : IInfo
         var item = await db.Infographics.AsNoTracking()
             .Where(x => x.Status == ContentStatus.Published && x.Slug == slug.ToLower())
             .Select(x => new InfographicDetailsDto(x.Id, x.Title, x.Slug, x.ShortDescription, x.Description,
-                x.DifficultyLevel, x.IsFeatured, x.PublishedAt,
+                x.DifficultyLevel, x.IsFeatured, x.CreatedAt, x.UpdatedAt, x.PublishedAt,
                 x.CoverMediaFile == null ? null : x.CoverMediaFile.FilePath,
                 x.InfographicMediaFile == null ? null : x.InfographicMediaFile.FilePath,
                 x.PdfMediaFile == null ? null : x.PdfMediaFile.FilePath,

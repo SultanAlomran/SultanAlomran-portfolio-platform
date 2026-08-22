@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { Category, InfographicDetails, InfographicEngagement, InfographicListItem, InfographicQuery, NegativeFeedbackReason, PagedResult, Tag } from './infographic.models';
+import { Category, GuideAiSummary, InfographicDetails, InfographicEngagement, InfographicListItem, InfographicQuery, NegativeFeedbackReason, PagedResult, Tag } from './infographic.models';
 import { map } from 'rxjs';
 @Injectable({providedIn:'root'})
 export class InfographicsApiService{
@@ -14,6 +14,8 @@ export class InfographicsApiService{
   setHelpful(id:string,isHelpful:boolean,reason:NegativeFeedbackReason|null){return this.http.put<InfographicEngagement>(`${this.base}/${encodeURIComponent(id)}/helpful-vote`,{isHelpful,reason},{withCredentials:true})}
   setRating(id:string,rating:1|2|3|4|5){return this.http.put<InfographicEngagement>(`${this.base}/${encodeURIComponent(id)}/rating`,{rating},{withCredentials:true})}
   recordView(slug:string){return this.http.post<{recorded:boolean}>(`${this.base}/${encodeURIComponent(slug)}/view`,{},{withCredentials:true})}
+  getAiSummary(slug:string){return this.http.post<GuideAiSummary>(`${environment.apiUrl}/ai/guides/${encodeURIComponent(slug)}/summary`,{},{withCredentials:true})}
+  allPublished(){return this.list({page:1,pageSize:100,sort:'newest'}).pipe(map(result=>result.items))}
   categories(){return this.http.get<Category[]>(`${this.base}/taxonomy/categories`)}
   tags(){return this.http.get<Tag[]>(`${this.base}/taxonomy/tags`)}
   private listItem(item:InfographicListItem):InfographicListItem{return{...item,coverUrl:this.publicUrl(item.coverUrl)}}

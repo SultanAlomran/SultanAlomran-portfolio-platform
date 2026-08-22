@@ -61,6 +61,18 @@ public sealed class PortfolioAssistantServiceTests
         await Assert.ThrowsAsync<AssistantProviderException>(() => service.SendAsync(new("certifications", []), CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Contextual_guide_request_includes_guide_evidence_and_grounding()
+    {
+        var tools = new FakeTools();
+        var client = new EchoFakeClient();
+        var service = Create(tools, client);
+        var response = await service.SendAsync(new("Explain this guide", [], "ef-core-performance-checklist"), CancellationToken.None);
+        Assert.Single(response.Sources);
+        Assert.Equal("/visual-handbook/ef-core-performance-checklist", response.Sources[0].Route);
+        Assert.Equal(1, tools.InfographicDetailsCalls);
+    }
+
     private static PortfolioAssistantService Create(FakeTools tools, IAiAssistantClient client, Action<AiAssistantOptions>? configure = null)
     {
         var options = new AiAssistantOptions { Enabled = true };

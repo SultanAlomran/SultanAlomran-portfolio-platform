@@ -26,6 +26,20 @@ internal sealed class LocalMediaStorage : IMediaStorage
 
     public string GetUrl(string key) => key.StartsWith("/media/", StringComparison.Ordinal) ? key : $"/media/{Uri.EscapeDataString(key).Replace("%2F", "/", StringComparison.OrdinalIgnoreCase)}";
 
+    public async Task<byte[]?> ReadBytesAsync(string key, CancellationToken token)
+    {
+        try
+        {
+            var path = Resolve(key);
+            if (!File.Exists(path)) return null;
+            return await File.ReadAllBytesAsync(path, token);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private string Resolve(string key)
     {
         key = key.StartsWith("/media/", StringComparison.Ordinal) ? key[7..] : key;

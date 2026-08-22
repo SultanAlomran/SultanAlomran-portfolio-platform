@@ -132,6 +132,7 @@ app.MapContentInsightsEndpoints();
 app.MapMediaEndpoints();
 app.MapTestAnalyticsEndpoints();
 app.MapAssistantEndpoints();
+app.MapGuideAiEndpoints();
 app.MapContactEndpoints();
 app.MapNotificationSettingsEndpoints();
 app.MapHub<NotificationsHub>(NotificationsHub.HubUrl);

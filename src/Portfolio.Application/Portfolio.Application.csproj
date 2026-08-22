@@ -3,6 +3,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="Microsoft.Extensions.Options" />
+    <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" />
     <ProjectReference Include="../Portfolio.Domain/Portfolio.Domain.csproj" />
     <ProjectReference Include="../Portfolio.Shared/Portfolio.Shared.csproj" />
   </ItemGroup>
