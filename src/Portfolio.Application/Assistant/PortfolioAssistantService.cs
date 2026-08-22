@@ -1,10 +1,17 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Portfolio.Application.Infographics;
+using Portfolio.Application.Media;
 
 namespace Portfolio.Application.Assistant;
 
-public sealed class PortfolioAssistantService(IAssistantTools tools, IAiAssistantClient client,
-    IOptions<AiAssistantOptions> options, ILogger<PortfolioAssistantService> logger) : IPortfolioAssistantService
+public sealed class PortfolioAssistantService(
+    IAssistantTools tools,
+    IAiAssistantClient client,
+    IOptions<AiAssistantOptions> options,
+    ILogger<PortfolioAssistantService> logger,
+    IInfographicsService? infographicsService = null,
+    IMediaStorage? mediaStorage = null) : IPortfolioAssistantService
 {
     public async Task<AssistantMessageResponse> SendAsync(AssistantMessageRequest request, CancellationToken token)
     {
@@ -22,13 +29,68 @@ public sealed class PortfolioAssistantService(IAssistantTools tools, IAiAssistan
         timeout.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(settings.RequestTimeoutSeconds, 1, 120)));
         try
         {
-            var evidence = await GetEvidenceAsync(message, settings.MaxToolRounds, timeout.Token);
-            var grounding = new AssistantGrounding(message, request.ConversationContext ?? [], evidence, PublicProfile.Context);
+            var evidence = new List<AssistantSource>(await GetEvidenceAsync(message, settings.MaxToolRounds, timeout.Token));
+            string? activeGuideContext = null;
+            GuideVisualContext? visualContext = null;
+
+            if (!string.IsNullOrWhiteSpace(request.GuideSlug))
+            {
+                var normalizedSlug = request.GuideSlug.Trim().ToLowerInvariant();
+                if (infographicsService is not null)
+                {
+                    var guide = await infographicsService.GetPublicBySlugAsync(normalizedSlug, timeout.Token);
+                    if (guide is not null)
+                    {
+                        var stepsText = string.Join("; ", guide.Steps.OrderBy(s => s.DisplayOrder).Select(s => $"{s.StepNumber}. {s.Title}: {s.Content}"));
+                        var codeText = string.Join("\n", guide.CodeExamples.Select(c => $"[{c.Language}] {c.Title}:\n{c.Code}"));
+                        activeGuideContext = $"CURRENT GUIDE: \"{guide.Title}\" ({guide.Category.Name} · {guide.DifficultyLevel}).\n" +
+                            $"Overview: {guide.ShortDescription} {guide.Description}\n" +
+                            $"Steps: {stepsText}\n" +
+                            (string.IsNullOrWhiteSpace(codeText) ? "" : $"Code Examples:\n{codeText}\n") +
+                            $"Tags: {string.Join(", ", guide.Tags.Select(t => t.Name))}";
+
+                        var guideSource = new AssistantSource("Infographic", guide.Title, $"/visual-handbook/{guide.Slug}", guide.ShortDescription);
+                        if (!evidence.Any(e => e.Route.Equals(guideSource.Route, StringComparison.OrdinalIgnoreCase)))
+                            evidence.Insert(0, guideSource);
+
+                        if (mediaStorage is not null && !string.IsNullOrWhiteSpace(guide.InfographicUrl))
+                        {
+                            var imageBytes = await mediaStorage.ReadBytesAsync(guide.InfographicUrl, timeout.Token);
+                            if (imageBytes is { Length: > 0 })
+                            {
+                                var ext = System.IO.Path.GetExtension(guide.InfographicUrl).ToLowerInvariant();
+                                var mime = ext is ".jpg" or ".jpeg" ? "image/jpeg" : ext is ".webp" ? "image/webp" : "image/png";
+                                visualContext = new GuideVisualContext(mime, imageBytes);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    var guideDetail = await tools.GetInfographicDetailsAsync(normalizedSlug, timeout.Token);
+                    if (guideDetail is not null)
+                    {
+                        activeGuideContext = $"CURRENT GUIDE: \"{guideDetail.Title}\". Route: {guideDetail.Route}.";
+                        if (!evidence.Any(e => e.Route.Equals(guideDetail.Route, StringComparison.OrdinalIgnoreCase)))
+                            evidence.Insert(0, guideDetail);
+                    }
+                }
+            }
+
+            var grounding = new AssistantGrounding(
+                message,
+                request.ConversationContext ?? [],
+                evidence,
+                PublicProfile.Context,
+                activeGuideContext,
+                visualContext);
+
             var response = await client.CompleteAsync(grounding, timeout.Token);
             if (string.IsNullOrWhiteSpace(response.Message)) throw new AssistantProviderException("The provider returned an invalid response.");
             var outputLimit = Math.Clamp(settings.MaxOutputCharacters, 100, 20_000);
             var output = response.Message.Length <= outputLimit ? response.Message : response.Message[..outputLimit];
-            logger.LogInformation("Assistant request completed with {EvidenceCount} sources", evidence.Count);
+            logger.LogInformation("Assistant request completed with {EvidenceCount} sources (GuideContext: {HasGuideContext}, Visual: {HasVisual})",
+                evidence.Count, activeGuideContext is not null, visualContext is not null);
             return response with { Message = output, Sources = SanitizeSources(response.Sources), Actions = SanitizeActions(response.Actions) };
         }
         catch (OperationCanceledException) when (!token.IsCancellationRequested)

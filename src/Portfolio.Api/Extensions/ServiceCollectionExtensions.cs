@@ -28,6 +28,9 @@ internal static class ServiceCollectionExtensions
             options.AddPolicy("assistant", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            options.AddPolicy("ai-summary", context => RateLimitPartition.GetFixedWindowLimiter(
+                AnonymousEngagementPartition(context), _ => new FixedWindowRateLimiterOptions
+                { PermitLimit = 10, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
             options.AddPolicy("contact-submission", context => RateLimitPartition.GetFixedWindowLimiter(
                 context.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
                 { PermitLimit = 5, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));

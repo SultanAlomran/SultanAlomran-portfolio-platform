@@ -23,6 +23,7 @@ public interface IMediaStorage
     Task StoreAsync(string key, Stream content, CancellationToken token);
     Task DeleteAsync(string key, CancellationToken token);
     string GetUrl(string key);
+    Task<byte[]?> ReadBytesAsync(string key, CancellationToken token);
 }
 
 public sealed class InvalidMediaException(string message) : Exception(message);

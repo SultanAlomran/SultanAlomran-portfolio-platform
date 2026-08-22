@@ -301,3 +301,29 @@ export async function mockContentInsightsApi(page: Page) {
     return route.fulfill({ status: 404 });
   });
 }
+
+export const guideAiSummaryFixture = {
+  guideSlug: 'ef-core-performance-checklist',
+  title: 'EF Core Performance Checklist',
+  summary: 'A structured technical overview covering projection, change tracking disablement, bounded pagination, and query plan verification for EF Core applications.',
+  keyTakeaways: [
+    'Always use AsNoTracking for read-only query paths to eliminate change tracker overhead.',
+    'Project directly into DTOs to fetch only required database columns.',
+    'Apply indexed ordering before pagination to ensure stable bounded reads.',
+  ],
+  commonUses: [
+    'High-throughput web APIs',
+    'Dashboard reporting endpoints',
+    'Microservice read models',
+  ],
+  caveat: 'Do not disable tracking on entities that will later be modified in the same unit of work.',
+  isVisualGrounded: true,
+  generatedAt: '2026-08-22T12:00:00Z',
+};
+
+export async function mockGuideAiSummary(page: Page) {
+  await page.route('**/api/ai/guides/**/summary', async route => {
+    return route.fulfill({ json: guideAiSummaryFixture });
+  });
+}
+

@@ -28,8 +28,8 @@ public sealed record AdminInfographicListItemDto(Guid Id, string Title, string S
     IReadOnlyList<InfographicTagDto> Tags);
 
 public sealed record InfographicDetailsDto(Guid Id, string Title, string Slug, string ShortDescription,
-    string? Description, DifficultyLevel DifficultyLevel, bool IsFeatured, DateTime? PublishedAt,
-    string? CoverUrl, string? InfographicUrl, string? PdfUrl, InfographicCategoryDto Category,
+    string? Description, DifficultyLevel DifficultyLevel, bool IsFeatured, DateTime CreatedAt, DateTime? UpdatedAt,
+    DateTime? PublishedAt, string? CoverUrl, string? InfographicUrl, string? PdfUrl, InfographicCategoryDto Category,
     IReadOnlyList<InfographicTagDto> Tags, IReadOnlyList<InfographicStepDto> Steps,
     IReadOnlyList<InfographicResourceDto> Resources, IReadOnlyList<InfographicCodeExampleDto> CodeExamples,
     IReadOnlyList<InfographicSeriesDto> Series, InfographicListItemDto? Previous,

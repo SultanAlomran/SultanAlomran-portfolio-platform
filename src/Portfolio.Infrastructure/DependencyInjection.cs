@@ -37,8 +37,31 @@ public static class DependencyInjection
         services.AddScoped<IProjectsService, ProjectsService>();
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
         services.AddScoped<IAdminAuthenticationService, AdminAuthenticationService>();
-        services.AddScoped<IAdminBootstrapService, AdminBootstrapService>();
-        services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
+        services.AddMemoryCache();
+        services.AddSingleton<DeterministicAiAssistantClient>();
+        services.AddHttpClient<OpenAiAssistantClient>();
+
+        services.AddTransient<IAiAssistantClient>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<AiAssistantOptions>>().Value;
+            if (string.Equals(options.Provider, "OpenAI", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                return sp.GetRequiredService<OpenAiAssistantClient>();
+            }
+            return sp.GetRequiredService<DeterministicAiAssistantClient>();
+        });
+
+        services.AddTransient<IGuideAiClient>(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<AiAssistantOptions>>().Value;
+            if (string.Equals(options.Provider, "OpenAI", StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(options.ApiKey))
+            {
+                return sp.GetRequiredService<OpenAiAssistantClient>();
+            }
+            return sp.GetRequiredService<DeterministicAiAssistantClient>();
+        });
         services.AddScoped<IInfographicsService, InfographicsService>();
         services.AddScoped<IInfographicEngagementService, InfographicEngagementService>();
         services.AddScoped<Portfolio.Application.ContentInsights.IContentInsightsService, Portfolio.Infrastructure.ContentInsights.ContentInsightsService>();

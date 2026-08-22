@@ -74,7 +74,7 @@ test.describe('Public Visual Handbook', () => {
     await expect(page.getByText('0 helpful · 1 not helpful')).toBeVisible();
     await expect(page.getByText('What could be improved?')).toBeVisible();
     await page.getByLabel('Needs a real-world example').check();
-    await expect(page.getByRole('status')).toContainText('Improvement reason saved');
+    await expect(page.getByRole('region', { name: 'Was this guide useful?' }).getByRole('status')).toContainText('Improvement reason saved');
 
     await page.getByRole('button', { name: 'Rate 4 out of 5' }).click();
     await expect(page.getByText('4 out of 5')).toBeVisible();
@@ -102,12 +102,12 @@ test.describe('Public Visual Handbook', () => {
     await expect(page.getByRole('link', { name: /Previous.*Query Fundamentals/ })).toBeVisible();
     await expect(page.getByRole('link', { name: /Next.*Advanced Query Plans/ })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Copy link' }).click();
-    await expect(page.getByRole('status')).toContainText('Link copied');
+    await page.getByRole('region', { name: 'Keep this guide handy' }).getByRole('button', { name: 'Copy link' }).click();
+    await expect(page.getByRole('region', { name: 'Keep this guide handy' }).getByRole('status')).toContainText('Link copied');
     const copied = await page.evaluate(() => localStorage.getItem('e2e.copiedLink'));
     expect(copied).toContain('/visual-handbook/ef-core-performance-checklist');
-    await page.getByRole('button', { name: /LinkedIn/ }).click();
-    await expect(page.getByRole('status')).toContainText('suggested caption is copied');
+    await page.getByRole('region', { name: 'Keep this guide handy' }).getByRole('button', { name: /LinkedIn/ }).click();
+    await expect(page.getByRole('region', { name: 'Keep this guide handy' }).getByRole('status')).toContainText('suggested caption is copied');
     const caption = await page.evaluate(() => localStorage.getItem('e2e.copiedLink'));
     expect(caption).toContain('Check out this .NET visual guide: EF Core Performance Checklist');
     expect(caption).toContain('Practical query-shaping guidance');
