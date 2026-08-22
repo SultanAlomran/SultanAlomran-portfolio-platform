@@ -11,14 +11,14 @@ test.describe('Admin Content Insights', () => {
     await page.goto(`${e2eEnvironment.adminUrl}/analytics`);
 
     // Verify page title and header
-    await expect(page.getByRole('heading', { name: 'Content Insights & Engagement' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Content Insights & Intelligence' })).toBeVisible();
 
     // Verify KPI cards
     await expect(page.getByText('Total Views')).toBeVisible();
     await expect(page.getByText('1,420')).toBeVisible();
     await expect(page.getByText('850 unique visitors')).toBeVisible();
     await expect(page.getByText('93.3%')).toBeVisible();
-    await expect(page.getByText('4.85 / 5')).toBeVisible();
+    await expect(page.getByText('4.85 / 5.0')).toBeVisible();
     await expect(page.getByText('52.9%')).toBeVisible();
 
     // Verify Needs Attention alert
@@ -31,7 +31,7 @@ test.describe('Admin Content Insights', () => {
     await expect(page.getByText('Explanation was unclear')).toBeVisible();
 
     // Verify Guide rankings table
-    await expect(page.getByRole('button', { name: /EF Core Performance Checklist/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'EF Core Performance Checklist' })).toBeVisible();
     await expect(page.getByText('92/100')).toBeVisible();
   });
 
@@ -39,13 +39,13 @@ test.describe('Admin Content Insights', () => {
     await page.goto(`${e2eEnvironment.adminUrl}/analytics`);
 
     // Click on Inspect Guide button
-    await page.getByRole('button', { name: 'Inspect Guide' }).first().click();
+    await page.getByRole('button', { name: 'Inspect' }).first().click();
 
     // Verify Modal
     const modal = page.locator('#guide-inspect-modal');
     await expect(modal).toBeVisible();
     await expect(modal.getByRole('heading', { name: 'EF Core Performance Checklist' })).toBeVisible();
-    await expect(modal.getByText('Content Health Score: 92/100')).toBeVisible();
+    await expect(modal.getByText('92%')).toBeVisible();
     await expect(modal.getByText('Excellent')).toBeVisible();
 
     // Close modal
