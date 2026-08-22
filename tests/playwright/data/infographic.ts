@@ -2,6 +2,14 @@ import type { Page } from '@playwright/test';
 
 interface MediaFixture { id:string; originalFileName:string; url:string; contentType:string; size:number }
 
+interface EngagementFixture {
+  helpfulCount:number; notHelpfulCount:number; helpfulPercentage:number|null;
+  averageRating:number|null; ratingCount:number;
+  ratingDistribution:Array<{rating:number;count:number}>;
+  negativeFeedback:Array<{reason:number;count:number}>;
+  visitorHelpfulVote:boolean|null; visitorNegativeFeedbackReason:number|null; visitorRating:number|null;
+}
+
 export const infographicIds = {
   category: '11111111-aaaa-4111-8111-111111111111',
   tag: '22222222-bbbb-4222-8222-222222222222',
@@ -44,6 +52,13 @@ export const infographicDetails = {
   next: nextInfographic,
   related: [relatedInfographic],
 };
+export const emptyEngagement: EngagementFixture = {
+  helpfulCount: 0, notHelpfulCount: 0, helpfulPercentage: null,
+  averageRating: null, ratingCount: 0,
+  ratingDistribution: [5, 4, 3, 2, 1].map(rating => ({ rating, count: 0 })),
+  negativeFeedback: [], visitorHelpfulVote: null,
+  visitorNegativeFeedbackReason: null, visitorRating: null,
+};
 export const adminInfographicDetails = {
   ...infographicDetails, categoryId: infographicIds.category, status: 1, createdAt: '2026-08-09T11:00:00Z', updatedAt: '2026-08-09T12:00:00Z',
   coverMediaFileId: null, infographicMediaFileId: null, pdfMediaFileId: null, tagIds: [infographicIds.tag],
@@ -54,8 +69,46 @@ export async function mockPublicInfographics(page: Page, withMedia = false) {
   const publicItem = withMedia ? { ...infographicListItem, coverUrl: '/media/test-cover.png' } : infographicListItem;
   const publicDetails = withMedia ? { ...infographicDetails, coverUrl: '/media/test-cover.png', infographicUrl: '/media/test-infographic.png', pdfUrl: '/media/test-document.pdf' } : infographicDetails;
   const resolvable = [publicItem, previousInfographic, nextInfographic, relatedInfographic];
+  let engagement: EngagementFixture = { ...emptyEngagement, ratingDistribution: emptyEngagement.ratingDistribution.map(row => ({ ...row })) };
   await page.route('**/api/infographics**', async route => {
     const url = new URL(route.request().url());
+    const request = route.request();
+    if (url.pathname.endsWith('/engagement')) return route.fulfill({ json: engagement });
+    if (request.method() === 'PUT' && url.pathname.endsWith('/helpful-vote')) {
+      const body = request.postDataJSON() as { isHelpful:boolean; reason:number|null };
+      let helpfulCount = engagement.helpfulCount;
+      let notHelpfulCount = engagement.notHelpfulCount;
+      if (engagement.visitorHelpfulVote === true) helpfulCount--;
+      if (engagement.visitorHelpfulVote === false) notHelpfulCount--;
+      if (body.isHelpful) helpfulCount++;
+      else notHelpfulCount++;
+      const total = helpfulCount + notHelpfulCount;
+      engagement = {
+        ...engagement, helpfulCount, notHelpfulCount,
+        helpfulPercentage: total ? Math.round(helpfulCount * 1000 / total) / 10 : null,
+        visitorHelpfulVote: body.isHelpful,
+        visitorNegativeFeedbackReason: body.isHelpful ? null : body.reason,
+        negativeFeedback: !body.isHelpful && body.reason ? [{ reason: body.reason, count: 1 }] : [],
+      };
+      return route.fulfill({ json: engagement });
+    }
+    if (request.method() === 'PUT' && url.pathname.endsWith('/rating')) {
+      const body = request.postDataJSON() as { rating:number };
+      const previous = engagement.visitorRating;
+      const ratingCount = previous === null ? engagement.ratingCount + 1 : engagement.ratingCount;
+      const total = (engagement.averageRating ?? 0) * engagement.ratingCount -
+        (previous ?? 0) + body.rating;
+      engagement = {
+        ...engagement, ratingCount,
+        averageRating: Math.round(total / ratingCount * 100) / 100,
+        visitorRating: body.rating,
+        ratingDistribution: engagement.ratingDistribution.map(row => ({
+          ...row,
+          count: row.count - (previous === row.rating ? 1 : 0) + (body.rating === row.rating ? 1 : 0),
+        })),
+      };
+      return route.fulfill({ json: engagement });
+    }
     if (url.pathname.endsWith('/taxonomy/categories')) return route.fulfill({ json: [infographicCategory] });
     if (url.pathname.endsWith('/taxonomy/tags')) return route.fulfill({ json: [infographicTag] });
     if (url.pathname.endsWith('/featured')) return route.fulfill({ json: [publicItem] });

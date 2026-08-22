@@ -40,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<IAdminBootstrapService, AdminBootstrapService>();
         services.AddSingleton<IAiAssistantClient, DeterministicAiAssistantClient>();
         services.AddScoped<IInfographicsService, InfographicsService>();
+        services.AddScoped<IInfographicEngagementService, InfographicEngagementService>();
         services.AddScoped<IMediaService, MediaService>();
         services.AddSingleton<IMediaStorage, LocalMediaStorage>();
         services.AddScoped<ITestAnalyticsService, TestAnalyticsService>();

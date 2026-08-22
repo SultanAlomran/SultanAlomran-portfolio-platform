@@ -16,6 +16,27 @@ internal static class InfographicEndpoints
             ids.Length > 50
                 ? Results.BadRequest(new { error = "A maximum of 50 infographic IDs can be resolved at once." })
                 : Results.Ok(await service.GetPublicByIdsAsync(ids, token)));
+        publicGroup.MapGet("/{slug}/engagement", async (
+            string slug, HttpContext context, IInfographicEngagementService service, CancellationToken token) =>
+        {
+            var engagement = await service.GetBySlugAsync(
+                slug, AnonymousEngagementIdentity.TryGetHash(context), token);
+            return engagement is null ? Results.NotFound() : Results.Ok(engagement);
+        });
+        publicGroup.MapPut("/{id:guid}/helpful-vote", async (
+            Guid id, SetHelpfulVoteRequest request, HttpContext context, IHostEnvironment environment,
+            IInfographicEngagementService service, CancellationToken token) =>
+        {
+            var visitorKeyHash = AnonymousEngagementIdentity.GetOrCreateHash(context, environment);
+            return Results.Ok(await service.SetHelpfulVoteAsync(id, visitorKeyHash, request, token));
+        }).RequireRateLimiting("engagement-write");
+        publicGroup.MapPut("/{id:guid}/rating", async (
+            Guid id, SetInfographicRatingRequest request, HttpContext context, IHostEnvironment environment,
+            IInfographicEngagementService service, CancellationToken token) =>
+        {
+            var visitorKeyHash = AnonymousEngagementIdentity.GetOrCreateHash(context, environment);
+            return Results.Ok(await service.SetRatingAsync(id, visitorKeyHash, request, token));
+        }).RequireRateLimiting("engagement-write");
         publicGroup.MapGet("/{slug}", async (string slug, IInfographicsService service, CancellationToken token) =>
         {
             var item = await service.GetPublicBySlugAsync(slug, token);

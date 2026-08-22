@@ -38,6 +38,10 @@ Public API:
 - `GET /api/infographics`
 - `GET /api/infographics/featured`
 - `GET /api/infographics/{slug}`
+- `GET /api/infographics/by-ids`
+- `GET /api/infographics/{slug}/engagement`
+- `PUT /api/infographics/{id}/helpful-vote`
+- `PUT /api/infographics/{id}/rating`
 - taxonomy lookups under `/api/infographics/taxonomy`
 
 Admin API supports list/details/create/update/delete, draft, publish readiness, publish, archive, category/tag lookups, and selectable media under `/api/admin/infographics`. Development OpenAPI and Scalar expose these endpoints.
@@ -63,9 +67,17 @@ Issue #38 adds a privacy-first continuation experience without creating a public
 - malformed, unavailable, or quota-limited storage falls back safely without blocking public content;
 - no browser/device fingerprint, IP identity, advertising tracker, public account, or SQL synchronization is introduced.
 
-The Saved filter resolves only current published guides through a bounded read-only `GET /api/infographics/by-ids` request. The API does not persist the visitor's saved list. Related Guides are derived deterministically from real Series, category, and tag metadata. Previous/Next links are emitted only for published neighbors in an existing ordered Series. Share actions use the browser Share/Clipboard APIs and a plain LinkedIn URL; download actions continue to reference existing media metadata.
+The Saved filter resolves only current published guides through a bounded read-only `GET /api/infographics/by-ids` request. The API does not persist the visitor's saved list. Related Guides are derived deterministically from real Series, category, and tag metadata. Previous/Next links are emitted only for published neighbors in an existing ordered Series. Share actions use native Share/Clipboard APIs. The LinkedIn action opens LinkedIn's official share-offsite URL and copies a guide-specific suggested caption for the visitor to paste. Per-guide Open Graph title, description, canonical URL, and cover-or-main-image metadata are set in the page. Direct LinkedIn posting or image upload is not performed because it requires LinkedIn OAuth consent and `w_member_social`; the static SPA still needs a future SSR/dynamic-rendering layer for guaranteed crawler-visible per-guide image previews. Download actions continue to reference existing media metadata.
 
-The existing `UserHelpfulVote`, `UserRating`, and `UserBookmark` tables remain unchanged. They require a real `Users.Id`, and their unique identity/content indexes and rating check constraint remain authoritative. The only browser identity currently implemented is the private Administrator cookie; analytics `Session` rows are not public authentication. Helpful/Not Helpful, structured negative reasons, and rating writes therefore remain blocked pending an approved public identity, consent, retention, and abuse/deduplication design. Administrator authentication is deliberately not reused for public engagement. No EF migration is required by this slice.
+## Server-persisted feedback and anonymous identity
+
+`UserHelpfulVote` and `UserRating` are reused; no duplicate engagement or anonymous-user table is created. Each row belongs to exactly one actor type: an authenticated `UserId` or an anonymous `VisitorKeyHash`. SQL check constraints enforce that exclusivity, and filtered unique indexes enforce one vote and one rating per actor/content pair. Existing authenticated records remain valid.
+
+The first Helpful or Rating write creates a 32-byte random first-party token in a 180-day, HttpOnly, SameSite=Lax cookie scoped to `/api/infographics` (Secure outside Development). The raw token never enters SQL or logs; SQL receives only its SHA-256 hash. Reads do not create the cookie. There is no public account, Administrator coupling, fingerprint, stored IP address, country lookup, user-agent identity, advertising tracker, or anonymous user record.
+
+Helpful votes are upserted and may change direction. Not Helpful can store one optional `NegativeFeedbackReason` value; changing to Helpful clears it. Ratings are upserted and retain the database `1..5` check. Aggregate queries stay server-side and return raw Helpful/Not Helpful counts, percentage, average, count, a five-bucket distribution, and structured-reason counts. Write endpoints allow 20 operations per five minutes, partitioned by the anonymous token or transient remote IP before a token exists; the IP partition is in memory and is never persisted.
+
+Clearing the cookie or waiting for it to expire creates a new browser identity and can permit another response. Preventing that without login would require stronger tracking or fingerprinting, which this design deliberately rejects. Engagement rows currently follow the content/database retention lifecycle; a future Analytics governance slice can define aggregation and deletion retention without changing the public interaction.
 
 ## Current boundaries
 

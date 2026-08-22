@@ -23,6 +23,28 @@ public sealed class DomainBehaviorTests
             new UserRating(Guid.NewGuid(), "Infographic", Guid.NewGuid(), rating));
 
     [Fact]
+    public void Visitor_rating_can_be_updated_without_creating_another_entity()
+    {
+        var rating = UserRating.ForVisitor(new string('A', 64), "Infographic", Guid.NewGuid(), 3);
+        rating.SetRating(5);
+        Assert.Equal((byte)5, rating.Rating);
+        Assert.NotNull(rating.UpdatedAt);
+        Assert.Null(rating.UserId);
+    }
+
+    [Fact]
+    public void Helpful_vote_clears_negative_reason_when_changed_to_helpful()
+    {
+        var vote = UserHelpfulVote.ForVisitor(new string('B', 64), "Infographic", Guid.NewGuid(), false,
+            NegativeFeedbackReason.NeedsRealWorldExample);
+        Assert.Equal(NegativeFeedbackReason.NeedsRealWorldExample, vote.NegativeFeedbackReason);
+        vote.SetVote(true);
+        Assert.True(vote.IsHelpful);
+        Assert.Null(vote.NegativeFeedbackReason);
+        Assert.Throws<ArgumentException>(() =>
+            vote.SetVote(true, NegativeFeedbackReason.ExplanationUnclear));
+    }
+    [Fact]
     public void Publishing_and_archiving_are_explicit_transitions()
     {
         var item = Create<Infographic>();

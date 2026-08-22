@@ -63,7 +63,7 @@ public sealed class AuthenticationApiTests : IAsyncLifetime
     {
         using var response = await client.GetAsync("/api/auth/google?returnUrl=https%3A%2F%2Fevil.example");
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.Equal("http://localhost:4300/dashboard", response.Headers.Location?.ToString());
+        Assert.Equal("http://localhost:4300/dashboard?loginSuccess=google", response.Headers.Location?.ToString());
         var current = await client.GetFromJsonAsync<CurrentAdmin>("/api/auth/me");
         Assert.Equal("Google", current?.Provider);
     }

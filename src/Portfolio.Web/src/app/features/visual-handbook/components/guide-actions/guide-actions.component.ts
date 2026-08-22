@@ -21,7 +21,7 @@ import BookmarkButtonComponent from '../bookmark-button/bookmark-button.componen
           @if (nativeShareAvailable()) {
             <button type="button" class="min-h-11 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-800 hover:border-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" (click)="share()">Share</button>
           }
-          <a class="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-800 hover:border-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" [href]="linkedInUrl()" target="_blank" rel="noopener">LinkedIn<span class="sr-only"> (opens in a new tab)</span></a>
+          <button type="button" class="inline-flex min-h-11 items-center rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-800 hover:border-violet-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" (click)="shareLinkedIn()">LinkedIn<span class="sr-only"> (opens in a new tab and copies a suggested caption)</span></button>
           @if (downloadUrl(); as url) {
             <a class="inline-flex min-h-11 items-center rounded-xl bg-violet-700 px-4 font-bold text-white hover:bg-violet-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600" [href]="url" [attr.download]="downloadIsCrossOrigin() ? null : ''" [attr.target]="downloadIsCrossOrigin() ? '_blank' : null" [attr.rel]="downloadIsCrossOrigin() ? 'noopener' : null">{{ downloadIsCrossOrigin() ? 'Open file' : 'Download' }}@if (downloadIsCrossOrigin()) { <span class="sr-only"> (opens in a new tab)</span> }</a>
           }
@@ -40,28 +40,30 @@ export default class GuideActionsComponent {
     new URL(`/visual-handbook/${this.guide().slug}`, this.document.baseURI).href);
   readonly linkedInUrl = computed(() =>
     `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(this.canonicalUrl())}`);
+  readonly linkedInCaption = computed(() =>
+    `Check out this ${this.guide().category.name} visual guide: ${this.guide().title}\n\n` +
+    `${this.guide().shortDescription}\n\n` +
+    `A practical reference worth saving for later.\n\n${this.canonicalUrl()}`);
   readonly downloadUrl = computed(() => this.guide().pdfUrl ?? this.guide().infographicUrl);
   readonly downloadIsCrossOrigin = computed(() => this.isCrossOrigin(this.downloadUrl()));
 
   async copyLink(): Promise<void> {
     try {
-      if (globalThis.navigator?.clipboard?.writeText) {
-        await globalThis.navigator.clipboard.writeText(this.canonicalUrl());
-      } else {
-        const field = this.document.createElement('textarea');
-        field.value = this.canonicalUrl();
-        field.setAttribute('readonly', '');
-        field.style.position = 'fixed';
-        field.style.opacity = '0';
-        this.document.body.appendChild(field);
-        field.select();
-        const copied = this.document.execCommand('copy');
-        field.remove();
-        if (!copied) throw new Error('Copy command was unavailable.');
-      }
+      await this.copyText(this.canonicalUrl());
       this.status.set('Link copied to your clipboard.');
     } catch {
       this.status.set('Copy was unavailable. Use the address in your browser.');
+    }
+  }
+
+  async shareLinkedIn(): Promise<void> {
+    const copy = this.copyText(this.linkedInCaption());
+    this.document.defaultView?.open(this.linkedInUrl(), '_blank', 'noopener');
+    try {
+      await copy;
+      this.status.set('LinkedIn opened. Your suggested caption is copied — paste it into the post.');
+    } catch {
+      this.status.set('LinkedIn opened. Add your own caption before posting.');
     }
   }
 
@@ -69,7 +71,7 @@ export default class GuideActionsComponent {
     try {
       await globalThis.navigator.share({
         title: this.guide().title,
-        text: this.guide().shortDescription,
+        text: this.linkedInCaption().replace(this.canonicalUrl(), '').trim(),
         url: this.canonicalUrl(),
       });
       this.status.set('Share sheet opened.');
@@ -79,6 +81,22 @@ export default class GuideActionsComponent {
     }
   }
 
+  private async copyText(value: string): Promise<void> {
+    if (globalThis.navigator?.clipboard?.writeText) {
+      await globalThis.navigator.clipboard.writeText(value);
+      return;
+    }
+    const field = this.document.createElement('textarea');
+    field.value = value;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    this.document.body.appendChild(field);
+    field.select();
+    const copied = this.document.execCommand('copy');
+    field.remove();
+    if (!copied) throw new Error('Copy command was unavailable.');
+  }
   private isCrossOrigin(url?: string): boolean {
     if (!url) return false;
     try {

@@ -61,11 +61,38 @@ test.describe('Public Visual Handbook', () => {
     await expect(page.getByRole('progressbar', { name: 'Reading progress' })).toHaveAttribute('aria-valuenow', /[1-9][0-9]?|100/);
   });
 
+  test('submits Helpful, structured negative feedback, and updateable ratings', async ({ page }) => {
+    await page.goto(`${e2eEnvironment.webUrl}/visual-handbook/ef-core-performance-checklist`);
+    await expect(page.getByRole('heading', { name: 'Was this guide useful?' })).toBeVisible();
+    await expect(page.getByText('No ratings yet')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Helpful', exact: true }).click();
+    await expect(page.getByText('1 helpful · 0 not helpful')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Helpful', exact: true })).toHaveAttribute('aria-pressed', 'true');
+
+    await page.getByRole('button', { name: 'Not helpful', exact: true }).click();
+    await expect(page.getByText('0 helpful · 1 not helpful')).toBeVisible();
+    await expect(page.getByText('What could be improved?')).toBeVisible();
+    await page.getByLabel('Needs a real-world example').check();
+    await expect(page.getByRole('status')).toContainText('Improvement reason saved');
+
+    await page.getByRole('button', { name: 'Rate 4 out of 5' }).click();
+    await expect(page.getByText('4 out of 5')).toBeVisible();
+    await expect(page.getByText('From 1 rating')).toBeVisible();
+    await page.getByRole('button', { name: 'Rate 5 out of 5' }).click();
+    await expect(page.getByText('5 out of 5')).toBeVisible();
+    await expect(page.getByText('From 1 rating')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Rate 5 out of 5' })).toHaveAttribute('aria-pressed', 'true');
+  });
   test('shows real related and Series navigation and copies the canonical link', async ({ page }) => {
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'clipboard', {
         configurable: true,
         value: { writeText: async (value: string) => localStorage.setItem('e2e.copiedLink', value) },
+      });
+      Object.defineProperty(window, 'open', {
+        configurable: true,
+        value: (url?: string | URL) => { localStorage.setItem('e2e.openedUrl', String(url)); return null; },
       });
     });
     await page.goto(`${e2eEnvironment.webUrl}/visual-handbook/ef-core-performance-checklist`);
@@ -79,7 +106,14 @@ test.describe('Public Visual Handbook', () => {
     await expect(page.getByRole('status')).toContainText('Link copied');
     const copied = await page.evaluate(() => localStorage.getItem('e2e.copiedLink'));
     expect(copied).toContain('/visual-handbook/ef-core-performance-checklist');
-    await expect(page.getByRole('link', { name: 'LinkedIn (opens in a new tab)' })).toHaveAttribute('href', /linkedin\.com\/sharing/);
+    await page.getByRole('button', { name: /LinkedIn/ }).click();
+    await expect(page.getByRole('status')).toContainText('suggested caption is copied');
+    const caption = await page.evaluate(() => localStorage.getItem('e2e.copiedLink'));
+    expect(caption).toContain('Check out this .NET visual guide: EF Core Performance Checklist');
+    expect(caption).toContain('Practical query-shaping guidance');
+    expect(caption).toContain('/visual-handbook/ef-core-performance-checklist');
+    const openedUrl = await page.evaluate(() => localStorage.getItem('e2e.openedUrl'));
+    expect(openedUrl).toMatch(/linkedin\.com\/sharing\/share-offsite/);
   });
 
   test('cancels superseded guide loads and safely opens cross-origin media', async ({ page }) => {

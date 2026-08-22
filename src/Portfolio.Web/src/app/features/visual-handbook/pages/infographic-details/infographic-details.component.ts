@@ -5,6 +5,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { auditTime, finalize, fromEvent, Subscription } from 'rxjs';
 import GuideActionsComponent from '../../components/guide-actions/guide-actions.component';
+import EngagementPanelComponent from '../../components/engagement-panel/engagement-panel.component';
 import InfographicCardComponent from '../../components/infographic-card/infographic-card.component';
 import ReadingProgressComponent from '../../components/reading-progress/reading-progress.component';
 import { InfographicDetails, difficultyLabel } from '../../data-access/infographic.models';
@@ -13,7 +14,7 @@ import { LocalEngagementService } from '../../data-access/local-engagement.servi
 
 @Component({
   selector: 'app-infographic-details',
-  imports: [RouterLink, GuideActionsComponent, InfographicCardComponent, ReadingProgressComponent],
+  imports: [RouterLink, EngagementPanelComponent, GuideActionsComponent, InfographicCardComponent, ReadingProgressComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (loading()) {
@@ -51,6 +52,7 @@ import { LocalEngagementService } from '../../data-access/local-engagement.servi
             <section><h2 class="text-2xl font-black">Structured Guide</h2><ol class="mt-5 grid gap-4">@for (step of guide.steps; track step.id) { <li class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><div class="flex gap-4"><span class="grid size-10 shrink-0 place-items-center rounded-full bg-violet-100 font-black text-violet-800">{{ step.stepNumber }}</span><div class="min-w-0"><h3 class="text-lg font-bold">{{ step.title }}</h3><p class="mt-2 whitespace-pre-line leading-7 text-slate-600">{{ step.content }}</p>@if (step.mediaUrl) { <img [src]="step.mediaUrl" [alt]="step.title" loading="lazy" class="mt-4 max-h-96 max-w-full rounded-xl object-contain"> }</div></div></li> }</ol></section>
             @if (guide.codeExamples.length) { <section><h2 class="text-2xl font-black">Code Examples</h2><div class="mt-5 grid gap-5">@for (example of guide.codeExamples; track example.id) { <article class="min-w-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-950"><header class="flex items-center justify-between border-b border-white/10 px-5 py-3 text-white"><strong>{{ example.title }}</strong><span class="text-xs uppercase text-violet-300">{{ example.language }}</span></header><pre class="overflow-x-auto p-5 text-sm text-slate-200"><code>{{ example.code }}</code></pre></article> }</div></section> }
             @if (guide.resources.length) { <section><h2 class="text-2xl font-black">Resources</h2><div class="mt-5 grid gap-3">@for (resource of guide.resources; track resource.id) { <a [href]="resource.url" target="_blank" rel="noopener" class="flex min-h-14 items-center justify-between rounded-xl border border-slate-200 bg-white px-5 font-bold hover:border-violet-400"><span>{{ resource.title }} <small class="ms-2 font-medium text-slate-500">{{ resource.resourceType }}</small></span><span aria-hidden="true">↗</span></a> }</div></section> }
+            <app-engagement-panel [guide]="guide"/>
             <app-guide-actions [guide]="guide"/>
           </main>
           <aside class="self-start rounded-2xl border border-slate-200 bg-white p-5 lg:sticky lg:top-6">
@@ -114,11 +116,21 @@ export default class InfographicDetailsComponent {
         this.item.set(guide);
         this.local.recordViewed(guide);
         this.previousProgress.set(this.local.progressFor(guide.id));
+        const canonicalUrl = new URL(`/visual-handbook/${guide.slug}`, this.document.baseURI).href;
+        const shareImage = guide.coverUrl ?? guide.infographicUrl;
         this.title.setTitle(`${guide.title} | Visual Handbook`);
         this.meta.updateTag({ name: 'description', content: guide.shortDescription });
         this.meta.updateTag({ property: 'og:title', content: guide.title });
         this.meta.updateTag({ property: 'og:description', content: guide.shortDescription });
-        if (guide.coverUrl) this.meta.updateTag({ property: 'og:image', content: new URL(guide.coverUrl, this.document.baseURI).href });
+        this.meta.updateTag({ property: 'og:type', content: 'article' });
+        this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
+        if (shareImage) {
+          this.meta.updateTag({ property: 'og:image', content: new URL(shareImage, this.document.baseURI).href });
+          this.meta.updateTag({ property: 'og:image:alt', content: `${guide.title} visual guide cover` });
+        } else {
+          this.meta.removeTag('property="og:image"');
+          this.meta.removeTag('property="og:image:alt"');
+        }
         this.setCanonical(`/visual-handbook/${guide.slug}`);
       },
       error: response => {

@@ -8,5 +8,20 @@ export interface InfographicCodeExample{id:string;title:string;language:string;c
 export interface InfographicSeries{id:string;name:string;slug:string;position:number}
 export interface InfographicListItem{id:string;title:string;slug:string;shortDescription:string;difficultyLevel:DifficultyLevel;isFeatured:boolean;publishedAt?:string;coverUrl?:string;category:Category;tags:Tag[]}
 export interface InfographicDetails extends InfographicListItem{description?:string;infographicUrl?:string;pdfUrl?:string;steps:InfographicStep[];resources:InfographicResource[];codeExamples:InfographicCodeExample[];series:InfographicSeries[];previous?:InfographicListItem;next?:InfographicListItem;related:InfographicListItem[]}
+export type NegativeFeedbackReason=1|2|3|4|5|6|7;
+export interface RatingDistribution{rating:1|2|3|4|5;count:number}
+export interface NegativeFeedbackCount{reason:NegativeFeedbackReason;count:number}
+export interface InfographicEngagement{
+  helpfulCount:number;
+  notHelpfulCount:number;
+  helpfulPercentage:number|null;
+  averageRating:number|null;
+  ratingCount:number;
+  ratingDistribution:RatingDistribution[];
+  negativeFeedback:NegativeFeedbackCount[];
+  visitorHelpfulVote:boolean|null;
+  visitorNegativeFeedbackReason:NegativeFeedbackReason|null;
+  visitorRating:1|2|3|4|5|null;
+}
 export interface InfographicQuery{search?:string;category?:string;tag?:string;difficulty?:DifficultyLevel;featured?:boolean;sort?:string;page?:number;pageSize?:number}
 export const difficultyLabel=(value:DifficultyLevel)=>['','Beginner','Intermediate','Advanced'][value];
